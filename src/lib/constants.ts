@@ -1,0 +1,10 @@
+export const BATCH_SIZE = 40
+export const MASTERY_MAX = 5
+export const MASTERY_THRESHOLD = 4
+export const ITEMS_PER_ENUM_PAGE = 5
+export const TOAST_DURATION_MS = 3000
+export const SEARCH_THRESHOLD = 0.3
+export const SEARCH_MIN_CHARS = 2
+export const SEARCH_MAX_RESULTS = 30
+export const SESSION_PERSIST_KEY = 'stitch-session'
+export const STATS_PERSIST_KEY = 'stitch-stats'
