@@ -10,9 +10,10 @@ import {
   BarChart2,
   Bell,
   Plus,
+  Share2,
 } from 'lucide-react'
 import { getDeck, updateDeck } from '@/db/deckRepository'
-import { createCards } from '@/db/cardRepository'
+import { createCards, getCardsByDeck } from '@/db/cardRepository'
 import { parseCSVFile } from '@/features/upload/csvParser'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { useStatsStore } from '@/store/statsStore'
@@ -22,6 +23,7 @@ import ProgressRing from '@/components/ProgressRing'
 import StatBadge from '@/components/StatBadge'
 import ModeCard from '@/components/ModeCard'
 import ExportButton from '@/features/export/ExportButton'
+import FlashcardCreator from '@/features/flashcards/FlashcardCreator'
 import type { Deck } from '@/lib/zodSchemas'
 
 export default function StudyDashboard() {
@@ -55,6 +57,10 @@ export default function StudyDashboard() {
 
   const [addingCsv, setAddingCsv] = useState(false)
   const [addingDocx, setAddingDocx] = useState(false)
+  const [showCreator, setShowCreator] = useState(false)
+  const [showPublish, setShowPublish] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [authorName, setAuthorName] = useState('')
 
   const handleAddCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -135,6 +141,58 @@ export default function StudyDashboard() {
     }
   }
 
+  const handlePublish = async () => {
+    if (!deck) return
+    setPublishing(true)
+    try {
+      const cards = await getCardsByDeck(deckId)
+      if (cards.length === 0) {
+        addToast('Cannot publish an empty deck', 'error')
+        return
+      }
+
+      const csvHeaders = 'front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,enum_items,id_answer,id_variants'
+      const csvRows = cards.map((c) => {
+        return [
+          c.front, c.back, c.chapter ?? '', c.subject ?? deck.subject, c.lesson ?? '', c.type,
+          c.mc_correct ?? '', c.mc_distractor1 ?? '', c.mc_distractor2 ?? '', c.mc_distractor3 ?? '',
+          c.tf_answer ?? '', c.enum_items ?? '', c.id_answer ?? '', c.id_variants ?? '',
+        ].map((v) => {
+          const s = String(v)
+          return s.includes(',') || s.includes('"') || s.includes('\n')
+            ? `"${s.replace(/"/g, '""')}"` : s
+        }).join(',')
+      })
+      const csvContent = [csvHeaders, ...csvRows].join('\n')
+
+      const name = authorName.trim() || 'Anonymous'
+      localStorage.setItem('authorName', name)
+
+      const res = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: deck.title,
+          subject: deck.subject,
+          csvContent,
+          authorName: name,
+        }),
+      })
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: 'Publish failed' }))
+        throw new Error(errData.error || `Server error: ${res.status}`)
+      }
+
+      addToast('Published! Anyone can now find your deck in the feed.', 'success')
+      setShowPublish(false)
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to publish', 'error')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   if (deckLoading || loading) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)]">
@@ -205,10 +263,26 @@ export default function StudyDashboard() {
               <Plus size={16} /> Add CSV
             </button>
             <button
+              onClick={() => setShowCreator(true)}
+              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm"
+            >
+              <Plus size={16} /> Add Cards
+            </button>
+            <button
               onClick={() => router.push('/new-deck')}
               className="bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm"
             >
               New Deck
+            </button>
+            <button
+              onClick={() => {
+                const saved = localStorage.getItem('authorName') || ''
+                setAuthorName(saved)
+                setShowPublish(true)
+              }}
+              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm"
+            >
+              <Share2 size={16} /> Publish
             </button>
           </div>
         </div>
@@ -312,6 +386,50 @@ export default function StudyDashboard() {
         onChange={handleAddCsv}
         className="hidden"
       />
+
+      {showCreator && (
+        <FlashcardCreator
+          deckId={deckId}
+          deck={deck}
+          onClose={() => setShowCreator(false)}
+          onCardsAdded={() => window.location.reload()}
+        />
+      )}
+
+      {showPublish && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowPublish(false)}>
+          <div
+            className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Publish to Feed</h2>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Author Name</label>
+            <input
+              type="text"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              placeholder="Your name (optional)"
+              className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handlePublish}
+                disabled={publishing}
+                className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex-1"
+              >
+                {publishing ? 'Publishing…' : 'Publish'}
+              </button>
+              <button
+                onClick={() => setShowPublish(false)}
+                disabled={publishing}
+                className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium hover:bg-[var(--color-surface)] disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

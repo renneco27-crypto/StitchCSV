@@ -34,6 +34,14 @@ export const CardSchema = z.object({
   wrongCount: z.number().min(0),
   lastReviewed: z.string().nullable(),
   nextReview: z.string().nullable(),
+  mc_correct: z.string().optional(),
+  mc_distractor1: z.string().optional(),
+  mc_distractor2: z.string().optional(),
+  mc_distractor3: z.string().optional(),
+  tf_answer: z.string().optional(),
+  enum_items: z.string().optional(),
+  id_answer: z.string().optional(),
+  id_variants: z.string().optional(),
 })
 export type Card = z.infer<typeof CardSchema>
 

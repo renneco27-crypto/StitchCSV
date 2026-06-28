@@ -189,6 +189,14 @@ function buildCards(rows: CSVRow[], deckId: string, primarySubject: string): Car
       wrongCount:   0,
       lastReviewed: null,
       nextReview:   null,
+      mc_correct:     row.mc_correct || '',
+      mc_distractor1: row.mc_distractor1 || '',
+      mc_distractor2: row.mc_distractor2 || '',
+      mc_distractor3: row.mc_distractor3 || '',
+      tf_answer:      row.tf_answer || '',
+      enum_items:     row.enum_items || '',
+      id_answer:      row.id_answer || '',
+      id_variants:    row.id_variants || '',
     })
   })
 

@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { X, HelpCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { X, HelpCircle, Sparkles, Loader2, BookOpen } from 'lucide-react'
 
 import UploadZone from '@/features/upload/UploadZone'
 import PastDecks from '@/features/upload/PastDecks'
+import { handleUpload } from '@/features/upload/uploadHandler'
+import { useToastStore } from '@/store/toastStore'
 
 const FORMATS = [
   {
@@ -56,8 +59,28 @@ const FORMATS = [
 ]
 
 export default function Home() {
+  const router = useRouter()
+  const addToast = useToastStore((s) => s.addToast)
   const [showHelp, setShowHelp] = useState(false)
   const [activeTab, setActiveTab] = useState(0)
+  const [pasteText, setPasteText] = useState('')
+  const [textLoading, setTextLoading] = useState(false)
+
+  const handleTextGenerate = async () => {
+    if (!pasteText.trim()) return
+    setTextLoading(true)
+    try {
+      const file = new File([pasteText], 'notes.txt', { type: 'text/plain' })
+      const id = await handleUpload(file)
+      addToast('Deck created from text!', 'success')
+      router.push('/study/' + id)
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to generate deck', 'error')
+    } finally {
+      setTextLoading(false)
+      setPasteText('')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] px-4 py-8">
@@ -75,11 +98,40 @@ export default function Home() {
             <HelpCircle size={16} />
             <span>Format Help</span>
           </button>
+          <button
+            onClick={() => router.push('/feed')}
+            className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-2)] transition-colors"
+          >
+            <BookOpen size={16} />
+            <span>Feed</span>
+          </button>
         </div>
 
         <div className="mt-6">
           <UploadZone />
         </div>
+
+        <div className="mt-6">
+          <div className="border-t border-[var(--color-border)] pt-6">
+            <p className="text-sm font-medium text-[var(--color-text-primary)] mb-3">Or paste your notes</p>
+            <textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder="Paste study notes here — the AI will extract flashcards from your text"
+              rows={5}
+              className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none"
+            />
+            <button
+              onClick={handleTextGenerate}
+              disabled={textLoading || !pasteText.trim()}
+              className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              {textLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+              {textLoading ? 'Generating deck…' : 'Generate from Text'}
+            </button>
+          </div>
+        </div>
+
         <div className="mt-10">
           <PastDecks />
         </div>

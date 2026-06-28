@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Loader2, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react'
+import { Upload, Loader2, CheckCircle2, XCircle, ArrowLeft, Sparkles } from 'lucide-react'
 import { handleUpload } from '@/features/upload/uploadHandler'
 import { useToastStore } from '@/store/toastStore'
 
@@ -18,6 +18,29 @@ export default function NewDeckPage() {
   const [error, setError] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [deckName, setDeckName] = useState('')
+  const [pasteText, setPasteText] = useState('')
+  const [textLoading, setTextLoading] = useState(false)
+
+  const handleTextGenerate = async () => {
+    const name = deckName.trim()
+    if (!name) {
+      addToast('Please enter a deck name first', 'error')
+      return
+    }
+    if (!pasteText.trim()) return
+    setTextLoading(true)
+    try {
+      const file = new File([pasteText], 'notes.txt', { type: 'text/plain' })
+      const id = await handleUpload(file, undefined, name)
+      addToast('Deck created from text!', 'success')
+      router.push('/study/' + id)
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to generate deck', 'error')
+    } finally {
+      setTextLoading(false)
+      setPasteText('')
+    }
+  }
 
   const processFile = async (file: File) => {
     const name = deckName.trim()
@@ -151,6 +174,25 @@ export default function NewDeckPage() {
               </button>
             </>
           )}
+        </div>
+
+        <div className="mt-6 border-t border-[var(--color-border)] pt-6">
+          <p className="text-sm font-medium text-[var(--color-text-primary)] mb-3">Or paste your notes</p>
+          <textarea
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            placeholder="Paste study notes here — the AI will extract flashcards from your text"
+            rows={5}
+            className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none"
+          />
+          <button
+            onClick={handleTextGenerate}
+            disabled={textLoading || !pasteText.trim() || !deckName.trim()}
+            className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+          >
+            {textLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+            {textLoading ? 'Generating deck…' : 'Generate from Text'}
+          </button>
         </div>
       </div>
     </div>

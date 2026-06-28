@@ -15,7 +15,11 @@ export async function getDeck(deckId: string): Promise<Deck | undefined> {
     const deck = await db.decks.get(deckId)
     if (!deck) return undefined
     const cards = await db.cards.where('deckId').equals(deckId).toArray()
-    return { ...deck, cards }
+    return {
+      ...deck,
+      cards,
+      quizItems: deck.quizItems ?? [],
+    }
   } catch (err) {
     throw new Error(`Failed to get deck: ${err instanceof Error ? err.message : String(err)}`)
   }
