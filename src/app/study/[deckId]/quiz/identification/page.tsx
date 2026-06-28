@@ -175,7 +175,7 @@ export default function IdentificationPage() {
               )}
             </div>
             <p className="text-sm text-[var(--color-text-muted)] mb-1">Correct answer:</p>
-            <p className="text-lg font-medium text-[var(--color-know)]">{currentItem?.answer}</p>
+            <p className="text-lg font-medium text-[var(--color-know)]">{currentItem?.answer || '(answer not available)'}</p>
             {result.matchedVariant && result.matchedVariant !== currentItem?.answer && (
               <p className="text-sm text-[var(--color-text-muted)] mt-2">
                 Matched variant: {result.matchedVariant}

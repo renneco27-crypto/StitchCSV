@@ -286,8 +286,20 @@ export async function POST(request: NextRequest) {
       } catch { /* ignore */ }
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const { value: html } = await mammoth.convertToHtml({ buffer })
+    const arrayBuffer = await file.arrayBuffer()
+    let html: string
+    try {
+      const result = await mammoth.convertToHtml({ buffer: arrayBuffer })
+      html = result.value
+    } catch (convErr) {
+      try {
+        const result = await mammoth.extractRawText({ buffer: arrayBuffer })
+        html = '<p>' + result.value.replace(/\n\n+/g, '</p><p>').replace(/\n/g, ' ') + '</p>'
+      } catch {
+        const msg = convErr instanceof Error ? convErr.message : 'Unknown error'
+        return NextResponse.json({ error: `Could not parse DOCX file. Ensure the file is a valid .docx: ${msg}` }, { status: 400 })
+      }
+    }
     const rawText = html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
 
     if (!rawText) {

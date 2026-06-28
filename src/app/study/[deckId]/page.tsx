@@ -74,11 +74,7 @@ export default function StudyDashboard() {
           await updateDeck(deckId, { quizItems: merged })
         }
         addToast('CSV added to deck!', 'success')
-        const d = await getDeck(deckId)
-        if (d) {
-          setDeck(d)
-          initStats(deckId, d.cards.length)
-        }
+        window.location.reload()
       }
       reader.readAsText(file)
     } catch (err) {
@@ -122,11 +118,7 @@ export default function StudyDashboard() {
         await updateDeck(deckId, { quizItems: merged })
       }
       addToast('DOCX converted and added to deck!', 'success')
-      const d = await getDeck(deckId)
-      if (d) {
-        setDeck(d)
-        initStats(deckId, d.cards.length)
-      }
+      window.location.reload()
     } catch (err) {
       console.error(err)
       addToast(err instanceof Error ? err.message : 'Failed to add DOCX', 'error')
