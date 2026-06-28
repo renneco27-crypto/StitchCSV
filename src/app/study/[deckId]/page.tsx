@@ -279,15 +279,17 @@ export default function StudyDashboard() {
           <StatBadge label={deck?.subject ?? 'General'} value={''} color="accent" />
         </div>
 
-        <div className="flex gap-4 mt-4 items-center">
-          <ProgressRing value={progress} size={72} />
-          <div className="flex flex-col gap-1">
-            <StatBadge label="Mastered" value={masteredCount} color="know" />
-            <StatBadge label="Learning" value={learningCount} color="mastered" />
-            <StatBadge label="New" value={newCount} color="new" />
+        <div className="flex flex-col sm:flex-row gap-4 mt-4 items-start sm:items-center">
+          <div className="flex items-center gap-4 overflow-visible px-1">
+            <ProgressRing value={progress} size={72} />
+            <div className="flex flex-col gap-1">
+              <StatBadge label="Mastered" value={masteredCount} color="know" />
+              <StatBadge label="Learning" value={learningCount} color="mastered" />
+              <StatBadge label="New" value={newCount} color="new" />
+            </div>
           </div>
 
-          <div className="mt-4 sm:mt-0 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => document.getElementById('docx-input')?.click()}
               disabled={addingDocx}
@@ -320,7 +322,7 @@ export default function StudyDashboard() {
                 setAuthorName(saved)
                 setShowPublish(true)
               }}
-              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full sm:w-auto"
+              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full col-span-2 sm:col-span-1"
             >
               <Share2 size={16} /> Publish
             </button>
@@ -392,15 +394,17 @@ export default function StudyDashboard() {
             count={`${tfCount} questions`}
             disabled={tfCount === 0}
           />
-          <ModeCard
-            icon={List}
-            label="Enumeration"
-            description="Recall the list"
-            color="var(--color-dontknow)"
-            href={`/study/${deckId}/quiz/enumeration`}
-            count={`${enumCount} sets`}
-            disabled={enumCount === 0}
-          />
+          <div className="col-span-2 sm:col-span-1">
+            <ModeCard
+              icon={List}
+              label="Enumeration"
+              description="Recall the list"
+              color="var(--color-dontknow)"
+              href={`/study/${deckId}/quiz/enumeration`}
+              count={`${enumCount} sets`}
+              disabled={enumCount === 0}
+            />
+          </div>
           <div className="col-span-2 sm:col-span-1">
             <ModeCard
               icon={BarChart2}
