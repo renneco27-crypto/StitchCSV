@@ -112,7 +112,7 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
 
       const parsed = parseCSVFile(csvText, deck?.title ?? 'Notes')
 
-      if (parsed.cards.length === 0) {
+      if (parsed.cards.length === 0 && parsed.deck.quizItems.length === 0) {
         addToast('No flashcards could be generated from this text', 'error')
         return
       }

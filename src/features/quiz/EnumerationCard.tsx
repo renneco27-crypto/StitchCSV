@@ -83,7 +83,7 @@ export default function EnumerationCard({
             const globalIndex = startIndex + i
             const answer = userAnswers[globalIndex] ?? ''
             return (
-              <div key={globalIndex} className="flex items-center gap-3">
+              <div key={globalIndex} className="flex items-center gap-3 overflow-hidden min-w-0">
                 <span className="w-7 h-7 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] text-sm font-medium flex items-center justify-center flex-shrink-0">
                   {globalIndex + 1}
                 </span>
@@ -92,7 +92,7 @@ export default function EnumerationCard({
                   value={answer}
                   onChange={(e) => onAnswerChange(globalIndex, e.target.value)}
                   placeholder="Type your answer..."
-                  className="flex-1 px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                  className="flex-1 px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] w-full min-w-0"
                   autoComplete="off"
                   autoCapitalize="none"
                   spellCheck={false}
@@ -157,29 +157,29 @@ export default function EnumerationCard({
         {results.map((r) => {
           const answer = userAnswers[r.globalIndex] ?? ''
           return (
-            <div key={r.globalIndex}>
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium"
-                  style={{
-                    backgroundColor: r.correct ? 'var(--color-know-soft)' : 'var(--color-dontknow-soft)',
-                    color: r.correct ? 'var(--color-know)' : 'var(--color-dontknow)',
-                  }}
-                >
-                  {r.correct ? <Check size={16} /> : <X size={16} />}
-                </span>
-                <span className="w-7 h-7 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] text-sm font-medium flex items-center justify-center flex-shrink-0">
-                  {r.globalIndex + 1}
-                </span>
-                <input
-                  type="text"
-                  value={answer}
-                  readOnly
-                  className={`flex-1 px-4 py-3 rounded-xl border-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] ${
-                    r.correct
-                      ? 'border-[var(--color-know)]'
-                      : 'border-[var(--color-dontknow)]'
-                  }`}
-                />
+              <div key={r.globalIndex}>
+                <div className="flex items-center gap-3 overflow-hidden min-w-0">
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium"
+                    style={{
+                      backgroundColor: r.correct ? 'var(--color-know-soft)' : 'var(--color-dontknow-soft)',
+                      color: r.correct ? 'var(--color-know)' : 'var(--color-dontknow)',
+                    }}
+                  >
+                    {r.correct ? <Check size={16} /> : <X size={16} />}
+                  </span>
+                  <span className="w-7 h-7 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] text-sm font-medium flex items-center justify-center flex-shrink-0">
+                    {r.globalIndex + 1}
+                  </span>
+                  <input
+                    type="text"
+                    value={answer}
+                    readOnly
+                    className={`flex-1 px-4 py-3 rounded-xl border-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] w-full min-w-0 ${
+                      r.correct
+                        ? 'border-[var(--color-know)]'
+                        : 'border-[var(--color-dontknow)]'
+                    }`}
+                  />
               </div>
               {!r.correct && (
                 <p className="text-sm text-[var(--color-know)] ml-[4.5rem] mt-1">
