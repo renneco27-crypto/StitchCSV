@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { DM_Serif_Display, Inter, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import ToastContainer from '@/components/ToastContainer'
+import AuthWrapper from '@/components/AuthWrapper'
 import './globals.css'
 
 const dmSerifDisplay = DM_Serif_Display({
@@ -40,7 +41,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <AuthWrapper>{children}</AuthWrapper>
           <ToastContainer />
         </ThemeProvider>
       </body>

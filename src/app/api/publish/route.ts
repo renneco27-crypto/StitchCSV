@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, subject, csvContent, authorName } = await request.json()
+    const { title, subject, csvContent, authorName, deviceId } = await request.json()
 
     if (!title || !csvContent) {
       return NextResponse.json({ error: 'Title and CSV content are required' }, { status: 400 })
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
         subject: subject || 'General',
         csv_content: csvContent,
         author_name: authorName || 'Anonymous',
+        device_id: deviceId || 'unknown',
       })
       .select('id')
       .single()

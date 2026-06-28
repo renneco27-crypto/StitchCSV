@@ -205,8 +205,7 @@ export default function StudyDashboard() {
 
       const csvContent = [csvHeaders, ...csvRows].join('\n')
 
-      const name = authorName.trim() || 'Anonymous'
-      localStorage.setItem('authorName', name)
+      const name = localStorage.getItem('accessCode') ?? 'Anonymous'
 
       const res = await fetch('/api/publish', {
         method: 'POST',
@@ -216,6 +215,7 @@ export default function StudyDashboard() {
           subject: deck.subject,
           csvContent,
           authorName: name,
+          deviceId: localStorage.getItem('deviceId') ?? 'unknown',
         }),
       })
 
@@ -271,8 +271,8 @@ export default function StudyDashboard() {
         rightSlot={<ExportButton deckId={deckId} deckTitle={deck?.title ?? 'Deck'} variant="icon" />}
       />
 
-      <div className="px-4 pt-6">
-        <h1 className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)]">
+      <div className="px-4 pt-6 min-w-0">
+        <h1 className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)] truncate">
           {deck?.title ?? 'Deck'}
         </h1>
         <div className="mt-1">
@@ -287,30 +287,30 @@ export default function StudyDashboard() {
             <StatBadge label="New" value={newCount} color="new" />
           </div>
 
-          <div className="ml-auto flex gap-2">
+          <div className="mt-4 sm:mt-0 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => document.getElementById('docx-input')?.click()}
               disabled={addingDocx}
-              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm"
+              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto"
             >
               <Plus size={16} /> Add DOCX
             </button>
             <button
               onClick={() => document.getElementById('csv-input')?.click()}
               disabled={addingCsv}
-              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm"
+              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto"
             >
               <Plus size={16} /> Add CSV
             </button>
             <button
               onClick={() => setShowCreator(true)}
-              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm"
+              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full sm:w-auto"
             >
               <Plus size={16} /> Add Cards
             </button>
             <button
               onClick={() => router.push('/new-deck')}
-              className="bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm"
+              className="bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full sm:w-auto"
             >
               New Deck
             </button>
@@ -320,7 +320,7 @@ export default function StudyDashboard() {
                 setAuthorName(saved)
                 setShowPublish(true)
               }}
-              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm"
+              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full sm:w-auto"
             >
               <Share2 size={16} /> Publish
             </button>
@@ -356,7 +356,7 @@ export default function StudyDashboard() {
       </div>
 
       <div className="px-4 pb-8 mt-3">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <ModeCard
             icon={Layers}
             label="Flashcards"
@@ -401,14 +401,16 @@ export default function StudyDashboard() {
             count={`${enumCount} sets`}
             disabled={enumCount === 0}
           />
-          <ModeCard
-            icon={BarChart2}
-            label="Stats"
-            description="Your progress"
-            color="var(--color-text-secondary)"
-            href={`/study/${deckId}/stats`}
-            count={`${accuracy}%`}
-          />
+          <div className="col-span-2 sm:col-span-1">
+            <ModeCard
+              icon={BarChart2}
+              label="Stats"
+              description="Your progress"
+              color="var(--color-text-secondary)"
+              href={`/study/${deckId}/stats`}
+              count={`${accuracy}%`}
+            />
+          </div>
         </div>
       </div>
 
@@ -443,14 +445,9 @@ export default function StudyDashboard() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Publish to Feed</h2>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Author Name</label>
-            <input
-              type="text"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-              placeholder="Your name (optional)"
-              className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
-            />
+            <p className="text-sm text-[var(--color-text-muted)] mb-4">
+              Publishing as: <span className="text-[var(--color-text-primary)] font-medium">{localStorage.getItem('accessCode') ?? 'Anonymous'}</span>
+            </p>
             <div className="flex gap-2 mt-4">
               <button
                 onClick={handlePublish}
