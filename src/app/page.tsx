@@ -73,7 +73,7 @@ export default function Home() {
             aria-label="CSV format help"
           >
             <HelpCircle size={16} />
-            <span>CSV Format Help</span>
+            <span>Format Help</span>
           </button>
         </div>
 
@@ -89,7 +89,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10">
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">CSV Format Reference</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Format Reference</h2>
               <button
                 onClick={() => setShowHelp(false)}
                 className="p-2 rounded-lg hover:bg-[var(--color-surface-2)] transition-colors"

@@ -92,7 +92,7 @@ export default function UploadZone() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv"
+        accept=".csv,.docx,.txt"
         className="hidden"
         onChange={handleFileSelect}
       />
@@ -101,16 +101,16 @@ export default function UploadZone() {
         <>
           <Upload size={48} className="mx-auto text-[var(--color-text-muted)]" />
           <p className="text-xl font-medium mt-4 text-[var(--color-text-primary)]">
-            {uploadState === 'dragover' ? 'Drop to upload' : 'Drop your CSV here'}
+            {uploadState === 'dragover' ? 'Drop to upload' : 'Drop your file here'}
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            CSV with columns: front, back, chapter, subject, lesson, type
+            CSV, DOCX, or TXT &mdash; Word docs &amp; text files are converted with AI
           </p>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity"
           >
-            Choose CSV file
+            Choose file
           </button>
         </>
       ) : uploadState === 'processing' ? (

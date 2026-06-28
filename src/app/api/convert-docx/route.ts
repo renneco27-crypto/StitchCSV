@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     if (!file) {
-      return NextResponse.json({ error: 'No DOCX file provided' }, { status: 400 })
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
     const csvHeadersRaw = formData.get('csvHeaders')
@@ -304,28 +304,39 @@ export async function POST(request: NextRequest) {
       } catch { /* ignore */ }
     }
 
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    const fileName = file.name.toLowerCase()
+    const isTextFile = fileName.endsWith('.txt')
+
+    let rawTextFull: string
     let html: string
-    try {
-      const result = await mammoth.convertToHtml({ buffer })
-      html = result.value
-    } catch (convErr) {
+
+    if (isTextFile) {
+      rawTextFull = await file.text()
+      html = '<p>' + rawTextFull.replace(/\n\n+/g, '</p><p>').replace(/\n/g, ' ') + '</p>'
+    } else {
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
       try {
-        const result = await mammoth.extractRawText({ buffer })
-        html = '<p>' + result.value.replace(/\n\n+/g, '</p><p>').replace(/\n/g, ' ') + '</p>'
-      } catch {
-        const msg = convErr instanceof Error ? convErr.message : 'Unknown error'
-        return NextResponse.json({ error: `Could not parse DOCX file. Ensure the file is a valid .docx: ${msg}` }, { status: 400 })
+        const result = await mammoth.convertToHtml({ buffer })
+        html = result.value
+      } catch (convErr) {
+        try {
+          const result = await mammoth.extractRawText({ buffer })
+          html = '<p>' + result.value.replace(/\n\n+/g, '</p><p>').replace(/\n/g, ' ') + '</p>'
+        } catch {
+          const msg = convErr instanceof Error ? convErr.message : 'Unknown error'
+          return NextResponse.json({ error: `Could not parse file. Ensure the file is a valid .docx: ${msg}` }, { status: 400 })
+        }
       }
+      rawTextFull = html
+        .replace(/\s*<\/(p|div|h[1-6]|li|tr|th|td)>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
     }
-    const rawTextFull = html
-      .replace(/\s*<\/(p|div|h[1-6]|li|tr|th|td)>/gi, '\n')
-      .replace(/<[^>]+>/g, '')
+
     const rawText = rawTextFull.replace(/\s+/g, ' ').trim()
 
     if (!rawText) {
-      return NextResponse.json({ error: 'Could not extract text from DOCX' }, { status: 400 })
+      return NextResponse.json({ error: 'Could not extract text from file' }, { status: 400 })
     }
 
     // CSV passthrough — if the DOCX contains raw CSV, return it directly without AI

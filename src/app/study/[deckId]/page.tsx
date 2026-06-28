@@ -301,7 +301,7 @@ export default function StudyDashboard() {
       <input
         id="docx-input"
         type="file"
-        accept=".docx"
+        accept=".docx,.txt"
         onChange={handleAddDocx}
         className="hidden"
       />

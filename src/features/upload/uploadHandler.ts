@@ -14,6 +14,21 @@ export class UploadError extends Error {
   }
 }
 
+async function convertFile(file: File, onProgress?: (step: string) => void): Promise<string> {
+  onProgress?.('Converting…')
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await fetch('/api/convert-docx', { method: 'POST', body: formData })
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ error: 'Conversion failed' }))
+    throw new UploadError('CONVERSION_ERROR', errData.error || `Server error: ${res.status}`, 1)
+  }
+
+  onProgress?.('Parsing converted content…')
+  return res.text()
+}
+
 function readFileText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -29,12 +44,20 @@ export async function handleUpload(
   customTitle?: string
 ): Promise<string> {
   try {
-    onProgress?.('Reading file…')
-    const text = await readFileText(file)
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    const title = customTitle || file.name.replace(/\.(csv|docx|doc|txt)$/i, '')
 
-    onProgress?.('Parsing CSV…')
-    const title = customTitle || file.name.replace(/\.csv$/i, '')
-    const { deck, cards } = parseCSVFile(text, title)
+    let csvText: string
+
+    if (ext === 'csv') {
+      onProgress?.('Reading file…')
+      csvText = await readFileText(file)
+      onProgress?.('Parsing CSV…')
+    } else {
+      csvText = await convertFile(file, onProgress)
+    }
+
+    const { deck, cards } = parseCSVFile(csvText, title)
 
     onProgress?.('Saving…')
     const deckWithoutCards: Deck = { ...deck, cards: [] }
