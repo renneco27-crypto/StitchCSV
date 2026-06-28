@@ -38,11 +38,16 @@ export default function EnumerationCard({
 
   const [checked, setChecked] = useState(false)
 
+  const allExpected = items.map((s) => s.toLowerCase().trim())
+  const used = new Array(allExpected.length).fill(false)
+
   const results = pageItems.map((item, i) => {
     const globalIndex = startIndex + i
     const user = (userAnswers[globalIndex] ?? '').toLowerCase().trim()
-    const expected = item.toLowerCase().trim()
-    return { globalIndex, user, expected, correct: user === expected }
+    const matchIdx = allExpected.findIndex((e, idx) => !used[idx] && user === e)
+    const correct = matchIdx !== -1
+    if (correct) used[matchIdx] = true
+    return { globalIndex, user, expected: item.toLowerCase().trim(), correct }
   })
 
   const allCorrect = results.every((r) => r.correct)

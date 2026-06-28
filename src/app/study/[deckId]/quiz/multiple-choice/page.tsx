@@ -2,14 +2,13 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { getCardsByDeck } from '@/db/cardRepository'
 import { useQuizSession } from '@/hooks/useQuizSession'
-import { buildMCQuestion } from '@/features/quiz/distractorEngine'
+import { shuffleSeeded } from '@/lib/shuffleSeeded'
 import TopBar from '@/components/TopBar'
 import QuizProgressBar from '@/features/quiz/QuizProgressBar'
 import MCOption from '@/features/quiz/MCOption'
 import QuizSummary from '@/features/quiz/QuizSummary'
-import type { Card, MultipleChoiceItem } from '@/lib/zodSchemas'
+import type { MultipleChoiceItem, MCOption as MCOptionType } from '@/lib/zodSchemas'
 
 type MCOptionState = 'default' | 'selected' | 'correct' | 'wrong' | 'reveal'
 
@@ -20,25 +19,26 @@ export default function MultipleChoicePage() {
 
   const session = useQuizSession(deckId, 'multiple_choice')
 
-  const [allCards, setAllCards] = useState<Card[]>(() => [])
   const [loading, setLoading] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [optionStates, setOptionStates] = useState<MCOptionState[]>(['default', 'default', 'default', 'default'])
 
   useEffect(() => {
-    getCardsByDeck(deckId).then((cards) => {
-      setAllCards(cards)
-      setLoading(false)
-    })
-  }, [deckId])
+    setLoading(false)
+  }, [])
 
   const mcQuestion = useMemo(() => {
-    if (!session.currentQuestion || allCards.length === 0) return null
+    if (!session.currentQuestion) return null
     const q = session.currentQuestion as MultipleChoiceItem
-    const targetCard = allCards.find((c) => c.front === q.question)
-    if (!targetCard) return null
-    return buildMCQuestion(targetCard, allCards)
-  }, [session.currentQuestion, allCards])
+    const allOptions = shuffleSeeded([q.correct, ...q.distractors], Date.now() + 2)
+    const correctIndex = allOptions.indexOf(q.correct)
+    const labels: MCOptionType['label'][] = ['A', 'B', 'C', 'D']
+    const options: MCOptionType[] = allOptions.map((text, i) => ({
+      label: labels[i],
+      text,
+    }))
+    return { question: q.question, correct: q.correct, options, correctIndex }
+  }, [session.currentQuestion])
 
   const handleSelect = useCallback(
     (index: number) => {

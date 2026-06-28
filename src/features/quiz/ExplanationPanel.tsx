@@ -35,13 +35,9 @@ export default function ExplanationPanel({
           {userWasCorrect ? '✓ Correct!' : '✕ Not quite'}
         </p>
 
-        {isTrue ? (
-          <p className="text-sm text-[var(--color-text-secondary)] mt-1">The statement was true.</p>
-        ) : (
-          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-            The correct version is: <span className="italic">{statement}</span>
-          </p>
-        )}
+        <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+          {isTrue ? 'The statement was true.' : 'The statement was false.'}
+        </p>
 
         <p className="text-sm text-[var(--color-text-secondary)] mt-2">{explanation}</p>
 

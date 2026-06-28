@@ -19,21 +19,21 @@ const FORMATS = [
   {
     type: 'True / False',
     key: 'true_false',
-    description: 'Statement with true/false answer',
-    columns: 'front,back,chapter,subject,lesson,type,tf_answer',
-    example: `front,back,chapter,subject,lesson,type,tf_answer
-"Water boils at 100°C at sea level","","Physics","Phase Changes",,"true_false","true"
-"Gold is a liquid at room temperature","","Chemistry","Elements",,"true_false","false"
-"Iron is magnetic","","Physics","Magnetism",,"true_false","true"`,
+    description: 'Statement with true/false answer. tf_answer: "true" if correct, "false" if incorrect. Optional explanation column for why it is true/false.',
+    columns: 'front,back,chapter,subject,lesson,type,tf_answer,explanation',
+    example: `front,back,chapter,subject,lesson,type,tf_answer,explanation
+"Water boils at 100°C at sea level","","Physics","Phase Changes",,"true_false","true","Water boils at 100°C at standard atmospheric pressure, but boiling point decreases at higher altitudes."
+"Gold is a liquid at room temperature","","Chemistry","Elements",,"true_false","false","Gold is a solid metal at room temperature; it melts at 1064°C."
+"Iron is magnetic","","Physics","Magnetism",,"true_false","true","Iron is magnetic because its un-canceled atomic electron spins naturally align into microscopic pockets called magnetic domains."`,
   },
   {
     type: 'Enumeration',
     key: 'enumeration',
-    description: 'List items (semicolon or comma separated, lowercase)',
+    description: 'List items (semicolon separated, lowercase). Use enum_items column for the answer items.',
     columns: 'front,back,chapter,subject,lesson,type,enum_items',
     example: `front,back,chapter,subject,lesson,type,enum_items
-"List 3 states of matter","solid;liquid;gas","Physics","States",,"enumeration","solid;liquid;gas"
-"List 4 forces of nature","gravity;electromagnetism;strong nuclear;weak nuclear","Physics","Forces",,"enumeration","gravity;electromagnetism;strong nuclear;weak nuclear"`,
+"List 3 states of matter","","Physics","States",,"enumeration","solid;liquid;gas"
+"List 4 forces of nature","","Physics","Forces",,"enumeration","gravity;electromagnetism;strong nuclear;weak nuclear"`,
   },
   {
     type: 'Identification',

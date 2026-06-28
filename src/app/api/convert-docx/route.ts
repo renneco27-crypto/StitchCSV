@@ -191,7 +191,7 @@ function deterministicClassify(sections: ParsedSection[], subject: string): { ro
         continue
       }
 
-      if (p.length < 300 && !section.boldTerms.length && !section.listItems.length) {
+      if (!section.boldTerms.length && !section.listItems.length) {
         unclassified.push(p)
       }
     }
@@ -250,23 +250,41 @@ function isValidCard(obj: Record<string, unknown>): boolean {
   }
 }
 
+function makeFallbackRow(text: string, subject: string): FlashcardRow {
+  const cleaned = text.replace(/\n/g, ' ').trim()
+  return {
+    front: cleaned.slice(0, 100),
+    back: cleaned.slice(0, 200),
+    chapter: '',
+    subject,
+    lesson: '',
+    type: 'definition',
+    mc_correct: '', mc_distractor1: '', mc_distractor2: '', mc_distractor3: '',
+    tf_answer: '',
+    enum_items: '',
+    id_answer: '',
+    id_variants: '',
+  }
+}
+
 function aiRowToFlashcardRow(obj: Record<string, unknown>, chapter: string, subject: string): FlashcardRow | null {
   if (!isValidCard(obj)) return null
+  const s = (v: unknown): string => (v ?? '') as string
   return {
-    front: obj.front || '',
-    back: obj.back || '',
-    chapter: obj.lesson || chapter,
-    subject: obj.subject || subject,
-    lesson: obj.lesson || '',
-    type: obj.type || 'definition',
-    mc_correct: obj.mc_correct || '',
-    mc_distractor1: obj.mc_distractor1 || '',
-    mc_distractor2: obj.mc_distractor2 || '',
-    mc_distractor3: obj.mc_distractor3 || '',
-    tf_answer: obj.tf_answer || '',
-    enum_items: obj.enum_items || '',
-    id_answer: obj.id_answer || '',
-    id_variants: obj.id_variants || '',
+    front: s(obj.front),
+    back: s(obj.back),
+    chapter: s(obj.lesson) || chapter,
+    subject: s(obj.subject) || subject,
+    lesson: s(obj.lesson),
+    type: s(obj.type) || 'definition',
+    mc_correct: s(obj.mc_correct),
+    mc_distractor1: s(obj.mc_distractor1),
+    mc_distractor2: s(obj.mc_distractor2),
+    mc_distractor3: s(obj.mc_distractor3),
+    tf_answer: s(obj.tf_answer),
+    enum_items: s(obj.enum_items),
+    id_answer: s(obj.id_answer),
+    id_variants: s(obj.id_variants),
   }
 }
 
@@ -287,25 +305,43 @@ export async function POST(request: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
     let html: string
     try {
-      const result = await mammoth.convertToHtml({ buffer: arrayBuffer })
+      const result = await mammoth.convertToHtml({ buffer })
       html = result.value
     } catch (convErr) {
       try {
-        const result = await mammoth.extractRawText({ buffer: arrayBuffer })
+        const result = await mammoth.extractRawText({ buffer })
         html = '<p>' + result.value.replace(/\n\n+/g, '</p><p>').replace(/\n/g, ' ') + '</p>'
       } catch {
         const msg = convErr instanceof Error ? convErr.message : 'Unknown error'
         return NextResponse.json({ error: `Could not parse DOCX file. Ensure the file is a valid .docx: ${msg}` }, { status: 400 })
       }
     }
-    const rawText = html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+    const rawTextFull = html
+      .replace(/\s*<\/(p|div|h[1-6]|li|tr|th|td)>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+    const rawText = rawTextFull.replace(/\s+/g, ' ').trim()
 
     if (!rawText) {
       return NextResponse.json({ error: 'Could not extract text from DOCX' }, { status: 400 })
     }
 
+    // CSV passthrough — if the DOCX contains raw CSV, return it directly without AI
+    const firstLine = rawTextFull.split(/\r?\n/).find((l: string) => l.trim())?.trim() ?? ''
+    if (/^front[,\t]/.test(firstLine) && /type/.test(firstLine)) {
+      const csvLines = rawTextFull
+        .replace(/^\uFEFF/, '')
+        .split(/\r?\n/)
+        .map((l: string) => l.trim())
+        .filter(Boolean)
+        .join('\n')
+      return new NextResponse(csvLines, {
+        status: 200,
+        headers: { 'Content-Type': 'text/csv; charset=utf-8' },
+      })
+    }
     const subject = inferSubject(rawText)
     const sections = parseHTMLStructure(html)
 
@@ -330,6 +366,26 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error('AI unclassified chunk error (Path A):', err)
+          if (chunk.replace(/\n/g, ' ').trim().length > 50) rows.push(makeFallbackRow(chunk, subject))
+        }
+      }
+
+      // If deterministic parsing found nothing, fall back to AI on the full text
+      if (rows.length === 0) {
+        const paragraphs = rawText.split(/\n\n+/).filter((p) => p.trim().length > 20)
+        const chunks = chunkTextByTokens(paragraphs, 800)
+        for (const chunk of chunks) {
+          try {
+            const aiText = await callAI(PLAIN_PROSE_SYSTEM_PROMPT, chunk)
+            const parsed = parseAIArrayResponse(aiText)
+            for (const item of parsed) {
+              const card = aiRowToFlashcardRow(item, '', subject)
+              if (card) rows.push(card)
+            }
+          } catch (err) {
+            console.error('AI fallback error (Path A):', err)
+            if (chunk.replace(/\n/g, ' ').trim().length > 50) rows.push(makeFallbackRow(chunk, subject))
+          }
         }
       }
 
@@ -360,7 +416,7 @@ export async function POST(request: NextRequest) {
           for (const h of csvHeaders) {
             if (h in oldRow) newRow[h] = (oldRow as Record<string, string>)[h]
           }
-          return newRow as FlashcardRow
+          return newRow as unknown as FlashcardRow
         })
       }
     } else if (structured) {
@@ -378,6 +434,26 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error('AI unclassified chunk error (Path B):', err)
+          if (chunk.replace(/\n/g, ' ').trim().length > 50) rows.push(makeFallbackRow(chunk, subject))
+        }
+      }
+
+      // If deterministic parsing found nothing, fall back to AI on the full text
+      if (rows.length === 0) {
+        const paragraphs = rawText.split(/\n\n+/).filter((p) => p.trim().length > 20)
+        const chunks = chunkTextByTokens(paragraphs, 800)
+        for (const chunk of chunks) {
+          try {
+            const aiText = await callAI(PLAIN_PROSE_SYSTEM_PROMPT, chunk)
+            const parsed = parseAIArrayResponse(aiText)
+            for (const item of parsed) {
+              const card = aiRowToFlashcardRow(item, '', subject)
+              if (card) rows.push(card)
+            }
+          } catch (err) {
+            console.error('AI fallback error (Path B):', err)
+            if (chunk.replace(/\n/g, ' ').trim().length > 50) rows.push(makeFallbackRow(chunk, subject))
+          }
         }
       }
 
@@ -413,25 +489,7 @@ export async function POST(request: NextRequest) {
           }
         } catch (err) {
           console.error('AI chunk error (Path C):', err)
-          const cleaned = chunk.replace(/\n/g, ' ').trim()
-          if (cleaned.length > 50) {
-            rows.push({
-              front: cleaned.slice(0, 100),
-              back: cleaned.slice(0, 200),
-              chapter: '',
-              subject,
-              lesson: '',
-              type: 'definition',
-              mc_correct: '',
-              mc_distractor1: '',
-              mc_distractor2: '',
-              mc_distractor3: '',
-              tf_answer: '',
-              enum_items: '',
-              id_answer: '',
-              id_variants: '',
-            })
-          }
+          if (chunk.replace(/\n/g, ' ').trim().length > 50) rows.push(makeFallbackRow(chunk, subject))
         }
       }
     }

@@ -63,18 +63,24 @@ export default function StudyDashboard() {
     setAddingCsv(true)
     try {
       const reader = new FileReader()
-      reader.onload = async (e) => {
-        const text = e.target?.result as string
-        const title = deck?.title ?? file.name.replace(/\.csv$/i, '')
-        const { deck: parsedDeck, cards } = parseCSVFile(text, title)
+      reader.onload = async () => {
+        try {
+          const text = reader.result as string
+          const title = deck?.title ?? file.name.replace(/\.csv$/i, '')
+          const parsed = parseCSVFile(text, title)
 
-        await createCards(cards)
-        if (parsedDeck.quizItems.length > 0 && deck) {
-          const merged = [...(deck.quizItems || []), ...parsedDeck.quizItems]
-          await updateDeck(deckId, { quizItems: merged })
+          const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))
+          await createCards(cardsWithDeckId)
+          if (parsed.deck.quizItems.length > 0 && deck) {
+            const merged = [...(deck.quizItems || []), ...parsed.deck.quizItems]
+            await updateDeck(deckId, { quizItems: merged })
+          }
+          addToast('CSV added to deck!', 'success')
+          window.location.reload()
+        } catch (err) {
+          console.error(err)
+          addToast(err instanceof Error ? err.message : 'Failed to add CSV', 'error')
         }
-        addToast('CSV added to deck!', 'success')
-        window.location.reload()
       }
       reader.readAsText(file)
     } catch (err) {
@@ -110,11 +116,12 @@ export default function StudyDashboard() {
 
       const csvText = await res.text()
       const title = deck?.title ?? file.name.replace(/\.docx$/i, '')
-      const { deck: parsedDeck, cards } = parseCSVFile(csvText, title)
+      const parsed = parseCSVFile(csvText, title)
 
-      await createCards(cards)
-      if (parsedDeck.quizItems.length > 0 && deck) {
-        const merged = [...(deck.quizItems || []), ...parsedDeck.quizItems]
+      const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))
+      await createCards(cardsWithDeckId)
+      if (parsed.deck.quizItems.length > 0 && deck) {
+        const merged = [...(deck.quizItems || []), ...parsed.deck.quizItems]
         await updateDeck(deckId, { quizItems: merged })
       }
       addToast('DOCX converted and added to deck!', 'success')

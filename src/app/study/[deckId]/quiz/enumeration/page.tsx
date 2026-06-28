@@ -36,14 +36,19 @@ export default function EnumerationPage() {
 
   const handleChecked = useCallback(() => {
     if (!currentItem) return
-    const items = currentItem.items
+    const expected = currentItem.items.map((s) => s.toLowerCase().trim())
+    const used = new Array(expected.length).fill(false)
     let correct = 0
-    for (let i = 0; i < items.length; i++) {
-      const user = userAnswers[i]?.toLowerCase().trim()
-      const expected = items[i]?.toLowerCase().trim()
-      if (user && user === expected) correct++
+    for (let i = 0; i < expected.length; i++) {
+      const user = (userAnswers[i] ?? '').toLowerCase().trim()
+      if (!user) continue
+      const matchIdx = expected.findIndex((e, idx) => !used[idx] && user === e)
+      if (matchIdx !== -1) {
+        used[matchIdx] = true
+        correct++
+      }
     }
-    session.handleAnswer(correct === items.length ? 'got_it' : 'missed')
+    session.handleAnswer(correct === expected.length ? 'got_it' : 'missed')
   }, [session, userAnswers, currentItem])
 
   const handleAdvanceCard = useCallback(() => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuizSession } from '@/hooks/useQuizSession'
 import TopBar from '@/components/TopBar'
@@ -22,29 +22,22 @@ export default function TrueFalsePage() {
   const [answerState, setAnswerState] = useState<AnswerState>('unanswered')
   const [showPanel, setShowPanel] = useState(false)
 
-  const displayVersions = useMemo(() => {
-    if (session.questions.length === 0) return []
-    return session.questions.map((_, i) => {
-      const x = Math.sin(i + 1) * 10000
-      return x - Math.floor(x) < 0.5
-    })
-  }, [session.questions])
-
-  const loading = session.questions.length === 0 || displayVersions.length === 0
+  const loading = session.questions.length === 0
 
   const handleAnswer = useCallback(
     (userBool: boolean) => {
       if (answerState !== 'unanswered') return
       setUserAnswer(userBool)
 
-      const correctAnswer = displayVersions[session.currentIndex] ?? true
+      const currentItem = session.currentQuestion as TrueFalseItem | null
+      const correctAnswer = currentItem?.correct ?? true
       const isCorrect = userBool === correctAnswer
 
       setAnswerState(isCorrect ? 'correct' : 'wrong')
       setShowPanel(true)
       session.handleAnswer(userBool, isCorrect)
     },
-    [answerState, session, displayVersions]
+    [answerState, session]
   )
 
   const handleNext = useCallback(() => {
@@ -106,9 +99,8 @@ export default function TrueFalsePage() {
   }
 
   const currentItem = session.currentQuestion as TrueFalseItem | null
-  const showTrueVersion = displayVersions[session.currentIndex] ?? true
-  const displayStatement = showTrueVersion ? currentItem?.statement ?? '' : currentItem?.falseVersion ?? ''
-  const correctAnswer = showTrueVersion
+  const displayStatement = currentItem?.statement ?? ''
+  const correctAnswer = currentItem?.correct ?? true
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
@@ -150,7 +142,7 @@ export default function TrueFalsePage() {
 
       {showPanel && currentItem && (
         <ExplanationPanel
-          isTrue={showTrueVersion}
+          isTrue={correctAnswer}
           statement={currentItem.statement}
           explanation={currentItem.explanation}
           userWasCorrect={answerState === 'correct'}
