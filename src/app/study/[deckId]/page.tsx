@@ -146,23 +146,63 @@ export default function StudyDashboard() {
     setPublishing(true)
     try {
       const cards = await getCardsByDeck(deckId)
-      if (cards.length === 0) {
+      const hasCards = cards.length > 0
+      const hasQuizItems = (deck.quizItems?.length ?? 0) > 0
+      if (!hasCards && !hasQuizItems) {
         addToast('Cannot publish an empty deck', 'error')
         return
       }
 
+      const esc = (v: unknown) => {
+        const s = String(v ?? '')
+        return s.includes(',') || s.includes('"') || s.includes('\n')
+          ? `"${s.replace(/"/g, '""')}"` : s
+      }
+
       const csvHeaders = 'front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,enum_items,id_answer,id_variants'
-      const csvRows = cards.map((c) => {
-        return [
-          c.front, c.back, c.chapter ?? '', c.subject ?? deck.subject, c.lesson ?? '', c.type,
-          c.mc_correct ?? '', c.mc_distractor1 ?? '', c.mc_distractor2 ?? '', c.mc_distractor3 ?? '',
-          c.tf_answer ?? '', c.enum_items ?? '', c.id_answer ?? '', c.id_variants ?? '',
-        ].map((v) => {
-          const s = String(v)
-          return s.includes(',') || s.includes('"') || s.includes('\n')
-            ? `"${s.replace(/"/g, '""')}"` : s
-        }).join(',')
-      })
+      const csvRows: string[] = []
+
+      for (const c of cards) {
+        csvRows.push([
+          esc(c.front), esc(c.back), esc(c.chapter), esc(c.subject || deck.subject), esc(c.lesson), esc(c.type),
+          esc(c.mc_correct), esc(c.mc_distractor1), esc(c.mc_distractor2), esc(c.mc_distractor3),
+          esc(c.tf_answer), esc(c.enum_items), esc(c.id_answer), esc(c.id_variants),
+        ].join(','))
+      }
+
+      for (const q of deck.quizItems || []) {
+        switch (q.mode) {
+          case 'multiple_choice':
+            csvRows.push([
+              esc(q.question), esc(q.correct), '', '', '', 'multiple_choice',
+              esc(q.correct), esc(q.distractors[0] ?? ''), esc(q.distractors[1] ?? ''), esc(q.distractors[2] ?? ''),
+              '', '', '', '',
+            ].join(','))
+            break
+          case 'true_false':
+            csvRows.push([
+              esc(q.statement), '', '', '', '', 'true_false',
+              '', '', '', '',
+              q.correct ? 'true' : 'false', '', '', '',
+            ].join(','))
+            break
+          case 'enumeration':
+            csvRows.push([
+              esc(q.topic), '', '', '', '', 'enumeration',
+              '', '', '', '',
+              '', q.items.join(';'), '', '',
+            ].join(','))
+            break
+          case 'identification':
+            csvRows.push([
+              esc(q.definition), '', '', '', '', 'identification',
+              '', '', '', '',
+              '', '', esc(q.answer), esc(q.acceptVariants?.join(';') ?? ''),
+            ].join(','))
+            break
+        }
+      }
+
       const csvContent = [csvHeaders, ...csvRows].join('\n')
 
       const name = authorName.trim() || 'Anonymous'
