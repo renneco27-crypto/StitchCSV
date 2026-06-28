@@ -54,6 +54,7 @@ export default function StudyDashboard() {
   }, [deckId, router, addToast, initStats])
 
   const [addingCsv, setAddingCsv] = useState(false)
+  const [addingDocx, setAddingDocx] = useState(false)
 
   const handleAddCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -81,6 +82,48 @@ export default function StudyDashboard() {
       addToast(err instanceof Error ? err.message : 'Failed to add CSV', 'error')
     } finally {
       setAddingCsv(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleAddDocx = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setAddingDocx(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      if (deck && deck.cards.length > 0) {
+        const csvHeaders = ['front', 'back', 'chapter', 'subject', 'lesson', 'type',
+          'mc_correct', 'mc_distractor1', 'mc_distractor2', 'mc_distractor3',
+          'tf_answer', 'enum_items', 'id_answer', 'id_variants']
+        formData.append('csvHeaders', JSON.stringify(csvHeaders))
+      }
+
+      const res = await fetch('/api/convert-docx', { method: 'POST', body: formData })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: 'Conversion failed' }))
+        throw new Error(errData.error || `Server error: ${res.status}`)
+      }
+
+      const csvText = await res.text()
+      const title = deck?.title ?? file.name.replace(/\.docx$/i, '')
+      const { cards } = parseCSVFile(csvText, title)
+
+      await createCards(cards)
+      addToast('DOCX converted and added to deck!', 'success')
+      const d = await getDeck(deckId)
+      if (d) {
+        setDeck(d)
+        initStats(deckId, d.cards.length)
+      }
+    } catch (err) {
+      console.error(err)
+      addToast(err instanceof Error ? err.message : 'Failed to add DOCX', 'error')
+    } finally {
+      setAddingDocx(false)
       e.target.value = ''
     }
   }
@@ -140,6 +183,13 @@ export default function StudyDashboard() {
           </div>
 
           <div className="ml-auto flex gap-2">
+            <button
+              onClick={() => document.getElementById('docx-input')?.click()}
+              disabled={addingDocx}
+              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm"
+            >
+              <Plus size={16} /> Add DOCX
+            </button>
             <button
               onClick={() => document.getElementById('csv-input')?.click()}
               disabled={addingCsv}
@@ -241,6 +291,13 @@ export default function StudyDashboard() {
         </div>
       </div>
 
+      <input
+        id="docx-input"
+        type="file"
+        accept=".docx"
+        onChange={handleAddDocx}
+        className="hidden"
+      />
       <input
         id="csv-input"
         type="file"
