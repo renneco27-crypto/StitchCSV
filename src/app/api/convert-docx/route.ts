@@ -49,135 +49,116 @@ function makeRow(overrides: Partial<FlashcardRow>): FlashcardRow {
   }
 }
 
+interface ParsedCard {
+  front: string
+  back: string
+  subject: string
+  topic: string
+  type: string
+}
 
-
-
-// ─── Sentence splitting ───────────────────────────────────────────────────────
-
-function splitIntoSentences(text: string): string[] {
-  return text
-    .split(/\./)
+function parseTextToCards(rawText: string): ParsedCard[] {
+  const sentences = rawText
+    .split(/(?<=[.!?])\s+/)
     .map(s => s.trim())
-    .filter(s => s.length > 10)
-}
+    .filter(s => s.length > 0)
 
-function extractSubjectFromSentence(sentence: string): string {
-  const cap = sentence.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/)?.[0]
-  if (cap) return cap
-  const noun = sentence.match(/\b(?:a|an|the)\s+([A-Za-z]{3,})\b/i)?.[1]
-  if (noun) return noun.charAt(0).toUpperCase() + noun.slice(1)
-  return 'Fact'
-}
+  const PATTERNS: Record<string, RegExp> = {
+    definition:  /(.+?)\s+(?:is|are|was|were)\s+(.+)/i,
+    property:    /(.+?)\s+(?:has|have)\s+(.+)/i,
+    function:    /(.+?)\s+(?:produces?|creates?|makes?|forms?)\s+(.+)/i,
+    composition: /(.+?)\s+(?:contains?|consists? of)\s+(.+)/i,
+    method:      /(.+?)\s+(?:uses?|attracts?)\s+(.+)/i,
+    cause:       /(.+?)\s+(?:causes?|enables?|allows?)\s+(.+)/i,
+  }
 
-function inferTopic(sentence: string): string {
-  const s = sentence.toLowerCase().trim()
-  const person = sentence.match(/\b(?:Mr|Mrs|Ms|Dr|Prof)\.\s*[A-Z][a-z]+\b|\b[A-Z][a-z]+\s+(?:is|was|has)\b/)
-  if (person) return 'Person'
-  if (/^[A-Z][a-z]+/.test(sentence.trim()) && /\b(?:is|are|was|were|means)\b/i.test(s)) return 'Definition'
-  if (/\b(?:latitude|longitude|km|located|east|west|north|south|city|country|island|bay)\b/i.test(s)) return 'Place'
-  if (/\b(?:include|includes|such as|consist|contain|list|types|kinds|categories)\b/i.test(s)) return 'List'
-  if (/\b(?:year|century|era|period|war|battle|revolution|discovered|invented)\b/i.test(s)) return 'Event'
-  if (/\b(?:true|false|yes|no|can|does|will|should|is\s+it|are\s+they)\b/i.test(s)) return 'Debatable'
-  return 'Fact'
-}
+  let currentTopic: string | null = null
+  const cards: ParsedCard[] = []
 
-function detectCardType(sentence: string): { type: string; back: string } {
-  const lower = sentence.toLowerCase()
+  for (let sentence of sentences) {
+    if (currentTopic) {
+      sentence = sentence
+        .replace(/^It\b/i, currentTopic)
+        .replace(/^They\b/i, currentTopic)
+        .replace(/^This\b/i, currentTopic)
+        .replace(/^These\b/i, currentTopic)
+    }
 
-  // Enumeration if 3+ comma-separated items
-  const items = sentence.split(/,\s*/).filter(i => i.length > 1 && i.trim().length > 0)
-  if (items.length >= 3) {
-    return {
-      type: 'enumeration',
-      back: items.map(i => i.replace(/[.!?]+$/, '').trim()).join(', '),
+    const defMatch = sentence.match(/^(?:A|An|The)\s+(.+?)\s+(?:is|are)\s+/i)
+    if (defMatch) {
+      currentTopic = defMatch[1].trim()
+    }
+
+    let matched = false
+    for (const [type, regex] of Object.entries(PATTERNS)) {
+      const m = sentence.match(regex)
+      if (m) {
+        const subject = m[1].replace(/^(A|An|The)\s+/i, '').trim()
+        const object = m[2].replace(/[.!?]$/, '').trim()
+
+        const blankTemplates: Record<string, string> = {
+          definition:  `${subject} is ____.`,
+          property:    `${subject} has ____.`,
+          function:    `${subject} produces ____.`,
+          composition: `${subject} contains ____.`,
+          method:      `${subject} uses/attracts ____.`,
+          cause:       `${subject} causes/enables ____.`,
+        }
+
+        cards.push({
+          front: blankTemplates[type],
+          back: object,
+          subject: currentTopic || subject,
+          topic: type,
+          type: 'definition',
+        })
+
+        matched = true
+        break
+      }
+    }
+
+    if (!matched && currentTopic) {
+      cards.push({
+        front: `${currentTopic} ____.`,
+        back: sentence.replace(/[.!?]$/, '').trim(),
+        subject: currentTopic,
+        topic: 'general',
+        type: 'definition',
+      })
     }
   }
 
-  // True/false if yes/no pattern or "can/does/will/should" question
-  if (
-    /\b(?:can|does|will|should|do|did)\s(?:a|an|the|this|that|it|they|we)\b/i.test(lower) ||
-    lower.endsWith('?') ||
-    /\b(?:is it|are they|does it|is there)\b/i.test(lower)
-  ) {
-    return { type: 'true_false', back: 'True' }
-  }
-
-  return { type: 'definition', back: sentence.match(/\b(?:is|are|was|were|means)\s+(.+)/i)?.[1]?.trim() || sentence }
+  return cards
 }
-
-function buildCard(sentence: string): FlashcardRow | null {
-  const s = sentence.trim()
-  if (s.length < 10) return null
-
-  const subject = extractSubjectFromSentence(s)
-  const topic = inferTopic(s)
-  const { type, back } = detectCardType(s)
-  const enumItems = type === 'enumeration' ? back.split(', ').join(';') : ''
-
-  let front: string
-  if (type === 'definition') {
-    // Cloze: blank out the subject
-    const subjectRegex = new RegExp(`\\b${subject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
-    const replaced = s.replace(subjectRegex, '________')
-    front = replaced !== s ? replaced : s
-  } else if (type === 'enumeration') {
-    const topicPhrase = subject !== 'Fact' ? subject : 'the items'
-    front = `List ${topicPhrase}`
-  } else {
-    front = s
-  }
-
-  const row: FlashcardRow = {
-    front, back, chapter: '', subject, lesson: '', type,
-    mc_correct: '', mc_distractor1: '', mc_distractor2: '', mc_distractor3: '',
-    tf_answer: type === 'true_false' ? 'true' : '',
-    enum_items: enumItems,
-    id_answer: '', id_variants: '',
-  }
-  row.lesson = topic
-
-  return row
-}
-
-// ─── GET — algorithm explainer ────────────────────────────────────────────────
 
 export async function GET() {
   return NextResponse.json({
     title: 'How Smart Card Generation Works',
     steps: [
       {
-        label: 'Subject Detection',
-        description: 'ALL CAPS words (DNA, ATP), Title Case phrases (Solar System, World War II), and words followed by "is/are/means" are identified as the answer pool.',
+        label: 'Sentence Splitting',
+        description: 'Text is split on . ! ? into individual sentences.',
       },
       {
-        label: 'Definition Cards',
-        description: 'Sentences like "Mitochondria is the powerhouse of the cell" become "________ is the powerhouse of the cell" with Mitochondria as the answer.',
+        label: 'Topic Memory',
+        description: 'Pronouns (It, They, This, These) are replaced with the last known topic. When a sentence begins with "A/An/The X is/are", X becomes the current topic.',
       },
       {
-        label: 'Multiple Choice',
-        description: 'Every definition card also becomes an MC question. Wrong options are other subjects found in the same text.',
+        label: 'Pattern Matching',
+        description: 'Each sentence is matched against 6 patterns: definition (is/are/was/were), property (has/have), function (produces/creates/makes/forms), composition (contains/consists of), method (uses/attracts), cause (causes/enables/allows).',
       },
       {
-        label: 'True / False',
-        description: 'Every fact generates a true card (original sentence) and a false card (subject swapped with a different subject, or number changed to a wrong value).',
+        label: 'Fill-in-the-Blank',
+        description: 'Each match produces one card with a fill-in-the-blank front like "X is ____." and the complement as the answer.',
       },
       {
-        label: 'Enumeration',
-        description: 'Sentences with "include/consist of/such as" followed by 3+ items, or consecutive short list lines under a heading, become "List the X" questions.',
-      },
-      {
-        label: 'Identification',
-        description: 'Sentences starting with "The" where a known subject appears get the subject blanked out — you identify what is being described.',
-      },
-      {
-        label: 'Minimum 4 Cards',
-        description: 'If fewer than 4 cards are found, remaining sentences are converted to definition cards until the minimum is met.',
+        label: 'Fallback',
+        description: 'If no pattern matches but a topic is known, a generic "Topic ____." card is created from the raw sentence.',
       },
     ],
   })
 }
-
-// ─── POST — main conversion ───────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
@@ -222,7 +203,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not extract text from file' }, { status: 400 })
     }
 
-    // CSV passthrough — if the file contains raw CSV, return it directly
+    // CSV passthrough
     const firstLine = rawTextFull.split(/\r?\n/).find((l: string) => l.trim())?.trim() ?? ''
     if (/^front[,\t]/.test(firstLine) && /type/.test(firstLine)) {
       const csvLines = rawTextFull
@@ -237,30 +218,28 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const sentences = splitIntoSentences(rawText)
+    const parsed = parseTextToCards(rawText)
 
-    let rows: FlashcardRow[] = []
+    let rows: FlashcardRow[] = parsed.map(c => makeRow({
+      front: c.front,
+      back: c.back,
+      subject: c.subject,
+      lesson: c.topic,
+      type: c.type,
+    }))
 
-    for (const sentence of sentences) {
-      if (rows.length >= 60) break
-      const card = buildCard(sentence)
-      if (card) rows.push(card)
-    }
-
-    // If fewer than 4 cards, fall back to raw sentences as definition cards
-    if (rows.length < 4 && sentences.length > 0) {
-      rows = []
-      for (const sentence of sentences) {
+    // Minimum 4 cards guarantee
+    if (rows.length < 4 && rows.length > 0) {
+      const sentences = rawText.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 10)
+      for (const s of sentences) {
         if (rows.length >= 4) break
-        const s = sentence.trim()
-        if (s.length < 10) continue
-        const subject = sentence.match(/\b[A-Z][a-z]+\b/)?.[0] || 'Fact'
+        const firstCap = s.match(/\b[A-Z][a-z]+\b/)?.[0] || 'Fact'
         rows.push(makeRow({
           front: s.length > 120 ? s.slice(0, 120) + '...' : s,
-          back: subject,
+          back: firstCap,
+          subject: firstCap,
+          lesson: 'general',
           type: 'definition',
-          subject,
-          lesson: 'Fact',
         }))
       }
     }
