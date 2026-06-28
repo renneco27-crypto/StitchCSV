@@ -34,7 +34,7 @@ export default function EnumerationPage() {
     session.handleNext()
   }, [session, currentItem])
 
-  const handleReveal = useCallback(() => {
+  const handleChecked = useCallback(() => {
     if (!currentItem) return
     const items = currentItem.items
     let correct = 0
@@ -44,8 +44,11 @@ export default function EnumerationPage() {
       if (user && user === expected) correct++
     }
     session.handleAnswer(correct === items.length ? 'got_it' : 'missed')
-    setTimeout(resetAndNext, 800)
-  }, [session, userAnswers, resetAndNext, currentItem])
+  }, [session, userAnswers, currentItem])
+
+  const handleAdvanceCard = useCallback(() => {
+    resetAndNext()
+  }, [resetAndNext])
 
   const shuffledItems = useMemo(() => {
     if (!currentItem) return []
@@ -65,12 +68,12 @@ export default function EnumerationPage() {
       if (session.showSummary) return
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault()
-        handleReveal()
+        handleChecked()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [session.showSummary, handleReveal])
+  }, [session.showSummary, handleChecked])
 
   if (loading) {
     return (
@@ -135,7 +138,8 @@ export default function EnumerationPage() {
           items={shuffledItems}
           userAnswers={userAnswers}
           currentPage={itemPage}
-          onReveal={handleReveal}
+          onCheckAnswers={handleChecked}
+          onAdvance={handleAdvanceCard}
           onPageChange={setItemPage}
           onAnswerChange={handleAnswerChange}
           chapter={currentItem?.chapter ?? ''}
