@@ -11,7 +11,7 @@ import {
   Bell,
   Plus,
 } from 'lucide-react'
-import { getDeck } from '@/db/deckRepository'
+import { getDeck, updateDeck } from '@/db/deckRepository'
 import { createCards } from '@/db/cardRepository'
 import { parseCSVFile } from '@/features/upload/csvParser'
 import { useStudyStats } from '@/hooks/useStudyStats'
@@ -66,9 +66,13 @@ export default function StudyDashboard() {
       reader.onload = async (e) => {
         const text = e.target?.result as string
         const title = deck?.title ?? file.name.replace(/\.csv$/i, '')
-        const { cards } = parseCSVFile(text, title)
+        const { deck: parsedDeck, cards } = parseCSVFile(text, title)
 
         await createCards(cards)
+        if (parsedDeck.quizItems.length > 0 && deck) {
+          const merged = [...(deck.quizItems || []), ...parsedDeck.quizItems]
+          await updateDeck(deckId, { quizItems: merged })
+        }
         addToast('CSV added to deck!', 'success')
         const d = await getDeck(deckId)
         if (d) {
@@ -110,9 +114,13 @@ export default function StudyDashboard() {
 
       const csvText = await res.text()
       const title = deck?.title ?? file.name.replace(/\.docx$/i, '')
-      const { cards } = parseCSVFile(csvText, title)
+      const { deck: parsedDeck, cards } = parseCSVFile(csvText, title)
 
       await createCards(cards)
+      if (parsedDeck.quizItems.length > 0 && deck) {
+        const merged = [...(deck.quizItems || []), ...parsedDeck.quizItems]
+        await updateDeck(deckId, { quizItems: merged })
+      }
       addToast('DOCX converted and added to deck!', 'success')
       const d = await getDeck(deckId)
       if (d) {

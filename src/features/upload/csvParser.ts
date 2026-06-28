@@ -123,7 +123,7 @@ function generateQuizItems(rows: CSVRow[], primarySubject: string): QuizItem[] {
     // Enumeration
     if (row.type === 'enumeration' || row.type === 'enum' || row.type === 'list') {
       const items = (row.enum_items || row.back)
-        .split(/[;,]/)
+        .split(';')
         .map((s) => s.trim().toLowerCase())
         .filter(Boolean)
       if (items.length >= 2) {
