@@ -85,26 +85,28 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] px-4 py-8">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 px-4 py-3">
           <div>
             <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">StitchAI</h1>
             <p className="text-sm text-[var(--color-text-muted)]">Turn notes into knowledge</p>
           </div>
-          <button
-            onClick={() => setShowHelp(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-2)] transition-colors"
-            aria-label="CSV format help"
-          >
-            <HelpCircle size={16} />
-            <span>Format Help</span>
-          </button>
-          <button
-            onClick={() => router.push('/feed')}
-            className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-2)] transition-colors"
-          >
-            <BookOpen size={16} />
-            <span>Feed</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowHelp(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-2)] transition-colors"
+              aria-label="CSV format help"
+            >
+              <HelpCircle size={16} />
+              <span>Format Help</span>
+            </button>
+            <button
+              onClick={() => router.push('/feed')}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-2)] transition-colors"
+            >
+              <BookOpen size={16} />
+              <span>Feed</span>
+            </button>
+          </div>
         </div>
 
         <div className="mt-6">

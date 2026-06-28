@@ -394,27 +394,23 @@ export default function StudyDashboard() {
             count={`${tfCount} questions`}
             disabled={tfCount === 0}
           />
-          <div className="col-span-2 sm:col-span-1">
-            <ModeCard
-              icon={List}
-              label="Enumeration"
-              description="Recall the list"
-              color="var(--color-dontknow)"
-              href={`/study/${deckId}/quiz/enumeration`}
-              count={`${enumCount} sets`}
-              disabled={enumCount === 0}
-            />
-          </div>
-          <div className="col-span-2 sm:col-span-1">
-            <ModeCard
-              icon={BarChart2}
-              label="Stats"
-              description="Your progress"
-              color="var(--color-text-secondary)"
-              href={`/study/${deckId}/stats`}
-              count={`${accuracy}%`}
-            />
-          </div>
+          <ModeCard
+            icon={List}
+            label="Enumeration"
+            description="Recall the list"
+            color="var(--color-dontknow)"
+            href={`/study/${deckId}/quiz/enumeration`}
+            count={`${enumCount} sets`}
+            disabled={enumCount === 0}
+          />
+          <ModeCard
+            icon={BarChart2}
+            label="Stats"
+            description="Your progress"
+            color="var(--color-text-secondary)"
+            href={`/study/${deckId}/stats`}
+            count={`${accuracy}%`}
+          />
         </div>
       </div>
 
