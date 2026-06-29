@@ -15,6 +15,7 @@ import {
 import { getDeck, updateDeck } from '@/db/deckRepository'
 import { createCards, getCardsByDeck } from '@/db/cardRepository'
 import { parseCSVFile } from '@/features/upload/csvParser'
+import { auditAndFixCSV } from '@/features/upload/csvFixer'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { useStatsStore } from '@/store/statsStore'
 import { useToastStore } from '@/store/toastStore'
@@ -61,6 +62,16 @@ export default function StudyDashboard() {
   const [showPublish, setShowPublish] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [authorName, setAuthorName] = useState('')
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+
+  const handleSaveTitle = async () => {
+    const trimmed = editTitle.trim()
+    if (!trimmed || !deck) return
+    await updateDeck(deckId, { title: trimmed })
+    setDeck({ ...deck, title: trimmed })
+    setEditingTitle(false)
+  }
 
   const handleAddCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -73,7 +84,7 @@ export default function StudyDashboard() {
         try {
           const text = reader.result as string
           const title = deck?.title ?? file.name.replace(/\.csv$/i, '')
-          const parsed = parseCSVFile(text, title)
+          const parsed = parseCSVFile(auditAndFixCSV(text), title)
 
           const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))
           await createCards(cardsWithDeckId)
@@ -122,7 +133,7 @@ export default function StudyDashboard() {
 
       const csvText = await res.text()
       const title = deck?.title ?? file.name.replace(/\.docx$/i, '')
-      const parsed = parseCSVFile(csvText, title)
+      const parsed = parseCSVFile(auditAndFixCSV(csvText), title)
 
       const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))
       await createCards(cardsWithDeckId)
@@ -272,9 +283,30 @@ export default function StudyDashboard() {
       />
 
       <div className="px-4 pt-6 min-w-0">
-        <h1 className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)] truncate">
-          {deck?.title ?? 'Deck'}
-        </h1>
+        {editingTitle ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTitle()
+                if (e.key === 'Escape') setEditingTitle(false)
+              }}
+              onBlur={handleSaveTitle}
+              autoFocus
+              className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1 w-full max-w-md focus:outline-none focus:border-[var(--color-accent)]"
+            />
+          </div>
+        ) : (
+          <h1
+            className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)] truncate cursor-pointer hover:text-[var(--color-accent)] transition-colors"
+            onClick={() => { setEditTitle(deck?.title ?? ''); setEditingTitle(true) }}
+            title="Click to edit title"
+          >
+            {deck?.title ?? 'Deck'}
+          </h1>
+        )}
         <div className="mt-1">
           <StatBadge label={deck?.subject ?? 'General'} value={''} color="accent" />
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Download, BookOpen, ArrowLeft } from 'lucide-react'
 import { parseCSVFile } from '@/features/upload/csvParser'
+import { auditAndFixCSV } from '@/features/upload/csvFixer'
 import { createDeck, getAllDecks } from '@/db/deckRepository'
 import { createCards } from '@/db/cardRepository'
 import { useToastStore } from '@/store/toastStore'
@@ -55,7 +56,7 @@ export default function FeedPage() {
       if (!res.ok) throw new Error('Deck not found')
       const data = await res.json()
 
-      const parsed = parseCSVFile(data.csv_content, data.title)
+      const parsed = parseCSVFile(auditAndFixCSV(data.csv_content), data.title)
 
       const deckId = await createDeck(parsed.deck)
       const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))

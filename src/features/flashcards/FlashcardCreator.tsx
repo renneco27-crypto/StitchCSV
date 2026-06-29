@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Loader2, Sparkles, Plus, X, PenLine } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Loader2, Sparkles, Plus, X, PenLine, Check } from 'lucide-react'
 import { parseCSVFile } from '@/features/upload/csvParser'
+import { auditAndFixCSV, isCSVInput } from '@/features/upload/csvFixer'
 import { createCards } from '@/db/cardRepository'
 import { updateDeck } from '@/db/deckRepository'
 import { useToastStore } from '@/store/toastStore'
@@ -36,6 +37,27 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
   const [front, setFront] = useState('')
   const [back, setBack] = useState('')
   const [manualLoading, setManualLoading] = useState(false)
+  const [cardType, setCardType] = useState('definition')
+  const [mcQuestion, setMcQuestion] = useState('')
+  const [mcCorrect, setMcCorrect] = useState('')
+  const [mcDistractors, setMcDistractors] = useState(['', '', ''])
+  const [tfStatement, setTfStatement] = useState('')
+  const [tfCorrect, setTfCorrect] = useState(true)
+  const [enumTopic, setEnumTopic] = useState('')
+  const [enumItems, setEnumItems] = useState(['', '', ''])
+  const [idDescription, setIdDescription] = useState('')
+  const [idAnswer, setIdAnswer] = useState('')
+  const [idVariants, setIdVariants] = useState([''])
+
+  const resetManualForm = () => {
+    setFront(''); setBack(''); setMcQuestion(''); setMcCorrect(''); setMcDistractors(['', '', ''])
+    setTfStatement(''); setTfCorrect(true); setEnumTopic(''); setEnumItems(['', '', ''])
+    setIdDescription(''); setIdAnswer(''); setIdVariants([''])
+  }
+
+  useEffect(() => {
+    resetManualForm()
+  }, [cardType])
 
   const [aiText, setAiText] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
@@ -50,15 +72,74 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
   }
 
   const handleManualSave = async () => {
-    if (!front.trim() || !back.trim()) {
-      addToast('Both front and back are required', 'error')
-      return
+    const esc = (v: unknown) => {
+      const s = String(v ?? '')
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+    }
+
+    let csvText: string
+
+    switch (cardType) {
+      case 'multiple_choice': {
+        if (!mcQuestion.trim() || !mcCorrect.trim()) {
+          addToast('Question and correct answer are required', 'error'); return
+        }
+        if (mcDistractors.some(d => !d.trim())) {
+          addToast('All 3 distractors are required', 'error'); return
+        }
+        const headers = ['front', 'back', 'type', 'mc_correct', 'mc_distractor1', 'mc_distractor2', 'mc_distractor3']
+        const row = [esc(mcQuestion), esc(mcCorrect), 'multiple_choice', esc(mcCorrect), ...mcDistractors.map(esc)].join(',')
+        csvText = [headers.join(','), row].join('\n')
+        break
+      }
+      case 'true_false': {
+        if (!tfStatement.trim()) {
+          addToast('Statement is required', 'error'); return
+        }
+        const tfAnswer = tfCorrect ? 'true' : 'false'
+        const headers = ['front', 'back', 'type', 'tf_answer']
+        const row = [esc(tfStatement), tfCorrect ? 'True' : 'False', 'true_false', tfAnswer].join(',')
+        csvText = [headers.join(','), row].join('\n')
+        break
+      }
+      case 'enumeration': {
+        if (!enumTopic.trim()) {
+          addToast('Topic is required', 'error'); return
+        }
+        const validItems = enumItems.filter(i => i.trim())
+        if (validItems.length < 3) {
+          addToast('At least 3 items are required', 'error'); return
+        }
+        const itemsStr = validItems.join(';')
+        const headers = ['front', 'back', 'type', 'enum_items']
+        const row = [esc(enumTopic), esc(validItems.join(', ')), 'enumeration', esc(itemsStr)].join(',')
+        csvText = [headers.join(','), row].join('\n')
+        break
+      }
+      case 'identification': {
+        if (!idDescription.trim() || !idAnswer.trim()) {
+          addToast('Description and answer are required', 'error'); return
+        }
+        const validVariants = idVariants.filter(v => v.trim())
+        const variantsStr = validVariants.length > 0 ? validVariants.join(';') : idAnswer.trim().toLowerCase()
+        const headers = ['front', 'back', 'type', 'id_answer', 'id_variants']
+        const row = [esc(idDescription), esc(idAnswer), 'identification', esc(idAnswer), esc(variantsStr)].join(',')
+        csvText = [headers.join(','), row].join('\n')
+        break
+      }
+      default: {
+        if (!front.trim() || !back.trim()) {
+          addToast('Both front and back are required', 'error'); return
+        }
+        const headers = ['front', 'back', 'type']
+        const row = [esc(front), esc(back), 'definition'].join(',')
+        csvText = [headers.join(','), row].join('\n')
+      }
     }
 
     setManualLoading(true)
     try {
-      const csvText = `front,back,type\n"${front.trim()}","${back.trim()}",definition`
-      const parsed = parseCSVFile(csvText, 'temp')
+      const parsed = parseCSVFile(auditAndFixCSV(csvText), 'temp')
       const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))
       await createCards(cardsWithDeckId)
 
@@ -68,8 +149,7 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
       }
 
       addToast('Card added!', 'success')
-      setFront('')
-      setBack('')
+      resetManualForm()
       onCardsAdded()
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to add card', 'error')
@@ -85,14 +165,14 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
     }
 
     const firstLine = aiText.trim().split('\n')[0]
-    const isCSV = /^front[,\t]/.test(firstLine) && /type/.test(firstLine)
+    const isCSV = isCSVInput(aiText)
 
     setAiLoading(true)
     try {
       let csvText: string
 
       if (isCSV) {
-        csvText = aiText.trim()
+        csvText = auditAndFixCSV(aiText.trim())
       } else {
         const formData = new FormData()
         const file = new File([aiText], 'notes.txt', { type: 'text/plain' })
@@ -107,7 +187,7 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
           const errData = await res.json().catch(() => ({ error: 'Generation failed' }))
           throw new Error(errData.error || `Server error: ${res.status}`)
         }
-        csvText = await res.text()
+        csvText = auditAndFixCSV(await res.text())
       }
 
       const parsed = parseCSVFile(csvText, deck?.title ?? 'Notes')
@@ -192,29 +272,169 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
         <div className="flex-1 overflow-y-auto p-4">
           {mode === 'manual' ? (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Front</label>
-                <input
-                  type="text"
-                  value={front}
-                  onChange={(e) => setFront(e.target.value)}
-                  placeholder="Enter the question or term"
-                  className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
-                />
+              <div className="flex flex-wrap gap-1">
+                {(['definition', 'multiple_choice', 'true_false', 'enumeration', 'identification'] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setCardType(t)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                      cardType === t
+                        ? 'bg-[var(--color-accent)] text-white'
+                        : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
+                    }`}
+                  >
+                    {t === 'definition' ? 'Definition' : t === 'multiple_choice' ? 'MC' : t === 'true_false' ? 'T/F' : t === 'enumeration' ? 'Enum' : 'ID'}
+                  </button>
+                ))}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Back</label>
-                <textarea
-                  value={back}
-                  onChange={(e) => setBack(e.target.value)}
-                  placeholder="Enter the answer or definition"
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none"
-                />
-              </div>
+
+              {cardType === 'definition' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Front</label>
+                    <input type="text" value={front} onChange={(e) => setFront(e.target.value)} placeholder="Enter the question or term"
+                      className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Back</label>
+                    <textarea value={back} onChange={(e) => setBack(e.target.value)} placeholder="Enter the answer or definition"
+                      rows={3} className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none" />
+                  </div>
+                </div>
+              )}
+
+              {cardType === 'multiple_choice' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Question</label>
+                    <input type="text" value={mcQuestion} onChange={(e) => setMcQuestion(e.target.value)} placeholder="Enter the question"
+                      className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Correct Answer</label>
+                    <input type="text" value={mcCorrect} onChange={(e) => setMcCorrect(e.target.value)} placeholder="The correct answer"
+                      className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">Distractors</label>
+                    <div className="space-y-2">
+                      {mcDistractors.map((d, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-[var(--color-text-muted)] w-4">{['A','B','C'][i]}</span>
+                          <input type="text" value={d} onChange={(e) => {
+                            const next = [...mcDistractors]; next[i] = e.target.value; setMcDistractors(next)
+                          }} placeholder={`Distractor ${i + 1}`}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                          <button onClick={() => {
+                            const next = [...mcDistractors]; next[i] = ''; setMcDistractors(next)
+                          }} className="shrink-0 p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors" title="Clear distractor">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {cardType === 'true_false' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Statement</label>
+                    <textarea value={tfStatement} onChange={(e) => setTfStatement(e.target.value)} placeholder="Enter the statement"
+                      rows={3} className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">Correct Answer</label>
+                    <div className="flex gap-2">
+                      <button onClick={() => setTfCorrect(true)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-medium transition-colors flex-1 ${
+                          tfCorrect ? 'border-[var(--color-know)] bg-[var(--color-know-soft)] text-[var(--color-know)]' : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
+                        }`}>
+                        {tfCorrect && <Check size={16} />} True
+                      </button>
+                      <button onClick={() => setTfCorrect(false)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-medium transition-colors flex-1 ${
+                          !tfCorrect ? 'border-[var(--color-dontknow)] bg-[var(--color-dontknow-soft)] text-[var(--color-dontknow)]' : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
+                        }`}>
+                        {!tfCorrect && <Check size={16} />} False
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {cardType === 'enumeration' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Topic</label>
+                    <input type="text" value={enumTopic} onChange={(e) => setEnumTopic(e.target.value)} placeholder="e.g. Types of clouds"
+                      className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">Items</label>
+                    <div className="space-y-2">
+                      {enumItems.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-[var(--color-text-muted)] w-4">{i + 1}.</span>
+                          <input type="text" value={item} onChange={(e) => {
+                            const next = [...enumItems]; next[i] = e.target.value; setEnumItems(next)
+                          }} placeholder={`Item ${i + 1}`}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                          <button onClick={() => setEnumItems(enumItems.filter((_, j) => j !== i))}
+                            className="shrink-0 p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors" title="Remove item">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => setEnumItems([...enumItems, ''])}
+                      className="mt-2 text-sm text-[var(--color-accent)] hover:underline">
+                      + Add item
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {cardType === 'identification' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Description</label>
+                    <textarea value={idDescription} onChange={(e) => setIdDescription(e.target.value)} placeholder="The description or clue"
+                      rows={2} className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Answer</label>
+                    <input type="text" value={idAnswer} onChange={(e) => setIdAnswer(e.target.value)} placeholder="The correct term"
+                      className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">Accept Variants</label>
+                    <div className="space-y-2">
+                      {idVariants.map((v, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <input type="text" value={v} onChange={(e) => {
+                            const next = [...idVariants]; next[i] = e.target.value; setIdVariants(next)
+                          }} placeholder={`Variant ${i + 1}`}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                          <button onClick={() => setIdVariants(idVariants.filter((_, j) => j !== i))}
+                            className="shrink-0 p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors" title="Remove variant">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => setIdVariants([...idVariants, ''])}
+                      className="mt-2 text-sm text-[var(--color-accent)] hover:underline">
+                      + Add variant
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={handleManualSave}
-                disabled={manualLoading || !front.trim() || !back.trim()}
+                disabled={manualLoading || (cardType === 'definition' && (!front.trim() || !back.trim())) || (cardType === 'multiple_choice' && (!mcQuestion.trim() || !mcCorrect.trim() || mcDistractors.some(d => !d.trim()))) || (cardType === 'true_false' && !tfStatement.trim()) || (cardType === 'enumeration' && (!enumTopic.trim() || enumItems.filter(i => i.trim()).length < 3)) || (cardType === 'identification' && (!idDescription.trim() || !idAnswer.trim()))}
                 className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {manualLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
@@ -264,7 +484,7 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                             </span>
                             <button
                               onClick={() => handleDeletePreviewCard(i)}
-                              className="shrink-0 p-1 rounded-lg text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                              className="shrink-0 p-1 rounded-lg text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
                               title="Remove card"
                             >
                               <X size={14} />

@@ -1,4 +1,5 @@
 import { parseCSVFile } from './csvParser'
+import { auditAndFixCSV } from './csvFixer'
 import { createDeck } from '@/db/deckRepository'
 import { createCards } from '@/db/cardRepository'
 import type { Deck } from '@/lib/zodSchemas'
@@ -57,7 +58,7 @@ export async function handleUpload(
       csvText = await convertFile(file, onProgress)
     }
 
-    const { deck, cards } = parseCSVFile(csvText, title)
+    const { deck, cards } = parseCSVFile(auditAndFixCSV(csvText), title)
 
     onProgress?.('Saving…')
     const deckWithoutCards: Deck = { ...deck, cards: [] }
