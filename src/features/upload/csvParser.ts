@@ -352,5 +352,6 @@ export function isFlashcardType(type: string): boolean {
  * Call this in your quiz component to get only quiz-relevant cards.
  */
 export function isQuizType(type: string): boolean {
-  return QUIZ_ONLY_TYPES.has(type.toLowerCase().trim())
+  const t = type.toLowerCase().trim()
+  return ['multiple_choice', 'mc', 'true_false', 'tf', 'enumeration', 'enum', 'identification', 'id'].includes(t)
 }
