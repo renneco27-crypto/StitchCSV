@@ -141,7 +141,6 @@ function resolveBack(row: CSVRow): string | null {
  * Quiz-only rows still get a card (for review mode) but are never shown
  * in the plain flashcard stack — the UI checks `card.type` to decide that.
  */
-// ─── Card builder ─────────────────────────────────────────────────────────────
 function buildCards(rows: CSVRow[], deckId: string, primarySubject: string): Card[] {
   const cards: Card[] = []
 
@@ -244,7 +243,6 @@ function generateQuizItems(rows: CSVRow[], primarySubject: string): QuizItem[] {
 
     // ── Enumeration ───────────────────────────────────────────────────────────
     if (type === 'enumeration' || type === 'enum') {
-      console.log(`[enum] front="${row.front.slice(0,30)}" enum_items="${row.enum_items}"`)
       // Fallback: if enum_items is empty but id_variants has content, the CSV
       // row probably has too many commas shifting data right by one column.
       const raw = row.enum_items || row.id_variants || row.back

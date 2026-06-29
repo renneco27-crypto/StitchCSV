@@ -24,10 +24,6 @@ function parseCSVRow(line: string): string[] {
   result.push(cur)
   return result
 }
-export function isQuizType(type: string): boolean {
-  return new Set(['multiple_choice', 'mc', 'true_false', 'tf', 'enumeration', 'enum', 'identification', 'id'])
-    .has(type.toLowerCase().trim())
-}
 function quoteField(val: string): string {
   if (!val) return ''
   if (val.includes(',') || val.includes('"') || val.includes('\n') || val.includes(' ')) {
@@ -78,7 +74,6 @@ export function auditAndFixCSV(csvText: string): string {
     const line = lines[i].trim()
     if (!line) continue
     const row = parseCSVRow(line)
-    console.log(`Row ${i}: cols=${row.length}, type="${row[5]}", front="${row[0]?.slice(0,30)}"`)
     fixedRows.push(fixRow(row))
   }
 

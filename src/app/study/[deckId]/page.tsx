@@ -181,39 +181,6 @@ export default function StudyDashboard() {
         ].join(','))
       }
 
-      for (const q of deck.quizItems || []) {
-        switch (q.mode) {
-          case 'multiple_choice':
-            csvRows.push([
-              esc(q.question), esc(q.correct), '', '', '', 'multiple_choice',
-              esc(q.correct), esc(q.distractors[0] ?? ''), esc(q.distractors[1] ?? ''), esc(q.distractors[2] ?? ''),
-              '', '', '', '',
-            ].join(','))
-            break
-          case 'true_false':
-            csvRows.push([
-              esc(q.statement), '', '', '', '', 'true_false',
-              '', '', '', '',
-              q.correct ? 'true' : 'false', '', '', '',
-            ].join(','))
-            break
-          case 'enumeration':
-            csvRows.push([
-              esc(q.topic), '', '', '', '', 'enumeration',
-              '', '', '', '',
-              '', q.items.join(';'), '', '',
-            ].join(','))
-            break
-          case 'identification':
-            csvRows.push([
-              esc(q.definition), '', '', '', '', 'identification',
-              '', '', '', '',
-              '', '', esc(q.answer), esc(q.acceptVariants?.join(';') ?? ''),
-            ].join(','))
-            break
-        }
-      }
-
       const csvContent = [csvHeaders, ...csvRows].join('\n')
 
       const name = localStorage.getItem('accessCode') ?? 'Anonymous'
