@@ -60,6 +60,7 @@ function fixRow(row: string[]): string[] {
 
 export function auditAndFixCSV(csvText: string): string {
   const lines = csvText.trim().split(/\r?\n/)
+
   if (!lines.length) return ''
 
   let dataStart = 0

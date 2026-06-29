@@ -21,10 +21,8 @@ interface CSVRow {
 }
 
 // Types that should appear in flashcard mode (have a readable front/back)
-const FLASHCARD_TYPES = new Set(['definition', 'concept', 'formula', 'process', 'list'])
-
-// Types that are quiz-only — they must NOT appear as plain flashcards
-const QUIZ_ONLY_TYPES = new Set(['multiple_choice', 'mc', 'true_false', 'tf', 'enumeration', 'enum', 'identification', 'id'])
+const FLASHCARD_TYPES = new Set(['definition', 'concept', 'formula', 'process', 'list',
+  'multiple_choice', 'mc', 'true_false', 'tf', 'enumeration', 'enum', 'identification', 'id'])
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
 
@@ -159,9 +157,6 @@ function buildCards(rows: CSVRow[], deckId: string, primarySubject: string): Car
     if (!front) return
 
     const type = row.type.toLowerCase().trim()
-
-    // Quiz-only rows belong exclusively in quizItems — never in the flashcard array.
-    if (QUIZ_ONLY_TYPES.has(type)) return
 
     const back = resolveBack(row)
     if (!back) return
