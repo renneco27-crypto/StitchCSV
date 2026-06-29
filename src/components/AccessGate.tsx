@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Loader2, Shield } from 'lucide-react'
 
 interface AccessGateProps {
@@ -11,20 +11,10 @@ export default function AccessGate({ onSuccess }: AccessGateProps) {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [deviceId, setDeviceId] = useState('')
-
-  useEffect(() => {
-    let id = localStorage.getItem('deviceId')
-    if (!id) {
-      id = crypto.randomUUID()
-      localStorage.setItem('deviceId', id)
-    }
-    setDeviceId(id)
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!code.trim() || !deviceId) return
+    if (!code.trim()) return
 
     setLoading(true)
     setError('')
@@ -33,7 +23,7 @@ export default function AccessGate({ onSuccess }: AccessGateProps) {
       const res = await fetch('/api/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim(), deviceId }),
+        body: JSON.stringify({ code: code.trim() }),
       })
 
       const data = await res.json()
@@ -84,7 +74,7 @@ export default function AccessGate({ onSuccess }: AccessGateProps) {
 
         <button
           type="submit"
-          disabled={loading || !code.trim() || !deviceId}
+          disabled={loading || !code.trim()}
           className="mt-4 w-full flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : null}

@@ -179,12 +179,19 @@ export async function exportDeckToDOCX(deckId: string, deckTitle: string): Promi
   })
 
   const blob = await Packer.toBlob(doc)
-  const url  = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href     = url
-  link.download = `${deckTitle.replace(/\s+/g, '_')}_export.docx`
-  link.click()
-  URL.revokeObjectURL(url)
+  const filename = `${deckTitle.replace(/\s+/g, '_')}_export.docx`
+  const file = new File([blob], filename, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file], title: filename })
+  } else {
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   useToastStore.getState().addToast('Export ready — check your downloads', 'success')
 }
