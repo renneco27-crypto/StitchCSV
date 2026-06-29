@@ -105,13 +105,6 @@ function parseCSV(text: string): CSVRow[] {
 function resolveBack(row: CSVRow): string | null {
   const type = row.type.toLowerCase().trim()
 
-  // Explicit flashcard types — use back directly (must be non-empty)
-  if (FLASHCARD_TYPES.has(type)) {
-    return row.back || null
-  }
-
-  // Quiz-only types — derive a human-readable back so the card can
-  // optionally be shown in review mode, but mark it clearly
   switch (type) {
     case 'multiple_choice':
     case 'mc':
@@ -120,13 +113,14 @@ function resolveBack(row: CSVRow): string | null {
     case 'true_false':
     case 'tf': {
       const answer = (row.tf_answer || row.back).toLowerCase().trim()
+      if (!answer) return null
       const isTrue = answer === 'true' || answer === 't' || answer === 'yes'
       return isTrue ? 'True' : 'False'
     }
 
     case 'enumeration':
     case 'enum': {
-      const raw = row.enum_items || row.id_variants || row.back
+      const raw = row.enum_items || row.back
       if (!raw) return null
       const items = raw.split(';').map(s => s.trim()).filter(Boolean)
       return items.length >= 3 ? items.join(', ') : null
@@ -137,7 +131,6 @@ function resolveBack(row: CSVRow): string | null {
       return row.id_answer || row.back || null
 
     default:
-      // Unknown type — fall back to back field or skip
       return row.back || null
   }
 }
@@ -251,6 +244,7 @@ function generateQuizItems(rows: CSVRow[], primarySubject: string): QuizItem[] {
 
     // ── Enumeration ───────────────────────────────────────────────────────────
     if (type === 'enumeration' || type === 'enum') {
+      console.log(`[enum] front="${row.front.slice(0,30)}" enum_items="${row.enum_items}"`)
       // Fallback: if enum_items is empty but id_variants has content, the CSV
       // row probably has too many commas shifting data right by one column.
       const raw = row.enum_items || row.id_variants || row.back
