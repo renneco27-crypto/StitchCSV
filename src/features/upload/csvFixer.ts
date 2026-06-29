@@ -40,6 +40,7 @@ function fixRow(row: string[]): string[] {
   if (type === 'multiple_choice') {
     if (cols === 14) return [...row, '']
     if (cols === 16) return row.slice(0, 15)
+    if (cols === 15) return row
   }
 
   if (type === 'identification') {
@@ -49,6 +50,7 @@ function fixRow(row: string[]): string[] {
       return [row[0], row[1], row[2], row[3], row[4], row[5], '', '', '', '', '', '', '', answer, variants]
     }
     if (cols === 14) return [...row, '']
+    if (cols === 15) return row
   }
 
   if (cols < EXPECTED_COLS) return [...row, ...Array(EXPECTED_COLS - cols).fill('')]
@@ -72,6 +74,7 @@ export function auditAndFixCSV(csvText: string): string {
     const line = lines[i].trim()
     if (!line) continue
     const row = parseCSVRow(line)
+    console.log(`Row ${i}: cols=${row.length}, type="${row[5]}", front="${row[0]?.slice(0,30)}"`)
     fixedRows.push(fixRow(row))
   }
 
