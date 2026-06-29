@@ -36,24 +36,26 @@ function fixRow(row: string[]): string[] {
   const type = (row[5] || '').toLowerCase().trim().replace(/"/g, '')
   const cols = row.length
 
-  if (type === 'multiple_choice') {
-    if (cols === 14) return [...row, '']
-    if (cols === 16) return row.slice(0, 15)
-    if (cols === 15) return row
-  }
+  if (cols === EXPECTED_COLS) return row
 
-  if (type === 'identification') {
-    if (cols === 16) {
+  if (cols === 16) {
+    if (type === 'identification') {
       const answer = row[14] || ''
       const variants = row[15] || ''
       return [row[0], row[1], row[2], row[3], row[4], row[5], '', '', '', '', '', '', '', answer, variants]
     }
-    if (cols === 14) return [...row, '']
-    if (cols === 15) return row
+    return row.slice(0, EXPECTED_COLS)
   }
 
-  if (cols < EXPECTED_COLS) return [...row, ...Array(EXPECTED_COLS - cols).fill('')]
-  if (cols > EXPECTED_COLS) return row.slice(0, EXPECTED_COLS)
+  if (cols === 14) {
+    return [...row.slice(0, 11), '', ...row.slice(11)]
+  }
+
+  if (cols < 14) {
+    const padded = [...row, ...Array(14 - cols).fill('')]
+    return [...padded.slice(0, 11), '', ...padded.slice(11)]
+  }
+
   return row
 }
 
