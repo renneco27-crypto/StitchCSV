@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('access_codes')
-      .select('id, code, active, used_by, expires_at')
+      .select('id, code, active, used_by, expires_at, can_publish')
       .eq('code', code.toUpperCase().trim())
       .single()
 
