@@ -183,7 +183,8 @@ export default function StudyDashboard() {
 
       const csvContent = [csvHeaders, ...csvRows].join('\n')
 
-      const name = localStorage.getItem('accessCode') ?? 'Anonymous'
+      const accessCode = localStorage.getItem('accessCode')
+      const name = accessCode ?? 'Anonymous'
 
       const res = await fetch('/api/publish', {
         method: 'POST',
@@ -193,6 +194,7 @@ export default function StudyDashboard() {
           subject: deck.subject,
           csvContent,
           authorName: name,
+          accessCode,
           deviceId: localStorage.getItem('deviceId') ?? 'unknown',
         }),
       })
@@ -315,16 +317,18 @@ export default function StudyDashboard() {
             >
               New Deck
             </button>
-            <button
-              onClick={() => {
-                const saved = localStorage.getItem('authorName') || ''
-                setAuthorName(saved)
-                setShowPublish(true)
-              }}
-              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full col-span-2 sm:col-span-1"
-            >
-              <Share2 size={16} /> Publish
-            </button>
+            {localStorage.getItem('canPublish') !== 'false' && (
+              <button
+                onClick={() => {
+                  const saved = localStorage.getItem('authorName') || ''
+                  setAuthorName(saved)
+                  setShowPublish(true)
+                }}
+                className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full col-span-2 sm:col-span-1"
+              >
+                <Share2 size={16} /> Publish
+              </button>
+            )}
           </div>
         </div>
 

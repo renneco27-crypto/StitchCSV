@@ -41,6 +41,7 @@ export default function AccessGate({ onSuccess }: AccessGateProps) {
       if (data.valid) {
         localStorage.setItem('accessCode', code.trim().toUpperCase())
         localStorage.setItem('accessVerified', 'true')
+        localStorage.setItem('canPublish', String(data.can_publish ?? true))
         onSuccess()
       } else {
         setError(data.reason || 'Invalid code')

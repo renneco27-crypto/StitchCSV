@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('access_codes')
-      .select('id, code, active, used_by')
+      .select('id, code, active, used_by, expires_at')
       .eq('code', code.toUpperCase().trim())
       .single()
 
@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ valid: false, reason: 'This code has been deactivated' })
     }
 
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      return NextResponse.json({ valid: false, reason: 'This code has expired' })
+    }
+
     if (!data.used_by) {
       await supabase
         .from('access_codes')
@@ -32,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ valid: false, reason: 'This code is already in use on another device' })
     }
 
-    return NextResponse.json({ valid: true })
+    return NextResponse.json({ valid: true, can_publish: data.can_publish })
   } catch (err) {
     console.error('verify-code error:', err)
     return NextResponse.json({ valid: false, reason: 'Server error' }, { status: 500 })
