@@ -9,6 +9,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title and CSV content are required' }, { status: 400 })
     }
 
+    const { data: existingDeck } = await supabase
+      .from('decks')
+      .select('id')
+      .eq('title', title.trim())
+      .single()
+
+    if (existingDeck) {
+      return NextResponse.json({ error: 'A deck with this title already exists' }, { status: 409 })
+    }
+
     if (accessCode) {
       const { data: codeData } = await supabase
         .from('access_codes')
