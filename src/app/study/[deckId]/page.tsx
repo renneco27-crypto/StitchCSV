@@ -19,6 +19,7 @@ import { auditAndFixCSV } from '@/features/upload/csvFixer'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { useStatsStore } from '@/store/statsStore'
 import { useToastStore } from '@/store/toastStore'
+import { createBrowserSupabase } from '@/lib/supabase'
 import TopBar from '@/components/TopBar'
 import ProgressRing from '@/components/ProgressRing'
 import StatBadge from '@/components/StatBadge'
@@ -62,8 +63,23 @@ export default function StudyDashboard() {
   const [showPublish, setShowPublish] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [authorName, setAuthorName] = useState('')
+  const [canPublish, setCanPublish] = useState(true)
   const [editingTitle, setEditingTitle] = useState(false)
   const [editTitle, setEditTitle] = useState('')
+
+  useEffect(() => {
+    const supabase = createBrowserSupabase()
+    supabase.auth.getUser().then(async ({ data }) => {
+      const email = data.user?.email ?? ''
+      if (email) setAuthorName(email.split('@')[0])
+    })
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) return
+      const res = await fetch('/api/session')
+      const sessionData = await res.json().catch(() => null)
+      setCanPublish(sessionData?.canPublish ?? true)
+    })
+  }, [])
 
   const handleSaveTitle = async () => {
     const trimmed = editTitle.trim()
@@ -183,8 +199,7 @@ export default function StudyDashboard() {
 
       const csvContent = [csvHeaders, ...csvRows].join('\n')
 
-      const accessCode = localStorage.getItem('accessCode')
-      const name = accessCode ?? 'Anonymous'
+      const name = authorName || 'Anonymous'
 
       const res = await fetch('/api/publish', {
         method: 'POST',
@@ -194,8 +209,6 @@ export default function StudyDashboard() {
           subject: deck.subject,
           csvContent,
           authorName: name,
-          accessCode,
-          deviceId: localStorage.getItem('deviceId') ?? 'unknown',
         }),
       })
 
@@ -317,7 +330,7 @@ export default function StudyDashboard() {
             >
               New Deck
             </button>
-            {localStorage.getItem('canPublish') !== 'false' && (
+            {canPublish && (
               <button
                 onClick={() => {
                   const saved = localStorage.getItem('authorName') || ''
@@ -449,7 +462,7 @@ export default function StudyDashboard() {
           >
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Publish to Feed</h2>
             <p className="text-sm text-[var(--color-text-muted)] mb-4">
-              Publishing as: <span className="text-[var(--color-text-primary)] font-medium">{localStorage.getItem('accessCode') ?? 'Anonymous'}</span>
+              Publishing as: <span className="text-[var(--color-text-primary)] font-medium">{authorName || 'Anonymous'}</span>
             </p>
             <div className="flex gap-2 mt-4">
               <button

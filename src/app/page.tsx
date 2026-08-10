@@ -8,6 +8,7 @@ import UploadZone from '@/features/upload/UploadZone'
 import PastDecks from '@/features/upload/PastDecks'
 import { handleUpload } from '@/features/upload/uploadHandler'
 import { useToastStore } from '@/store/toastStore'
+import SignOutButton from '@/components/SignOutButton'
 
 const FORMATS = [
   {
@@ -106,6 +107,7 @@ export default function Home() {
               <BookOpen size={16} />
               <span>Feed</span>
             </button>
+            <SignOutButton />
           </div>
         </div>
 

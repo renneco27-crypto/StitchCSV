@@ -126,10 +126,14 @@ export default function FeedPage() {
     if (!newFolderName.trim()) return
     setCreating(true)
     try {
+      const sessionRes = await fetch('/api/session')
+      const sessionData = await sessionRes.json().catch(() => null)
+      const createdBy = sessionData?.user?.id ?? ''
+
       const res = await fetch('/api/folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newFolderName.trim(), createdBy: localStorage.getItem('accessCode') ?? '' }),
+        body: JSON.stringify({ name: newFolderName.trim(), createdBy }),
       })
       if (!res.ok) {
         const errData = await res.json()

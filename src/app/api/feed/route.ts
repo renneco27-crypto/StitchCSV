@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerSupabase } from '@/lib/supabaseServer'
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const subject = searchParams.get('subject')
     const sort = searchParams.get('sort') || 'newest'

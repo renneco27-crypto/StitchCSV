@@ -1,17 +1,29 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import AccessGate from '@/components/AccessGate'
+import AuthGate from '@/components/AuthGate'
+import { createBrowserSupabase } from '@/lib/supabase'
 
 export default function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const [verified, setVerified] = useState<boolean | null>(null)
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
-    const isVerified = localStorage.getItem('accessVerified') === 'true'
-    setVerified(isVerified)
+    const supabase = createBrowserSupabase()
+
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthenticated(!!data.session)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthenticated(!!session)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  if (verified === null) return null
-  if (!verified) return <AccessGate onSuccess={() => setVerified(true)} />
+  if (authenticated === null) return null
+  if (!authenticated) return <AuthGate />
   return <>{children}</>
 }

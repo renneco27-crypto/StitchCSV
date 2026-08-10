@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerSupabase } from '@/lib/supabaseServer'
 
 export async function GET() {
   try {
+    const supabase = await createServerSupabase()
     const { data, error } = await supabase
       .from('feed_folders')
       .select('*, decks(count)')
@@ -30,6 +31,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createServerSupabase()
     const { name, createdBy } = await request.json()
 
     if (!name || !name.trim()) {

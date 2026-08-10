@@ -1,9 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerSupabase } from '@/lib/supabaseServer'
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, subject, csvContent, authorName, deviceId, accessCode } = await request.json()
+    const supabase = await createServerSupabase()
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'You must be signed in to publish' }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('can_publish')
+      .eq('id', user.id)
+      .single()
+
+    if (profile && !profile.can_publish) {
+      return NextResponse.json({ error: 'Your account does not have publishing permission' }, { status: 403 })
+    }
+
+    const { title, subject, csvContent, authorName } = await request.json()
 
     if (!title || !csvContent) {
       return NextResponse.json({ error: 'Title and CSV content are required' }, { status: 400 })
@@ -19,34 +40,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'A deck with this title already exists' }, { status: 409 })
     }
 
-    if (accessCode) {
-      const { data: codeData } = await supabase
-        .from('access_codes')
-        .select('active, can_publish, expires_at')
-        .eq('code', accessCode.toUpperCase().trim())
-        .single()
-
-      if (!codeData || !codeData.active) {
-        return NextResponse.json({ error: 'Access code is inactive or invalid' }, { status: 403 })
-      }
-
-      if (!codeData.can_publish) {
-        return NextResponse.json({ error: 'This access code does not have publishing permission' }, { status: 403 })
-      }
-
-      if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
-        return NextResponse.json({ error: 'Access code has expired' }, { status: 403 })
-      }
-    }
-
     const { data, error } = await supabase
       .from('decks')
       .insert({
         title,
         subject: subject || 'General',
         csv_content: csvContent,
-        author_name: authorName || 'Anonymous',
-        device_id: deviceId || 'unknown',
+        author_name: authorName || user.user_metadata?.display_name || user.email || 'Anonymous',
+        device_id: user.id,
       })
       .select('id')
       .single()
