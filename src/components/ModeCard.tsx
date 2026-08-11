@@ -28,7 +28,7 @@ export default function ModeCard({
     <button
       onClick={() => !disabled && router.push(href)}
       disabled={disabled}
-      className="flex flex-col items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left transition-all hover:border-[var(--color-accent)] disabled:opacity-40 disabled:pointer-events-none"
+      className="flex flex-col items-start gap-2 rounded-xl border border-[var(--color-border)] glass-panel p-4 text-left transition-all hover:border-[var(--color-border-neon)] disabled:opacity-40 disabled:pointer-events-none cyber-glow-hover"
     >
       <div
         className="flex items-center justify-center w-10 h-10 rounded-lg"

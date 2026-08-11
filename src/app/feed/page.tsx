@@ -216,7 +216,7 @@ export default function FeedPage() {
             <ArrowLeft size={20} className="text-[var(--color-text-secondary)]" />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Public Feed</h1>
+            <h1 className="text-2xl font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">Public Feed</h1>
             <p className="text-sm text-[var(--color-text-muted)]">Community-shared decks</p>
           </div>
         </div>
@@ -228,77 +228,77 @@ export default function FeedPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <button
-                onClick={() => setActiveFolder(null)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeFolder === null
-                    ? 'bg-[var(--color-accent)] text-white'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)]'
-                }`}
-              >
-                <BookOpen size={14} />
-                All
-              </button>
-              {folders.map((f) => (
-                <div key={f.id} className="relative group">
-                  <button
-                    onClick={() => setActiveFolder(f.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      activeFolder === f.id
-                        ? 'bg-[var(--color-accent)] text-white'
-                        : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)]'
-                    }`}
-                  >
-                    <FolderOpen size={14} />
-                    {f.name}
-                    <span className="text-xs opacity-60">({f.deck_count})</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteFolder(f.id)}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Delete folder"
-                  >
-                    <X size={10} />
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => setShowNewFolder(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--color-surface)] text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] border border-dashed border-[var(--color-accent)] transition-colors"
-              >
-                <Plus size={14} />
-                New Folder
-              </button>
-            </div>
+             <div className="flex items-center gap-2 mb-4 flex-wrap">
+               <button
+                 onClick={() => setActiveFolder(null)}
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors squishy-btn ${
+                   activeFolder === null
+                     ? 'bg-[var(--color-accent)] text-white cyber-glow'
+                     : 'glass-panel text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] border border-[var(--color-border)]'
+                 }`}
+               >
+                 <BookOpen size={14} />
+                 All
+               </button>
+               {folders.map((f) => (
+                 <div key={f.id} className="relative group">
+                   <button
+                     onClick={() => setActiveFolder(f.id)}
+                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors squishy-btn ${
+                       activeFolder === f.id
+                         ? 'bg-[var(--color-accent)] text-white cyber-glow'
+                         : 'glass-panel text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] border border-[var(--color-border)]'
+                     }`}
+                   >
+                     <FolderOpen size={14} />
+                     {f.name}
+                     <span className="text-xs opacity-60">({f.deck_count})</span>
+                   </button>
+                   <button
+                     onClick={() => handleDeleteFolder(f.id)}
+                     className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--color-dontknow)] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                     title="Delete folder"
+                   >
+                     <X size={10} />
+                   </button>
+                 </div>
+               ))}
+               <button
+                 onClick={() => setShowNewFolder(true)}
+                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium glass-panel text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] border border-dashed border-[var(--color-accent)] transition-colors squishy-btn"
+               >
+                 <Plus size={14} />
+                 New Folder
+               </button>
+             </div>
 
-            {showNewFolder && (
-              <div className="flex items-center gap-2 mb-4 p-3 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)]">
-                <input
-                  type="text"
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  placeholder="Folder name…"
-                  maxLength={40}
-                  className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreateFolder() }}
-                  autoFocus
-                />
-                <button
-                  onClick={handleCreateFolder}
-                  disabled={creating || !newFolderName.trim()}
-                  className="px-3 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-                >
-                  {creating ? <Loader2 size={14} className="animate-spin" /> : 'Create'}
-                </button>
-                <button
-                  onClick={() => { setShowNewFolder(false); setNewFolderName('') }}
-                  className="px-3 py-2 rounded-lg text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+             {showNewFolder && (
+               <div className="flex items-center gap-2 mb-4 p-3 glass-panel rounded-xl border border-[var(--color-border)]">
+                 <input
+                   type="text"
+                   value={newFolderName}
+                   onChange={(e) => setNewFolderName(e.target.value)}
+                   placeholder="Folder name…"
+                   maxLength={40}
+                   className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow"
+                   onKeyDown={(e) => { if (e.key === 'Enter') handleCreateFolder() }}
+                   autoFocus
+                 />
+                 <button
+                   onClick={handleCreateFolder}
+                   disabled={creating || !newFolderName.trim()}
+                   className="px-3 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity squishy-btn cyber-glow-hover"
+                 >
+                   {creating ? <Loader2 size={14} className="animate-spin" /> : 'Create'}
+                 </button>
+                 <button
+                   onClick={() => { setShowNewFolder(false); setNewFolderName('') }}
+                   className="px-3 py-2 rounded-lg text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)] transition-colors squishy-btn"
+                 >
+                   Cancel
+                 </button>
+               </div>
+             )}
 
             {displayDecks.length === 0 ? (
               <div className="text-center py-20">
@@ -308,115 +308,115 @@ export default function FeedPage() {
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
-                {displayDecks.map((deck) => (
-                  <div
-                    key={deck.id}
-                    className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-medium text-[var(--color-text-primary)] truncate">
-                          {deck.title}
-                        </h3>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-medium">
-                            {deck.subject}
-                          </span>
-                          <span className="text-sm text-[var(--color-text-muted)]">
-                            by {deck.author_name}
-                          </span>
-                          <span className="text-xs text-[var(--color-text-muted)]">
-                            {new Date(deck.published_at).toLocaleDateString()}
-                          </span>
-                          <span className="text-xs text-[var(--color-text-muted)]">
-                            {deck.download_count} downloads
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {activeFolder ? (
-                          <button
-                            onClick={() => handleRemoveFromFolder(deck.id)}
-                            disabled={categorizingId === deck.id}
-                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-red-100 hover:text-red-600 disabled:opacity-50 transition-colors"
-                          >
-                            {categorizingId === deck.id ? (
-                              <Loader2 size={12} className="animate-spin" />
-                            ) : (
-                              <X size={12} />
-                            )}
-                            Remove
-                          </button>
-                        ) : (
-                          <div className="relative group/cat">
-                            <button
-                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] disabled:opacity-50 transition-colors"
-                              disabled={categorizingId === deck.id}
-                            >
-                              {categorizingId === deck.id ? (
-                                <Loader2 size={12} className="animate-spin" />
-                              ) : (
-                                <Folder size={12} />
-                              )}
-                              Categorize
-                              <ChevronDown size={10} />
-                            </button>
-                            {folders.length > 0 && (
-                              <div className="absolute right-0 top-full mt-1 z-10 hidden group-hover/cat:block min-w-40">
-                                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg py-1">
-                                  {folders.map((f) => (
-                                    <button
-                                      key={f.id}
-                                      onClick={() => handleAddToFolder(f.id, deck.id)}
-                                      className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 transition-colors"
-                                    >
-                                      <FolderOpen size={13} />
-                                      {f.name}
-                                    </button>
-                                  ))}
-                                  <button
-                                    onClick={() => { setShowNewFolder(true); setCategorizingId(null) }}
-                                    className="w-full text-left px-3 py-2 text-sm text-[var(--color-accent)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 border-t border-[var(--color-border)] transition-colors"
-                                  >
-                                    <Plus size={13} />
-                                    New Folder…
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                            {folders.length === 0 && (
-                              <div className="absolute right-0 top-full mt-1 z-10 hidden group-hover/cat:block min-w-40">
-                                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg py-3 px-3 text-center">
-                                  <p className="text-xs text-[var(--color-text-muted)]">No folders yet</p>
-                                  <button
-                                    onClick={() => setShowNewFolder(true)}
-                                    className="mt-1 text-xs text-[var(--color-accent)] font-medium hover:underline"
-                                  >
-                                    Create one
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        <button
-                          onClick={() => handleAddToApp(deck)}
-                          disabled={addingId === deck.id || addedIds.has(deck.id)}
-                          className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm shrink-0"
-                        >
-                          {addingId === deck.id ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <Download size={14} />
-                          )}
-                          {addedIds.has(deck.id) ? 'Added' : 'Add to My App'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+               <div className="flex flex-col gap-3">
+                 {displayDecks.map((deck) => (
+                   <div
+                     key={deck.id}
+                     className="glass-panel rounded-xl border border-[var(--color-border)] p-4 hover:border-[var(--color-border-neon)] transition cyber-glow-hover"
+                   >
+                     <div className="flex items-start justify-between gap-3">
+                       <div className="flex-1 min-w-0">
+                         <h3 className="text-base font-medium text-[var(--color-text-primary)] truncate">
+                           {deck.title}
+                         </h3>
+                         <div className="flex items-center gap-3 mt-1 flex-wrap">
+                           <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-medium">
+                             {deck.subject}
+                           </span>
+                           <span className="text-sm text-[var(--color-text-muted)]">
+                             by {deck.author_name}
+                           </span>
+                           <span className="text-xs text-[var(--color-text-muted)]">
+                             {new Date(deck.published_at).toLocaleDateString()}
+                           </span>
+                           <span className="text-xs text-[var(--color-text-muted)]">
+                             {deck.download_count} downloads
+                           </span>
+                         </div>
+                       </div>
+                       <div className="flex items-center gap-2 shrink-0">
+                         {activeFolder ? (
+                           <button
+                             onClick={() => handleRemoveFromFolder(deck.id)}
+                             disabled={categorizingId === deck.id}
+                             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-dontknow-soft)] hover:text-[var(--color-dontknow)] border border-[var(--color-border)] disabled:opacity-50 transition-colors squishy-btn"
+                           >
+                             {categorizingId === deck.id ? (
+                               <Loader2 size={12} className="animate-spin" />
+                             ) : (
+                               <X size={12} />
+                             )}
+                             Remove
+                           </button>
+                         ) : (
+                           <div className="relative group/cat">
+                             <button
+                               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] border border-[var(--color-border)] disabled:opacity-50 transition-colors squishy-btn"
+                               disabled={categorizingId === deck.id}
+                             >
+                               {categorizingId === deck.id ? (
+                                 <Loader2 size={12} className="animate-spin" />
+                               ) : (
+                                 <Folder size={12} />
+                               )}
+                               Categorize
+                               <ChevronDown size={10} />
+                             </button>
+                             {folders.length > 0 && (
+                               <div className="absolute right-0 top-full mt-1 z-10 hidden group-hover/cat:block min-w-40">
+                                 <div className="glass-panel border border-[var(--color-border)] rounded-xl shadow-lg py-1">
+                                   {folders.map((f) => (
+                                     <button
+                                       key={f.id}
+                                       onClick={() => handleAddToFolder(f.id, deck.id)}
+                                       className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 transition-colors"
+                                     >
+                                       <FolderOpen size={13} />
+                                       {f.name}
+                                     </button>
+                                   ))}
+                                   <button
+                                     onClick={() => { setShowNewFolder(true); setCategorizingId(null) }}
+                                     className="w-full text-left px-3 py-2 text-sm text-[var(--color-accent)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 border-t border-[var(--color-border)] transition-colors"
+                                   >
+                                     <Plus size={13} />
+                                     New Folder…
+                                   </button>
+                                 </div>
+                               </div>
+                             )}
+                             {folders.length === 0 && (
+                               <div className="absolute right-0 top-full mt-1 z-10 hidden group-hover/cat:block min-w-40">
+                                 <div className="glass-panel border border-[var(--color-border)] rounded-xl shadow-lg py-3 px-3 text-center">
+                                   <p className="text-xs text-[var(--color-text-muted)]">No folders yet</p>
+                                   <button
+                                     onClick={() => setShowNewFolder(true)}
+                                     className="mt-1 text-xs text-[var(--color-accent)] font-medium hover:underline"
+                                   >
+                                     Create one
+                                   </button>
+                                 </div>
+                               </div>
+                             )}
+                           </div>
+                         )}
+                         <button
+                           onClick={() => handleAddToApp(deck)}
+                           disabled={addingId === deck.id || addedIds.has(deck.id)}
+                           className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm shrink-0 squishy-btn cyber-glow-hover"
+                         >
+                           {addingId === deck.id ? (
+                             <Loader2 size={14} className="animate-spin" />
+                           ) : (
+                             <Download size={14} />
+                           )}
+                           {addedIds.has(deck.id) ? 'Added' : 'Add to My App'}
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
             )}
           </>
         )}

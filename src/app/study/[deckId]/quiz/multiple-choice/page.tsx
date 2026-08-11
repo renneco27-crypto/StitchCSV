@@ -162,7 +162,7 @@ export default function MultipleChoicePage() {
             <span>&middot;</span>
             <span>{currentQuestion?.subject}</span>
           </div>
-          <p className="font-['DM_Serif_Display'] text-2xl mt-2 text-[var(--color-text-primary)]">
+          <p className="font-['Playfair_Display'] text-2xl mt-2 text-[var(--color-text-primary)]">
             {currentQuestion?.question}
           </p>
         </div>

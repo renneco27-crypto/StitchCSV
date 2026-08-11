@@ -71,7 +71,7 @@ export default function EnumerationCard({
           <span>{subject}</span>
         </div>
         <p className="text-xs text-[var(--color-text-muted)] mb-2">Type each item, then reveal to check</p>
-        <p className="font-['DM_Serif_Display'] text-2xl text-center mb-6 text-[var(--color-text-primary)]">
+        <p className="font-['Playfair_Display'] text-2xl text-center mb-6 text-[var(--color-text-primary)]">
           {topic}
         </p>
         <div className="mx-auto w-full max-w-md border-b-2 border-[var(--color-border-strong)]" />

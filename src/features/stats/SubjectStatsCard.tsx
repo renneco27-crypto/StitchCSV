@@ -56,7 +56,7 @@ export default function SubjectStatsCard({
       <hr className="my-4 border-[var(--color-border)]" />
 
       <div className="flex items-baseline gap-1">
-        <span className="text-4xl font-['DM_Serif_Display'] text-[var(--color-text-primary)]">
+        <span className="text-4xl font-['Playfair_Display'] text-[var(--color-text-primary)]">
           {stats.accuracy}
         </span>
         <span className="text-sm text-[var(--color-text-muted)]">% accuracy</span>

@@ -53,7 +53,7 @@ export default function SearchResult({ result, deckTitle, onClick }: SearchResul
   return (
     <div
       onClick={onClick}
-      className="rounded-xl border border-[var(--color-border)] p-4 cursor-pointer hover:bg-[var(--color-surface-2)] hover:border-[var(--color-accent)] transition-all"
+      className="glass-panel rounded-xl border border-[var(--color-border)] p-4 cursor-pointer hover:border-[var(--color-border-neon)] transition-all cyber-glow-hover"
     >
       <div className="flex items-center gap-2 text-xs">
         <span className="uppercase text-[var(--color-text-muted)]">{card.chapter}</span>

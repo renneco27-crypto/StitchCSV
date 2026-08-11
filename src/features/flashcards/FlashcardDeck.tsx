@@ -42,7 +42,7 @@ export default function FlashcardDeck({
       >
         {/* Front face */}
         <div
-          className="absolute inset-0 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
+          className="absolute inset-0 glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
           style={{ backfaceVisibility: 'hidden' }}
         >
           <div className="flex justify-between items-start">
@@ -60,7 +60,7 @@ export default function FlashcardDeck({
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center">
-            <p className="font-['DM_Serif_Display'] text-3xl md:text-4xl text-center text-[var(--color-text-primary)]">
+            <p className="font-['Playfair_Display'] text-3xl md:text-4xl text-center text-[var(--color-text-primary)]">
               {card.front}
             </p>
           </div>
@@ -71,7 +71,7 @@ export default function FlashcardDeck({
 
         {/* Back face */}
         <div
-          className="absolute inset-0 bg-[#FAFAF7] dark:bg-[#201F1C] rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
+          className="absolute inset-0 glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
           <div className="flex justify-between items-start">

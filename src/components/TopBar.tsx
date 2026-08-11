@@ -10,11 +10,11 @@ interface TopBarProps {
 
 export default function TopBar({ title, onBack, rightSlot }: TopBarProps) {
   return (
-    <header className="h-14 bg-[var(--color-surface)] border-b border-[var(--color-border)] px-4 flex items-center gap-3">
+    <header className="h-14 glass-panel border-b border-[var(--color-border)] px-4 flex items-center gap-3 sticky top-0 z-40">
       {onBack && (
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors"
           aria-label="Go back"
         >
           <ArrowLeft size={20} />

@@ -240,13 +240,13 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col cyber-border"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10">
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Add Cards</h2>
+        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] sticky top-0 z-10">
+          <h2 className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">Add Cards</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--color-surface-2)] transition-colors">
             <X size={20} />
           </button>

@@ -21,7 +21,7 @@ export default function SearchBar({ value, onChange, onClear }: SearchBarProps) 
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search cards…"
         autoFocus
-        className="w-full rounded-xl border border-[var(--color-border)] pl-10 pr-10 py-3 text-base font-['JetBrains_Mono'] bg-[var(--color-surface)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent-soft)] placeholder:text-[var(--color-text-muted)] text-[var(--color-text-primary)]"
+        className="w-full rounded-xl border border-[var(--color-border)] pl-10 pr-10 py-3 text-base font-['JetBrains_Mono'] bg-[var(--color-surface-2)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] placeholder:text-[var(--color-text-muted)] text-[var(--color-text-primary)] transition-shadow"
       />
       {value.length > 0 && (
         <button

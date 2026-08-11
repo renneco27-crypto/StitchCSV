@@ -31,7 +31,7 @@ export default function ExportButton({ deckId, deckTitle, variant = 'icon' }: Ex
       <button
         onClick={handleExport}
         disabled={loading}
-        className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors p-1"
+        className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors p-1"
         aria-label="Export deck as DOCX"
       >
         {loading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
@@ -43,7 +43,7 @@ export default function ExportButton({ deckId, deckTitle, variant = 'icon' }: Ex
     <button
       onClick={handleExport}
       disabled={loading}
-      className="flex items-center justify-center gap-2 w-full rounded-xl border border-[var(--color-border)] py-3 font-medium text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)] transition-colors disabled:opacity-40"
+      className="flex items-center justify-center gap-2 w-full rounded-xl border border-[var(--color-border)] py-3 font-medium text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-border-neon)] hover:text-[var(--color-accent)] transition-colors disabled:opacity-40 squishy-btn"
     >
       {loading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
       Export DOCX

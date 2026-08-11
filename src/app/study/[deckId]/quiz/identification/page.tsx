@@ -126,7 +126,7 @@ export default function IdentificationPage() {
             <span>·</span>
             <span>{currentItem?.subject}</span>
           </div>
-          <p className="font-['DM_Serif_Display'] text-2xl text-center text-[var(--color-text-primary)]">
+          <p className="font-['Playfair_Display'] text-2xl text-center text-[var(--color-text-primary)]">
             {currentItem?.definition}
           </p>
         </div>

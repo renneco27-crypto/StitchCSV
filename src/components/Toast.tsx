@@ -40,7 +40,7 @@ export default function Toast({ toast, onDismiss }: ToastProps) {
 
   return (
     <div
-      className={`max-w-xs rounded-xl border-l-4 p-4 shadow-lg flex items-start gap-3 bg-[var(--color-surface)] transition-transform duration-200 ease-in-out ${
+      className={`max-w-xs rounded-xl border-l-4 p-4 shadow-lg flex items-start gap-3 glass-panel transition-transform duration-200 ease-in-out ${
         exiting ? 'translate-x-[120%]' : 'translate-x-0'
       }`}
       style={{ borderColor: config.border }}

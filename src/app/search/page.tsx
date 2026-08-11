@@ -63,33 +63,33 @@ export default function SearchPage() {
           onClear={() => setQuery('')}
         />
 
-        {Object.keys(deckMap).length > 0 && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar mt-3 pb-1">
-            <button
-              onClick={() => setFilterDeckId('all')}
-              className={`rounded-full px-3 py-1 text-sm whitespace-nowrap ${
-                filterDeckId === 'all'
-                  ? 'bg-[var(--color-accent)] text-white'
-                  : 'bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] cursor-pointer'
-              }`}
-            >
-              All decks
-            </button>
-            {Object.entries(deckMap).map(([id, title]) => (
-              <button
-                key={id}
-                onClick={() => setFilterDeckId(id)}
-                className={`rounded-full px-3 py-1 text-sm whitespace-nowrap ${
-                  filterDeckId === id
-                    ? 'bg-[var(--color-accent)] text-white'
-                    : 'bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] cursor-pointer'
-                }`}
-              >
-                {title}
-              </button>
-            ))}
-          </div>
-        )}
+         {Object.keys(deckMap).length > 0 && (
+           <div className="flex gap-2 overflow-x-auto no-scrollbar mt-3 pb-1">
+             <button
+               onClick={() => setFilterDeckId('all')}
+               className={`rounded-full px-3 py-1 text-sm whitespace-nowrap squishy-btn ${
+                 filterDeckId === 'all'
+                   ? 'bg-[var(--color-accent)] text-white cyber-glow'
+                   : 'glass-panel text-[var(--color-text-secondary)] border border-[var(--color-border)]'
+               }`}
+             >
+               All decks
+             </button>
+             {Object.entries(deckMap).map(([id, title]) => (
+               <button
+                 key={id}
+                 onClick={() => setFilterDeckId(id)}
+                 className={`rounded-full px-3 py-1 text-sm whitespace-nowrap squishy-btn ${
+                   filterDeckId === id
+                     ? 'bg-[var(--color-accent)] text-white cyber-glow'
+                     : 'glass-panel text-[var(--color-text-secondary)] border border-[var(--color-border)]'
+                 }`}
+               >
+                 {title}
+               </button>
+             ))}
+           </div>
+         )}
 
         <div className="mt-4">
           {query.length < SEARCH_MIN_CHARS ? (

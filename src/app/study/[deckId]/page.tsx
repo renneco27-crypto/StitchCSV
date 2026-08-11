@@ -277,12 +277,12 @@ export default function StudyDashboard() {
               }}
               onBlur={handleSaveTitle}
               autoFocus
-              className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1 w-full max-w-md focus:outline-none focus:border-[var(--color-accent)]"
+               className="text-2xl font-['Playfair_Display'] text-[var(--color-text-primary)] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1 w-full max-w-md focus:outline-none focus:border-[var(--color-accent)]"
             />
           </div>
         ) : (
           <h1
-            className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)] truncate cursor-pointer hover:text-[var(--color-accent)] transition-colors"
+            className="text-2xl font-['Playfair_Display'] text-[var(--color-text-primary)] truncate cursor-pointer hover:text-[var(--color-accent)] transition-colors"
             onClick={() => { setEditTitle(deck?.title ?? ''); setEditingTitle(true) }}
             title="Click to edit title"
           >
@@ -304,45 +304,45 @@ export default function StudyDashboard() {
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
-            <button
-              onClick={() => document.getElementById('docx-input')?.click()}
-              disabled={addingDocx}
-              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto"
-            >
-              <Plus size={16} /> Add DOCX
-            </button>
-            <button
-              onClick={() => document.getElementById('csv-input')?.click()}
-              disabled={addingCsv}
-              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto"
-            >
-              <Plus size={16} /> Add CSV
-            </button>
-            <button
-              onClick={() => setShowCreator(true)}
-              className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full sm:w-auto"
-            >
-              <Plus size={16} /> Add Cards
-            </button>
-            <button
-              onClick={() => router.push('/new-deck')}
-              className="bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full sm:w-auto"
-            >
-              New Deck
-            </button>
-            {canPublish && (
-              <button
-                onClick={() => {
-                  const saved = localStorage.getItem('authorName') || ''
-                  setAuthorName(saved)
-                  setShowPublish(true)
-                }}
-                className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-surface)] transition-colors text-sm w-full col-span-2 sm:col-span-1"
-              >
-                <Share2 size={16} /> Publish
-              </button>
-            )}
-          </div>
+             <button
+               onClick={() => document.getElementById('docx-input')?.click()}
+               disabled={addingDocx}
+               className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto squishy-btn cyber-glow-hover"
+             >
+               <Plus size={16} /> Add DOCX
+             </button>
+             <button
+               onClick={() => document.getElementById('csv-input')?.click()}
+               disabled={addingCsv}
+               className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto squishy-btn cyber-glow-hover"
+             >
+               <Plus size={16} /> Add CSV
+             </button>
+             <button
+               onClick={() => setShowCreator(true)}
+               className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full sm:w-auto squishy-btn"
+             >
+               <Plus size={16} /> Add Cards
+             </button>
+             <button
+               onClick={() => router.push('/new-deck')}
+               className="bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full sm:w-auto squishy-btn"
+             >
+               New Deck
+             </button>
+             {canPublish && (
+               <button
+                 onClick={() => {
+                   const saved = localStorage.getItem('authorName') || ''
+                   setAuthorName(saved)
+                   setShowPublish(true)
+                 }}
+                 className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full col-span-2 sm:col-span-1 squishy-btn"
+               >
+                 <Share2 size={16} /> Publish
+               </button>
+             )}
+           </div>
         </div>
 
         <div className="mt-2 text-sm text-[var(--color-mastered)] font-medium">
@@ -351,7 +351,7 @@ export default function StudyDashboard() {
       </div>
 
       {dueCount > 0 && (
-        <div className="mx-4 mt-4 bg-[var(--color-accent-soft)] border-l-4 border-[var(--color-accent)] rounded-xl p-4 flex justify-between items-center">
+        <div className="mx-4 mt-4 glass-panel border-l-4 border-[var(--color-accent)] rounded-xl p-4 flex justify-between items-center cyber-glow">
           <div className="flex items-center gap-2">
             <Bell size={16} className="text-[var(--color-accent)]" />
             <span className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -455,12 +455,12 @@ export default function StudyDashboard() {
       )}
 
       {showPublish && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowPublish(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowPublish(false)}>
           <div
-            className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] w-full max-w-sm p-6"
+            className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-sm p-6 cyber-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Publish to Feed</h2>
+            <h2 className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)] mb-4">Publish to Feed</h2>
             <p className="text-sm text-[var(--color-text-muted)] mb-4">
               Publishing as: <span className="text-[var(--color-text-primary)] font-medium">{authorName || 'Anonymous'}</span>
             </p>
@@ -468,14 +468,14 @@ export default function StudyDashboard() {
               <button
                 onClick={handlePublish}
                 disabled={publishing}
-                className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex-1"
+                className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex-1 squishy-btn cyber-glow-hover"
               >
                 {publishing ? 'Publishing…' : 'Publish'}
               </button>
               <button
                 onClick={() => setShowPublish(false)}
                 disabled={publishing}
-                className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium hover:bg-[var(--color-surface)] disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] disabled:opacity-50 transition-colors squishy-btn"
               >
                 Cancel
               </button>

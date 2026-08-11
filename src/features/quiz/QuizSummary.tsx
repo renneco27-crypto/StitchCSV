@@ -34,7 +34,7 @@ export default function QuizSummary({
       <p className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">{mode}</p>
 
       <p
-        className="text-5xl font-['DM_Serif_Display'] text-[var(--color-text-primary)] mt-2"
+        className="text-5xl font-['Playfair_Display'] text-[var(--color-text-primary)] mt-2"
       >
         {accuracy}%
       </p>
