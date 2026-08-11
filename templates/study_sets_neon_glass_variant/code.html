@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Library - Bloom Mind</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&amp;family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "cyber-black": "#050505",
+                "cyber-gray-dark": "#111111",
+                "cyber-gray": "#1a1a1a",
+                "cyber-pink": "#ff2d85",
+                "cyber-pink-dim": "rgba(255, 45, 133, 0.2)",
+                "cyber-text-main": "#ffffff",
+                "cyber-text-muted": "#a0a0a0",
+                "secondary-container": "#6a364b",
+                "surface-tint": "#ffb1c5",
+                "primary-container": "#ff4a8d",
+                "on-surface": "#efddee",
+                "surface-container-low": "#221824",
+                "error-container": "#93000a",
+                "on-primary-fixed": "#3f001a",
+                "surface-container-highest": "#3c313e",
+                "outline": "#aa888f",
+                "tertiary-fixed-dim": "#d9bede",
+                "on-error": "#690005",
+                "on-secondary": "#4f2035",
+                "surface-container": "#261c28",
+                "error": "#ffb4ab",
+                "inverse-primary": "#ba005b",
+                "background": "#050505",
+                "inverse-surface": "#efddee",
+                "on-primary-fixed-variant": "#8f0044",
+                "secondary-fixed": "#ffd9e4",
+                "on-surface-variant": "#e3bdc5",
+                "on-error-container": "#ffdad6",
+                "tertiary-container": "#a189a6",
+                "secondary-fixed-dim": "#f9b3cc",
+                "on-tertiary-fixed-variant": "#54405a",
+                "on-background": "#ffffff",
+                "outline-variant": "#5b3f46",
+                "on-secondary-fixed": "#360b1f",
+                "tertiary-fixed": "#f6d9fa",
+                "on-tertiary": "#3c2942",
+                "surface-dim": "#19101b",
+                "on-tertiary-fixed": "#26152c",
+                "surface": "#050505",
+                "surface-variant": "#3c313e",
+                "primary-fixed-dim": "#ffb1c5",
+                "on-secondary-fixed-variant": "#6a364b",
+                "tertiary": "#d9bede",
+                "on-tertiary-container": "#35233b",
+                "on-primary": "#ffffff",
+                "surface-bright": "#413542",
+                "surface-container-high": "#312633",
+                "primary-fixed": "#ffd9e1",
+                "on-secondary-container": "#e6a2ba",
+                "on-primary-container": "#ffffff",
+                "secondary": "#f9b3cc",
+                "primary": "#ff2d85",
+                "inverse-on-surface": "#382d39",
+                "surface-container-lowest": "#140b16"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px",
+                "cyber": "8px"
+        },
+        "spacing": {
+                "gutter": "16px",
+                "margin-desktop": "64px",
+                "container-max": "1280px",
+                "unit": "8px",
+                "margin-mobile": "16px"
+        },
+        "fontFamily": {
+                "display-lg": [
+                        "Playfair Display"
+                ],
+                "headline-lg-mobile": [
+                        "Playfair Display"
+                ],
+                "headline-lg": [
+                        "Playfair Display"
+                ],
+                "body-md": [
+                        "Be Vietnam Pro", "sans-serif"
+                ],
+                "label-sm": [
+                        "Be Vietnam Pro", "sans-serif"
+                ]
+        },
+        "fontSize": {
+                "display-lg": [
+                        "56px",
+                        {
+                                "lineHeight": "64px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .cyber-glow { box-shadow: 0 0 10px rgba(255, 45, 133, 0.5), 0 0 20px rgba(255, 45, 133, 0.3); }
+        .cyber-glow-hover:hover { box-shadow: 0 0 15px rgba(255, 45, 133, 0.8), 0 0 30px rgba(255, 45, 133, 0.5); }
+        .cyber-border { border: 1px solid #ff2d85; box-shadow: inset 0 0 5px rgba(255, 45, 133, 0.2), 0 0 5px rgba(255, 45, 133, 0.2); }
+        .glass-panel { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .squishy-btn:active { transform: scale(0.95); transition: transform 0.1s ease-in-out; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-[#050505] text-cyber-text-main font-body-md min-h-screen relative pb-32">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center px-margin-mobile h-16 w-full z-50 fixed top-0 glass-panel border-b border-cyber-gray">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-cyber-pink cyber-glow">
+<img class="w-full h-full object-cover grayscale" data-alt="User portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRjXmLXS7ZBXDX3DV3jOUT0ETvCXNq4UpRVxu5fygNRkZE3g-Js0zIeW-TdjNoZ4kv1wkuFBkBJGy-UOedrhtI6HFJtgcFqfzHX35fAsCm8EcGVD9CuhRVTn1lxnU6yMTxMwJlvho7wuqGwy5y3cisM3kNfi1A-nyWQnGP75Jyy4U1RImUS5uE9tSSDMudXdeN2D0LTYmiwd3qRJDR0eOUC4QT7Nkstgvad4LZXIIfi3HHyNcSABRD2Q"/>
+</div>
+<h1 class="font-display-lg text-[22px] font-bold text-cyber-text-main tracking-widest uppercase" style="font-family: 'Be Vietnam Pro', sans-serif;">Bloom<span class="text-cyber-pink">Mind</span></h1>
+<button class="w-8 h-8 flex items-center justify-center text-cyber-text-main hover:text-cyber-pink transition-colors active:scale-95 duration-200 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Header & Search -->
+<div class="mb-6">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-[24px] mb-4 text-cyber-text-main uppercase tracking-wider" style="font-family: 'Be Vietnam Pro', sans-serif;">My Library</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-cyber-text-muted">search</span>
+<input class="w-full bg-cyber-gray-dark border border-cyber-gray rounded-cyber py-3 pl-12 pr-4 focus:outline-none focus:border-cyber-pink focus:shadow-[0_0_10px_rgba(255,45,133,0.3)] transition-all font-body-md text-cyber-text-main placeholder:text-cyber-text-muted" placeholder="Search study sets..." type="text"/>
+</div>
+</div>
+<!-- Filters / Categories -->
+<div class="flex gap-unit overflow-x-auto pb-4 mb-2 no-scrollbar">
+<button class="squishy-btn whitespace-nowrap px-4 py-2 rounded-cyber bg-cyber-pink text-white font-label-sm uppercase tracking-wider cyber-glow-hover transition-all">All Sets</button>
+<button class="squishy-btn whitespace-nowrap px-4 py-2 rounded-cyber bg-cyber-gray-dark border border-cyber-gray text-cyber-text-muted font-label-sm uppercase tracking-wider hover:text-white hover:border-cyber-pink transition-all">Languages</button>
+<button class="squishy-btn whitespace-nowrap px-4 py-2 rounded-cyber bg-cyber-gray-dark border border-cyber-gray text-cyber-text-muted font-label-sm uppercase tracking-wider hover:text-white hover:border-cyber-pink transition-all">History</button>
+<button class="squishy-btn whitespace-nowrap px-4 py-2 rounded-cyber bg-cyber-gray-dark border border-cyber-gray text-cyber-text-muted font-label-sm uppercase tracking-wider hover:text-white hover:border-cyber-pink transition-all">Music</button>
+</div>
+<!-- Library List (Dense format) -->
+<div class="flex flex-col gap-3">
+<!-- Card 1 -->
+<div class="glass-panel cyber-border rounded-cyber p-4 flex items-center gap-4 hover:-translate-y-0.5 transition-transform duration-300 group cursor-pointer">
+<div class="w-1 bg-cyber-pink h-12 rounded-full cyber-glow"></div>
+<div class="flex-1">
+<h3 class="font-body-md font-bold text-[16px] text-white mb-1 group-hover:text-cyber-pink transition-colors">French Vocabulary</h3>
+<div class="flex items-center gap-3">
+<p class="font-label-sm text-[11px] text-cyber-text-muted uppercase tracking-wider">Daily conversation essentials</p>
+<span class="w-1 h-1 rounded-full bg-cyber-gray"></span>
+<span class="font-label-sm text-[11px] text-cyber-pink uppercase tracking-widest">124 Cards</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-cyber border border-cyber-pink flex items-center justify-center bg-cyber-gray-dark text-cyber-pink squishy-btn group-hover:cyber-glow transition-all">
+<span class="material-symbols-outlined text-[20px]">play_arrow</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-panel cyber-border rounded-cyber p-4 flex items-center gap-4 hover:-translate-y-0.5 transition-transform duration-300 group cursor-pointer">
+<div class="w-1 bg-cyber-pink h-12 rounded-full cyber-glow opacity-70"></div>
+<div class="flex-1">
+<h3 class="font-body-md font-bold text-[16px] text-white mb-1 group-hover:text-cyber-pink transition-colors">History Dates</h3>
+<div class="flex items-center gap-3">
+<p class="font-label-sm text-[11px] text-cyber-text-muted uppercase tracking-wider">European Renaissance</p>
+<span class="w-1 h-1 rounded-full bg-cyber-gray"></span>
+<span class="font-label-sm text-[11px] text-cyber-pink uppercase tracking-widest opacity-80">56 Cards</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-cyber border border-cyber-gray hover:border-cyber-pink flex items-center justify-center bg-cyber-gray-dark text-white hover:text-cyber-pink squishy-btn transition-all">
+<span class="material-symbols-outlined text-[20px]">play_arrow</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-panel cyber-border rounded-cyber p-4 flex items-center gap-4 hover:-translate-y-0.5 transition-transform duration-300 group cursor-pointer">
+<div class="w-1 bg-cyber-pink h-12 rounded-full cyber-glow opacity-50"></div>
+<div class="flex-1">
+<h3 class="font-body-md font-bold text-[16px] text-white mb-1 group-hover:text-cyber-pink transition-colors">Piano Chords</h3>
+<div class="flex items-center gap-3">
+<p class="font-label-sm text-[11px] text-cyber-text-muted uppercase tracking-wider">Jazz progressions &amp; inversions</p>
+<span class="w-1 h-1 rounded-full bg-cyber-gray"></span>
+<span class="font-label-sm text-[11px] text-cyber-pink uppercase tracking-widest opacity-80">42 Cards</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-cyber border border-cyber-gray hover:border-cyber-pink flex items-center justify-center bg-cyber-gray-dark text-white hover:text-cyber-pink squishy-btn transition-all">
+<span class="material-symbols-outlined text-[20px]">play_arrow</span>
+</div>
+</div>
+<!-- Empty State / Add New Card -->
+<div class="bg-cyber-gray-dark border border-dashed border-cyber-gray rounded-cyber p-4 flex items-center justify-center gap-3 hover:border-cyber-pink transition-colors cursor-pointer group">
+<div class="w-8 h-8 rounded-cyber flex items-center justify-center text-cyber-pink group-hover:cyber-glow transition-all">
+<span class="material-symbols-outlined text-[24px]">add</span>
+</div>
+<p class="font-body-md text-[14px] text-cyber-text-muted group-hover:text-cyber-pink font-bold uppercase tracking-wider transition-colors">Create New Set</p>
+</div>
+</div>
+</main>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed bottom-24 right-4 md:right-8 lg:right-12 w-14 h-14 bg-cyber-pink text-white rounded-cyber flex items-center justify-center squishy-btn z-40 cyber-glow hover:bg-[#ff4d9c] transition-colors">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 glass-panel border-t border-cyber-pink shadow-[0_-5px_20px_rgba(255,45,133,0.1)]">
+<a class="flex flex-col items-center justify-center text-cyber-text-muted hover:text-cyber-pink active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-sm text-[10px] uppercase tracking-wider">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-cyber-text-muted hover:text-cyber-pink active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1">style</span>
+<span class="font-label-sm text-[10px] uppercase tracking-wider">Study</span>
+</a>
+<a class="flex flex-col items-center justify-center text-cyber-text-muted hover:text-cyber-pink active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1">equalizer</span>
+<span class="font-label-sm text-[10px] uppercase tracking-wider">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-cyber-pink active:scale-90 duration-200 relative" href="#">
+<div class="absolute -inset-2 bg-cyber-pink-dim rounded-cyber blur-md"></div>
+<span class="material-symbols-outlined mb-1 relative" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+<span class="font-label-sm text-[10px] uppercase tracking-wider relative font-bold">Library</span>
+</a>
+</nav>
+</body></html>

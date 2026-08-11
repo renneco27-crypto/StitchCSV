@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Loader2, Download, BookOpen, ArrowLeft,
-  Folder, FolderOpen, Plus, X, ChevronDown,
+  Folder, FolderOpen, Plus, X, ChevronDown, Trash2,
 } from 'lucide-react'
 import { parseCSVFile } from '@/features/upload/csvParser'
 import { auditAndFixCSV } from '@/features/upload/csvFixer'
@@ -200,6 +200,22 @@ export default function FeedPage() {
       addToast('Folder deleted', 'success')
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to delete folder', 'error')
+    }
+  }
+
+  const handleDeleteDeck = async (deckId: string) => {
+    if (!window.confirm('Delete this deck from the feed?')) return
+    try {
+      const res = await fetch(`/api/feed/${deckId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to delete deck')
+      }
+      setDecks((prev) => prev.filter((d) => d.id !== deckId))
+      setFolderDecks((prev) => prev.filter((d) => d.id !== deckId))
+      addToast('Deck deleted', 'success')
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to delete deck', 'error')
     }
   }
 
@@ -400,6 +416,13 @@ export default function FeedPage() {
                              )}
                            </div>
                          )}
+                         <button
+                           onClick={() => handleDeleteDeck(deck.id)}
+                           className="flex items-center gap-2 text-[var(--color-dontknow)] px-4 py-2 rounded-xl font-medium hover:bg-[var(--color-dontknow-soft)] border border-[var(--color-border)] transition-colors text-sm shrink-0 squishy-btn"
+                           title="Delete deck"
+                         >
+                           <Trash2 size={14} />
+                         </button>
                          <button
                            onClick={() => handleAddToApp(deck)}
                            disabled={addingId === deck.id || addedIds.has(deck.id)}

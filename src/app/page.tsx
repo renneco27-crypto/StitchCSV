@@ -89,7 +89,7 @@ export default function Home() {
         <div className="glass-panel rounded-2xl flex items-center justify-between mb-6 px-5 py-3 border border-[var(--color-border)]">
           <div>
             <h1 className="text-2xl font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
-              Stitch<span className="text-[var(--color-accent)]">AI</span>
+              Mae<span className="text-[var(--color-accent)]">AI</span>
             </h1>
             <p className="text-sm text-[var(--color-text-muted)]">Turn notes into knowledge</p>
           </div>
