@@ -92,12 +92,12 @@ export default function NewDeckPage() {
       <div className="max-w-xl mx-auto px-4 py-8">
         <button
           onClick={() => router.push('/')}
-          className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] mb-6"
+          className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] mb-6 squishy-btn"
         >
           <ArrowLeft size={16} /> Back
         </button>
 
-        <h1 className="text-2xl font-['DM_Serif_Display'] text-[var(--color-text-primary)]">
+        <h1 className="text-2xl font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
           New Deck
         </h1>
         <p className="text-sm text-[var(--color-text-muted)] mt-1">
@@ -109,16 +109,16 @@ export default function NewDeckPage() {
           placeholder="Deck name (required)"
           value={deckName}
           onChange={(e) => setDeckName(e.target.value)}
-          className="mt-6 w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+          className="mt-6 w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow"
         />
 
         <div
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setState('dragover') }}
           onDragLeave={() => setState('idle')}
-          className={`mt-4 rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-200 ${
+          className={`mt-4 glass-panel rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-200 ${
             state === 'dragover'
-              ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)]'
+              ? 'border-[var(--color-border-neon)] bg-[var(--color-accent-soft)] cyber-glow'
               : 'border-[var(--color-border-strong)]'
           }`}
         >
@@ -132,7 +132,7 @@ export default function NewDeckPage() {
 
           {state === 'idle' || state === 'dragover' ? (
             <>
-              <Upload size={48} className="mx-auto text-[var(--color-text-muted)]" />
+              <Upload size={48} className="mx-auto text-[var(--color-accent)]" />
               <p className="text-xl font-medium mt-4 text-[var(--color-text-primary)]">
                 {state === 'dragover' ? 'Drop to upload' : 'Drop your file here'}
               </p>
@@ -141,7 +141,7 @@ export default function NewDeckPage() {
               </p>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity"
+                className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity squishy-btn cyber-glow-hover"
               >
                 Choose file
               </button>
@@ -157,7 +157,7 @@ export default function NewDeckPage() {
               <p className="text-xl font-medium mt-4 text-[var(--color-text-primary)]">Deck ready!</p>
               <button
                 onClick={() => router.push('/study/' + deckId)}
-                className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity"
+                className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity squishy-btn cyber-glow-hover"
               >
                 Open deck →
               </button>
@@ -168,7 +168,7 @@ export default function NewDeckPage() {
               <p className="text-sm text-[var(--color-dontknow)] mt-4">{error}</p>
               <button
                 onClick={() => selectedFile ? processFile(selectedFile) : setState('idle')}
-                className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity"
+                className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity squishy-btn cyber-glow-hover"
               >
                 Try again
               </button>
@@ -176,19 +176,19 @@ export default function NewDeckPage() {
           )}
         </div>
 
-        <div className="mt-6 border-t border-[var(--color-border)] pt-6">
+        <div className="mt-6 glass-panel rounded-2xl border border-[var(--color-border)] pt-6 px-6 pb-6">
           <p className="text-sm font-medium text-[var(--color-text-primary)] mb-3">Or paste your notes</p>
           <textarea
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
             placeholder="Paste study notes here — the AI will extract flashcards from your text"
             rows={5}
-            className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none"
+            className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow resize-none"
           />
           <button
             onClick={handleTextGenerate}
             disabled={textLoading || !pasteText.trim() || !deckName.trim()}
-            className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity squishy-btn cyber-glow-hover"
           >
             {textLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
             {textLoading ? 'Generating deck…' : 'Generate from Text'}

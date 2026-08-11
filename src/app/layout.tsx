@@ -1,18 +1,18 @@
 import type { Metadata } from 'next'
-import { DM_Serif_Display, Inter, JetBrains_Mono } from 'next/font/google'
+import { Playfair_Display, Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import ToastContainer from '@/components/ToastContainer'
 import AuthWrapper from '@/components/AuthWrapper'
 import './globals.css'
 
-const dmSerifDisplay = DM_Serif_Display({
-  weight: '400',
+const playfairDisplay = Playfair_Display({
+  weight: ['400', '500', '600', '700', '800', '900'],
   subsets: ['latin'],
   variable: '--font-serif',
 })
 
-const inter = Inter({
-  weight: ['400', '500', '600'],
+const beVietnamPro = Be_Vietnam_Pro({
+  weight: ['400', '500', '600', '700', '800', '900'],
   subsets: ['latin'],
   variable: '--font-sans',
 })
@@ -37,7 +37,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${dmSerifDisplay.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${playfairDisplay.variable} ${beVietnamPro.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

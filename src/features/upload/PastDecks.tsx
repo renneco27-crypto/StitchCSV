@@ -47,7 +47,7 @@ export default function PastDecks() {
 
   if (decks.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 glass-panel rounded-2xl">
         <BookOpen size={48} className="mx-auto text-[var(--color-text-muted)]" />
         <p className="text-sm text-[var(--color-text-muted)] mt-4">
           No decks yet — upload your first notes above
@@ -69,11 +69,12 @@ export default function PastDecks() {
           <div
             key={deck.id}
             onClick={() => router.push('/study/' + deck.id)}
-            className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 flex items-center gap-4 cursor-pointer hover:border-[var(--color-accent)] transition"
+            className="glass-panel rounded-xl border border-[var(--color-border)] p-4 flex items-center gap-4 cursor-pointer hover:border-[var(--color-border-neon)] transition group cyber-glow-hover"
           >
+            <div className="w-1 bg-[var(--color-accent)] h-12 rounded-full cyber-glow" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-base font-medium truncate">{deck.title}</span>
+                <span className="text-base font-medium truncate group-hover:text-[var(--color-accent)] transition-colors">{deck.title}</span>
                 <StatBadge label={deck.subject} value={''} color="accent" />
               </div>
               <div className="flex items-center gap-3 mt-1">

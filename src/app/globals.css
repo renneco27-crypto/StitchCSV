@@ -1,51 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg: #F5F5F0;
-  --color-surface: #FFFFFF;
-  --color-surface-2: #F0EFEB;
-  --color-border: #E6E4DF;
-  --color-border-strong: #C8C5BD;
-  --color-text-primary: #1C1B1A;
-  --color-text-secondary: #5C5A54;
-  --color-text-muted: #9C9A92;
-  --color-accent: #6C5CE7;
-  --color-accent-soft: rgba(108, 92, 231, 0.1);
-  --color-know: #2ECC71;
-  --color-know-soft: rgba(46, 204, 113, 0.1);
-  --color-dontknow: #E74C3C;
-  --color-dontknow-soft: rgba(231, 76, 60, 0.1);
-  --color-mastered: #F39C12;
-  --color-mastered-soft: rgba(243, 156, 18, 0.1);
-  --color-new: #3498DB;
-  --color-new-soft: rgba(52, 152, 219, 0.1);
+  /* Midnight Bloom — neon glass design system */
+  --color-bg: #050505;
+  --color-surface: #111111;
+  --color-surface-2: #1a1a1a;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-border-neon: #ff2d85;
+  --color-text-primary: #f8f0f2;
+  --color-text-secondary: #d6c2c9;
+  --color-text-muted: #9a88a0;
+  --color-accent: #ff2d85;
+  --color-accent-soft: rgba(255, 45, 133, 0.12);
+  --color-accent-glow: rgba(255, 45, 133, 0.5);
+  --color-know: #3ddc84;
+  --color-know-soft: rgba(61, 220, 132, 0.15);
+  --color-dontknow: #ff4b6b;
+  --color-dontknow-soft: rgba(255, 75, 107, 0.15);
+  --color-mastered: #ffc800;
+  --color-mastered-soft: rgba(255, 200, 0, 0.15);
+  --color-new: #d9bede;
+  --color-new-soft: rgba(217, 190, 222, 0.15);
 
-  --font-serif: 'DM Serif Display', Georgia, serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #141310;
-    --color-surface: #1E1D1A;
-    --color-surface-2: #2A2825;
-    --color-border: #3A3834;
-    --color-border-strong: #5C5A54;
-    --color-text-primary: #EDECE8;
-    --color-text-secondary: #A8A69E;
-    --color-text-muted: #6B6962;
-    --color-accent: #8B7CF7;
-    --color-accent-soft: rgba(139, 124, 247, 0.15);
-    --color-know: #3DDC84;
-    --color-know-soft: rgba(61, 220, 132, 0.15);
-    --color-dontknow: #F05A4A;
-    --color-dontknow-soft: rgba(240, 90, 74, 0.15);
-    --color-mastered: #F5B342;
-    --color-mastered-soft: rgba(245, 179, 66, 0.15);
-    --color-new: #5BABEA;
-    --color-new-soft: rgba(91, 171, 234, 0.15);
-  }
 }
 
 @theme inline {
@@ -56,9 +36,33 @@
 }
 
 body {
-  background: var(--color-bg);
+  background:
+    radial-gradient(1200px 800px at 80% -10%, rgba(255, 45, 133, 0.08) 0%, transparent 60%),
+    radial-gradient(1000px 700px at -10% 110%, rgba(217, 190, 222, 0.06) 0%, transparent 55%),
+    var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+}
+
+/* Neon glow + glass utilities */
+.cyber-glow {
+  box-shadow: 0 0 10px rgba(255, 45, 133, 0.5), 0 0 20px rgba(255, 45, 133, 0.3);
+}
+.cyber-glow-hover:hover {
+  box-shadow: 0 0 15px rgba(255, 45, 133, 0.8), 0 0 30px rgba(255, 45, 133, 0.5);
+}
+.cyber-border {
+  border: 1px solid #ff2d85;
+  box-shadow: inset 0 0 5px rgba(255, 45, 133, 0.2), 0 0 5px rgba(255, 45, 133, 0.2);
+}
+.glass-panel {
+  background: rgba(17, 17, 17, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.squishy-btn:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-in-out;
 }
 
 @keyframes slide-right {

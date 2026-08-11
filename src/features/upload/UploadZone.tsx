@@ -83,9 +83,9 @@ export default function UploadZone() {
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      className={`rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-200 ${
+      className={`glass-panel rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-200 ${
         uploadState === 'dragover'
-          ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)]'
+          ? 'border-[var(--color-border-neon)] bg-[var(--color-accent-soft)] cyber-glow'
           : 'border-[var(--color-border-strong)]'
       }`}
     >
@@ -99,7 +99,7 @@ export default function UploadZone() {
 
       {uploadState === 'idle' || uploadState === 'dragover' ? (
         <>
-          <Upload size={48} className="mx-auto text-[var(--color-text-muted)]" />
+          <Upload size={48} className="mx-auto text-[var(--color-accent)]" />
           <p className="text-xl font-medium mt-4 text-[var(--color-text-primary)]">
             {uploadState === 'dragover' ? 'Drop to upload' : 'Drop your file here'}
           </p>
@@ -108,7 +108,7 @@ export default function UploadZone() {
           </p>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity"
+            className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity squishy-btn cyber-glow-hover"
           >
             Choose file
           </button>
@@ -126,7 +126,7 @@ export default function UploadZone() {
           <p className="text-xl font-medium mt-4 text-[var(--color-text-primary)]">Deck ready!</p>
           <button
             onClick={() => router.push('/study/' + deckId)}
-            className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity"
+            className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity squishy-btn cyber-glow-hover"
           >
             Open deck →
           </button>
@@ -137,7 +137,7 @@ export default function UploadZone() {
           <p className="text-sm text-[var(--color-dontknow)] mt-4">{errorMessage}</p>
           <button
             onClick={handleRetry}
-            className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity"
+            className="bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium mt-4 hover:opacity-90 transition-opacity squishy-btn cyber-glow-hover"
           >
             Try again
           </button>

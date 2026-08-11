@@ -86,15 +86,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] px-4 py-8">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6 px-4 py-3">
+        <div className="glass-panel rounded-2xl flex items-center justify-between mb-6 px-5 py-3 border border-[var(--color-border)]">
           <div>
-            <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">StitchAI</h1>
+            <h1 className="text-2xl font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
+              Stitch<span className="text-[var(--color-accent)]">AI</span>
+            </h1>
             <p className="text-sm text-[var(--color-text-muted)]">Turn notes into knowledge</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowHelp(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-2)] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:border-[var(--color-border-neon)] hover:text-[var(--color-accent)] transition-colors squishy-btn"
               aria-label="CSV format help"
             >
               <HelpCircle size={16} />
@@ -102,7 +104,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => router.push('/feed')}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-2)] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:border-[var(--color-border-neon)] hover:text-[var(--color-accent)] transition-colors squishy-btn"
             >
               <BookOpen size={16} />
               <span>Feed</span>
@@ -116,19 +118,19 @@ export default function Home() {
         </div>
 
         <div className="mt-6">
-          <div className="border-t border-[var(--color-border)] pt-6">
+          <div className="glass-panel rounded-2xl border border-[var(--color-border)] pt-6 px-6 pb-6">
             <p className="text-sm font-medium text-[var(--color-text-primary)] mb-3">Or paste your notes</p>
             <textarea
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
               placeholder="Paste study notes here — the AI will extract flashcards from your text"
               rows={5}
-              className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow resize-none"
             />
             <button
               onClick={handleTextGenerate}
               disabled={textLoading || !pasteText.trim()}
-              className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity squishy-btn cyber-glow-hover"
             >
               {textLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
               {textLoading ? 'Generating deck…' : 'Generate from Text'}
@@ -142,10 +144,10 @@ export default function Home() {
       </div>
 
       {showHelp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10">
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Format Reference</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col cyber-border">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] sticky top-0 z-10">
+              <h2 className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">Format Reference</h2>
               <button
                 onClick={() => setShowHelp(false)}
                 className="p-2 rounded-lg hover:bg-[var(--color-surface-2)] transition-colors"
@@ -154,14 +156,14 @@ export default function Home() {
               </button>
             </div>
             
-            <div className="flex gap-1 p-2 border-b border-[var(--color-border)] overflow-x-auto sticky top-[48px] bg-[var(--color-surface)] z-10">
+            <div className="flex gap-1 p-2 border-b border-[var(--color-border)] overflow-x-auto sticky top-[48px] z-10 no-scrollbar">
               {FORMATS.map((f, i) => (
                 <button
                   key={f.key}
                   onClick={() => setActiveTab(i)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors squishy-btn ${
                     activeTab === i
-                      ? 'bg-[var(--color-accent)] text-white'
+                      ? 'bg-[var(--color-accent)] text-white cyber-glow'
                       : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
                   }`}
                 >
@@ -177,7 +179,7 @@ export default function Home() {
                     {FORMATS[activeTab].description}
                   </p>
                 )}
-                <div className="bg-[var(--color-bg)] rounded-xl p-4 font-mono text-xs text-[var(--color-text-secondary)] overflow-x-auto">
+                <div className="bg-[var(--color-surface-2)] rounded-xl p-4 font-mono text-xs text-[var(--color-text-secondary)] overflow-x-auto border border-[var(--color-border)]">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-[var(--color-text-muted)]">Required columns:</span>
                     <span className="text-xs text-[var(--color-text-muted)]">{FORMATS[activeTab].columns}</span>
@@ -185,8 +187,8 @@ export default function Home() {
                   <pre className="whitespace-pre-wrap">{FORMATS[activeTab].example}</pre>
                 </div>
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  Tip: Use <kbd className="px-1.5 py-0.5 bg-[var(--color-surface-2)] rounded text-[10px] font-mono">&ldquo;quotes&rdquo;</kbd> for fields containing commas.
-                  Type column is optional — defaults to <code className="px-1.5 py-0.5 bg-[var(--color-surface-2)] rounded text-[10px] font-mono">definition</code>.
+                  Tip: Use <kbd className="px-1.5 py-0.5 bg-[var(--color-surface-2)] rounded text-[10px] font-mono border border-[var(--color-border)]">&ldquo;quotes&rdquo;</kbd> for fields containing commas.
+                  Type column is optional — defaults to <code className="px-1.5 py-0.5 bg-[var(--color-surface-2)] rounded text-[10px] font-mono border border-[var(--color-border)]">definition</code>.
                 </p>
               </div>
             </div>
