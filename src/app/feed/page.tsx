@@ -339,12 +339,12 @@ export default function FeedPage() {
                      key={deck.id}
                      className="glass-panel rounded-xl border border-[var(--color-border)] p-4 hover:border-[var(--color-border-neon)] transition cyber-glow-hover"
                    >
-                     <div className="flex items-start justify-between gap-3">
+                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                        <div className="flex-1 min-w-0">
-                         <h3 className="text-base font-medium text-[var(--color-text-primary)] truncate">
+                         <h3 className="text-base font-medium text-[var(--color-text-primary)] break-words whitespace-normal line-clamp-2">
                            {deck.title}
                          </h3>
-                         <div className="flex items-center gap-3 mt-1 flex-wrap">
+                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                            <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-medium">
                              {deck.subject}
                            </span>
@@ -359,7 +359,7 @@ export default function FeedPage() {
                            </span>
                          </div>
                        </div>
-                       <div className="flex items-center gap-2 shrink-0">
+                       <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 w-full sm:w-auto">
                          {activeFolder ? (
                            <button
                              onClick={() => handleRemoveFromFolder(deck.id)}

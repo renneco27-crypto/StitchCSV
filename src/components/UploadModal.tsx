@@ -139,11 +139,7 @@ export default function UploadModal() {
   }
 
   const handleGenerate = async () => {
-    const name = deckName.trim()
-    if (!name) {
-      addToast('Please enter a deck name first', 'error')
-      return
-    }
+    const name = deckName.trim() || 'Untitled Deck'
     if (!pasteText.trim()) return
     setTextLoading(true)
     try {
@@ -303,7 +299,7 @@ export default function UploadModal() {
               </button>
               <button
                 onClick={handleGenerate}
-                disabled={textLoading || !pasteText.trim() || !deckName.trim()}
+                disabled={textLoading || !pasteText.trim()}
                 className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity w-full justify-center squishy-btn cyber-glow-hover"
               >
                 {textLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}

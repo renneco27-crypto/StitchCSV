@@ -74,7 +74,7 @@ export default function PastDecks() {
             <div className="w-1 bg-[var(--color-accent)] h-12 rounded-full cyber-glow" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-base font-medium truncate group-hover:text-[var(--color-accent)] transition-colors">{deck.title}</span>
+                <span className="text-base font-medium break-words whitespace-normal line-clamp-2 group-hover:text-[var(--color-accent)] transition-colors">{deck.title}</span>
                 <StatBadge label={deck.subject} value={''} color="accent" />
               </div>
               <div className="flex items-center gap-3 mt-1">

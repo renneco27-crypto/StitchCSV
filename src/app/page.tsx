@@ -1,20 +1,39 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useStatsStore } from '@/store/statsStore'
 import PastDecks from '@/features/upload/PastDecks'
 import { getStreakStatus } from '@/features/stats/statsCalculator'
+import { fetchStatsFromSupabase, syncStatsToSupabase } from '@/features/stats/supabaseSync'
 
 export default function Home() {
   const stats = useStatsStore((s) => s.stats)
+  const [dbTotalStreak, setDbTotalStreak] = useState<number | null>(null)
+  const [dbStudiedToday, setDbStudiedToday] = useState<number | null>(null)
 
+  // Local calculation
   const deckStats = Object.values(stats).filter((s) => s && s.lastStudied)
-  const studiedToday = deckStats.filter(
+  const localStudiedToday = deckStats.filter(
     (s) => getStreakStatus(s.lastStudied) === 'today'
   ).length
-  const totalStreak = deckStats.reduce(
+  const localTotalStreak = deckStats.reduce(
     (max, s) => Math.max(max, s.studyStreak ?? 0),
     0
   )
+
+  useEffect(() => {
+    // Sync local stats to supabase, then fetch the latest
+    syncStatsToSupabase(stats).then(async () => {
+      const dbStats = await fetchStatsFromSupabase()
+      if (dbStats) {
+        setDbTotalStreak(dbStats.total_streak)
+        setDbStudiedToday(dbStats.studied_today)
+      }
+    })
+  }, [stats])
+
+  const totalStreak = dbTotalStreak !== null ? Math.max(dbTotalStreak, localTotalStreak) : localTotalStreak
+  const studiedToday = dbStudiedToday !== null ? Math.max(dbStudiedToday, localStudiedToday) : localStudiedToday
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] px-4 py-8">

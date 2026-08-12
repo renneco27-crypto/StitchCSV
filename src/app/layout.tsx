@@ -44,9 +44,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthWrapper>
-            <div className="flex flex-1">
+            <div className="flex flex-col lg:flex-row flex-1">
               <Sidebar />
-              <main className="flex-1 min-w-0">{children}</main>
+              <main className="flex-1 min-w-0 flex flex-col">{children}</main>
             </div>
           </AuthWrapper>
           <UploadModal />
