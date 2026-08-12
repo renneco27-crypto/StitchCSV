@@ -29,12 +29,12 @@ export default function FlashcardDeck({
 
   return (
     <div
-      className={`h-72 md:h-96 w-full cursor-pointer ${animClass}`}
+      className={`w-full cursor-pointer ${animClass}`}
       style={{ perspective: '1000px' }}
       onClick={onFlip}
     >
       <div
-        className="relative w-full h-full transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+        className="w-full transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] grid"
         style={{
           transformStyle: 'preserve-3d',
           transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -42,7 +42,7 @@ export default function FlashcardDeck({
       >
         {/* Front face */}
         <div
-          className="absolute inset-0 glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
+          className="col-start-1 row-start-1 min-h-[18rem] md:min-h-[24rem] h-full glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
           style={{ backfaceVisibility: 'hidden' }}
         >
           <div className="flex justify-between items-start">
@@ -59,8 +59,8 @@ export default function FlashcardDeck({
               ))}
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center">
-            <p className="font-['Playfair_Display'] text-3xl md:text-4xl text-center text-[var(--color-text-primary)]">
+          <div className="flex-1 flex items-center justify-center py-4">
+            <p className="font-['Playfair_Display'] text-2xl sm:text-3xl md:text-4xl text-center text-[var(--color-text-primary)] break-words">
               {card.front}
             </p>
           </div>
@@ -71,7 +71,7 @@ export default function FlashcardDeck({
 
         {/* Back face */}
         <div
-          className="absolute inset-0 glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
+          className="col-start-1 row-start-1 min-h-[18rem] md:min-h-[24rem] h-full glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
           <div className="flex justify-between items-start">
@@ -80,8 +80,8 @@ export default function FlashcardDeck({
             </span>
             <StatBadge label={card.status} value="" color={statusColor} />
           </div>
-          <div className="flex-1 flex items-center justify-center flex-col gap-3">
-            <p className="text-xl font-medium text-center text-[var(--color-text-primary)]">
+          <div className="flex-1 flex items-center justify-center flex-col gap-3 py-4">
+            <p className="text-lg sm:text-xl font-medium text-center text-[var(--color-text-primary)] break-words">
               {card.back}
             </p>
             {card.type === 'formula' && (
