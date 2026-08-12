@@ -109,7 +109,7 @@ export default function NewDeckPage() {
           placeholder="Deck name (required)"
           value={deckName}
           onChange={(e) => setDeckName(e.target.value)}
-          className="mt-6 w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow"
+          className="mt-6 w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow"
         />
 
         <div
@@ -183,7 +183,7 @@ export default function NewDeckPage() {
             onChange={(e) => setPasteText(e.target.value)}
             placeholder="Paste study notes here — the AI will extract flashcards from your text"
             rows={5}
-            className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow resize-none"
+            className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow resize-none"
           />
           <button
             onClick={handleTextGenerate}

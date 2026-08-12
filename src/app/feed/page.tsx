@@ -305,7 +305,7 @@ export default function FeedPage() {
                    onChange={(e) => setNewFolderName(e.target.value)}
                    placeholder="Folder name…"
                    maxLength={40}
-                   className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow"
+                   className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow"
                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreateFolder() }}
                    autoFocus
                  />

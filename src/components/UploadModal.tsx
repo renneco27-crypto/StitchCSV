@@ -2,12 +2,55 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Loader2, Sparkles, X, CheckCircle2, XCircle } from 'lucide-react'
+import { Upload, Loader2, Sparkles, X, CheckCircle2, XCircle, Bot } from 'lucide-react'
 import { handleUpload, UploadError } from '@/features/upload/uploadHandler'
 import { useToastStore } from '@/store/toastStore'
 import { useUIStore } from '@/store/uiStore'
 
 type UploadState = 'idle' | 'dragover' | 'processing' | 'success' | 'error'
+
+const CLAUDE_PROMPT_TEMPLATE = `Analyze the entire reference material.
+Identify every distinct topic and subtopic.
+Extract every examinable fact, including definitions, formulas, theories, processes, rules, exceptions, examples, and conditions.
+Merge duplicate facts but NEVER omit unique information.
+Automatically determine how many flashcards are required based on the amount of unique examinable information. Do not create filler questions and do not skip important concepts.
+Before finishing, internally verify that every major topic is represented.
+If the output reaches the response limit, stop only after completing the current CSV row and output exactly: CONTINUE_FROM_NEXT_ROW. When I reply with "Continue", resume immediately from the next unfinished row.
+
+1. UNIFIED COLUMN SCHEMA
+The header must be exactly this, word for word, no substitutions:
+front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,explanation,enum_items,id_answer,id_variants
+
+There are exactly 15 columns. Do NOT add extra columns or rename headers.
+Every single row must have exactly 15 comma-separated values. Unused columns must be left empty but still present as commas.
+chapter = column 3, subject = column 4, lesson = column 5, type = column 6.
+
+2. QUIZ TYPE PARAMETERS & ROW STRUCTURAL RULES
+Apply the correct comma-padding so optional values always map to the correct absolute column index. For ALL types except "definition", the back column (column 2) must be empty "". Only "definition" type uses the back column.
+definition: Populate ONLY the front and back fields. The front column contains the description; the back column contains the term.
+multiple_choice: Populate mc_correct and exactly three distractors.
+COLUMN COUNT RULE: After mc_distractor3 (column 10), there must be exactly 5 empty columns to reach column 15.
+Correct Format: "Question","","Ch","Subj","Les",multiple_choice,Correct,D1,D2,D3,,,,,
+true_false: Populate tf_answer with "true" or "false" and explanation with a brief justification.
+enumeration: Populate enum_items only. Include exactly 6 empty commas after the type value.
+Example: "enumeration",,,,,,,"item1;item2",,
+identification: Populate id_answer and id_variants only. Include exactly 8 empty commas after the type value.
+Example: "identification",,,,,,,,,"Answer","variant1;variant2"
+
+3. SYNTAX & FORMATTING CONSTRAINTS
+Output ONLY the raw plain-text CSV. Do NOT output Markdown, do not explain anything, and do not number the rows.
+Wrap any field containing spaces, commas, punctuation, or quotes inside double quotes.
+Enumeration items must be inside ONE cell, lowercase, separated with semicolons.
+Identification variants must be lowercase and separated with semicolons.
+MANDATORY TYPE DISTRIBUTION RULE: You MUST generate cards of ALL five types. Aim for a balanced mix. Every major fact must be covered by at least one multiple_choice, true_false, or identification card in addition to its definition card.
+
+TOPIC: [INSERT TOPIC]
+CHAPTER: [INSERT CHAPTER]
+SUBJECT: [INSERT SUBJECT]
+LESSON: [INSERT LESSON]
+REFERENCE STUDY NOTES: [PASTE YOUR STUDY NOTES HERE]
+
+Tell me how many CSVs of the chapter you have created (e.g., 1/5). If I say "disregard and go to the next", delete from your memory any prior text I've said.`
 
 export default function UploadModal() {
   const router = useRouter()
@@ -117,6 +160,23 @@ export default function UploadModal() {
     }
   }
 
+  const handleCopyToClaude = async () => {
+    if (!pasteText.trim()) {
+      addToast('Paste your study notes first', 'error')
+      return
+    }
+    const prompt = CLAUDE_PROMPT_TEMPLATE
+      .replace('[INSERT TOPIC]', deckName.trim() || '[INSERT TOPIC]')
+      .replace('[PASTE YOUR STUDY NOTES HERE]', pasteText.trim())
+    try {
+      await navigator.clipboard.writeText(prompt)
+      addToast('Prompt copied — paste it in Claude', 'success')
+      window.open('https://claude.ai/', '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      addToast('Failed to copy prompt', 'error')
+    }
+  }
+
   const tabButton = (t: 'file' | 'text', label: string) => (
     <button
       onClick={() => setTab(t)}
@@ -153,8 +213,8 @@ export default function UploadModal() {
         </div>
 
         <div className="flex gap-1 px-4 pt-3">
-          {tabButton('file', 'Upload File')}
           {tabButton('text', 'Paste Text')}
+          {tabButton('file', 'Upload File')}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
@@ -163,7 +223,7 @@ export default function UploadModal() {
             value={deckName}
             onChange={(e) => setDeckName(e.target.value)}
             placeholder="Deck name (required)"
-            className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow"
+            className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow"
           />
 
           {tab === 'file' ? (
@@ -231,8 +291,16 @@ export default function UploadModal() {
                 onChange={(e) => setPasteText(e.target.value)}
                 placeholder="Paste study notes here — the AI will extract flashcards from your text"
                 rows={7}
-                className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.2)] transition-shadow resize-none"
+                className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow resize-none"
               />
+              <button
+                onClick={handleCopyToClaude}
+                disabled={!pasteText.trim()}
+                className="mt-3 flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] disabled:opacity-50 transition-colors w-full justify-center squishy-btn"
+              >
+                <Bot size={16} />
+                Copy to Claude
+              </button>
               <button
                 onClick={handleGenerate}
                 disabled={textLoading || !pasteText.trim() || !deckName.trim()}

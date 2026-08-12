@@ -17,7 +17,7 @@ interface UIActions {
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
   isUploadModalOpen: false,
-  uploadModalTab: 'file',
+  uploadModalTab: 'text',
 
   openUploadModal: (tab = 'file') =>
     set({ isUploadModalOpen: true, uploadModalTab: tab }),

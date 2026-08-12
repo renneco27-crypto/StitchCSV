@@ -59,7 +59,7 @@ export default function Sidebar() {
         })}
 
         <button
-          onClick={() => openUploadModal('file')}
+          onClick={() => openUploadModal()}
           title="Create Deck"
           className="mt-4 flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity squishy-btn cyber-glow-hover"
         >
