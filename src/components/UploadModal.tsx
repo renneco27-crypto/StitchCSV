@@ -143,7 +143,8 @@ export default function UploadModal() {
     if (!pasteText.trim()) return
     setTextLoading(true)
     try {
-      const file = new File([pasteText], 'notes.txt', { type: 'text/plain' })
+      // Create a CSV file from the pasted text so handleUpload parses it directly (pure algo, no AI)
+      const file = new File([pasteText], 'deck.csv', { type: 'text/csv' })
       const id = await handleUpload(file, undefined, name)
       addToast('Deck created!', 'success')
       handleClose()
@@ -157,13 +158,8 @@ export default function UploadModal() {
   }
 
   const handleCopyToClaude = async () => {
-    if (!pasteText.trim()) {
-      addToast('Paste your study notes first', 'error')
-      return
-    }
     const prompt = CLAUDE_PROMPT_TEMPLATE
       .replace('[INSERT TOPIC]', deckName.trim() || '[INSERT TOPIC]')
-      .replace('[PASTE YOUR STUDY NOTES HERE]', pasteText.trim())
     try {
       await navigator.clipboard.writeText(prompt)
       addToast('Prompt copied — paste it in Claude', 'success')
@@ -285,14 +281,13 @@ export default function UploadModal() {
               <textarea
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                placeholder="Paste study notes here — the AI will extract flashcards from your text"
+                placeholder="Paste study notes here after sending to ai."
                 rows={7}
                 className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow resize-none"
               />
               <button
                 onClick={handleCopyToClaude}
-                disabled={!pasteText.trim()}
-                className="mt-3 flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] disabled:opacity-50 transition-colors w-full justify-center squishy-btn"
+                className="mt-3 flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] transition-colors w-full justify-center squishy-btn"
               >
                 <Bot size={16} />
                 Copy to Claude
