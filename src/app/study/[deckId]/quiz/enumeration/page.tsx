@@ -9,6 +9,7 @@ import TopBar from '@/components/TopBar'
 import QuizProgressBar from '@/features/quiz/QuizProgressBar'
 import EnumerationCard from '@/features/quiz/EnumerationCard'
 import QuizSummary from '@/features/quiz/QuizSummary'
+import RestartButton from '@/components/RestartButton'
 import type { EnumerationItem } from '@/lib/zodSchemas'
 
 export default function EnumerationPage() {
@@ -19,7 +20,6 @@ export default function EnumerationPage() {
   const session = useQuizSession(deckId, 'enumeration')
 
   const [userAnswers, setUserAnswers] = useState<string[]>([])
-  const [itemPage, setItemPage] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,7 +30,6 @@ export default function EnumerationPage() {
 
   const resetAndNext = useCallback(() => {
     setUserAnswers(Array(currentItem?.items.length ?? 0).fill(''))
-    setItemPage(0)
     session.handleNext()
   }, [session, currentItem])
 
@@ -119,11 +118,7 @@ export default function EnumerationPage() {
       <TopBar
         title="Enumeration"
         onBack={() => router.push('/study/' + deckId)}
-        rightSlot={
-          <button onClick={() => session.handleRestart()} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-sm">
-            ✕
-          </button>
-        }
+        rightSlot={<RestartButton onRestart={() => session.handleRestart()} />}
       />
 
       <QuizProgressBar
@@ -142,10 +137,8 @@ export default function EnumerationPage() {
           topic={currentItem?.topic ?? ''}
           items={shuffledItems}
           userAnswers={userAnswers}
-          currentPage={itemPage}
           onCheckAnswers={handleChecked}
           onAdvance={handleAdvanceCard}
-          onPageChange={setItemPage}
           onAnswerChange={handleAnswerChange}
           chapter={currentItem?.chapter ?? ''}
           subject={currentItem?.subject ?? ''}

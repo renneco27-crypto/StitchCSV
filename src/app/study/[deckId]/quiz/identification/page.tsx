@@ -7,6 +7,7 @@ import { checkIdentificationAnswer } from '@/features/identification/answerCheck
 import TopBar from '@/components/TopBar'
 import QuizProgressBar from '@/features/quiz/QuizProgressBar'
 import QuizSummary from '@/features/quiz/QuizSummary'
+import RestartButton from '@/components/RestartButton'
 import { Check, X } from 'lucide-react'
 import type { IdentificationItem } from '@/lib/zodSchemas'
 
@@ -101,11 +102,7 @@ export default function IdentificationPage() {
       <TopBar
         title="Identification"
         onBack={() => router.push('/study/' + deckId)}
-        rightSlot={
-          <button onClick={() => session.handleRestart()} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-sm">
-            ✕
-          </button>
-        }
+        rightSlot={<RestartButton onRestart={() => session.handleRestart()} />}
       />
 
       <QuizProgressBar

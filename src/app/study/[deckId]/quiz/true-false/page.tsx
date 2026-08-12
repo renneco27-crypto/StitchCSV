@@ -9,6 +9,7 @@ import TrueFalseCard from '@/features/quiz/TrueFalseCard'
 import TrueFalseButtons from '@/features/quiz/TrueFalseButtons'
 import ExplanationPanel from '@/features/quiz/ExplanationPanel'
 import QuizSummary from '@/features/quiz/QuizSummary'
+import RestartButton from '@/components/RestartButton'
 import type { AnswerState, TrueFalseItem } from '@/lib/zodSchemas'
 
 export default function TrueFalsePage() {
@@ -107,11 +108,7 @@ export default function TrueFalsePage() {
       <TopBar
         title="True / False"
         onBack={() => router.push('/study/' + deckId)}
-        rightSlot={
-          <button onClick={() => session.handleRestart()} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-sm">
-            &times;
-          </button>
-        }
+        rightSlot={<RestartButton onRestart={() => session.handleRestart()} />}
       />
 
       <QuizProgressBar

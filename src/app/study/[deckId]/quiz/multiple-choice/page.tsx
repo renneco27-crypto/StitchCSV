@@ -8,6 +8,7 @@ import TopBar from '@/components/TopBar'
 import QuizProgressBar from '@/features/quiz/QuizProgressBar'
 import MCOption from '@/features/quiz/MCOption'
 import QuizSummary from '@/features/quiz/QuizSummary'
+import RestartButton from '@/components/RestartButton'
 import type { MultipleChoiceItem, MCOption as MCOptionType } from '@/lib/zodSchemas'
 
 type MCOptionState = 'default' | 'selected' | 'correct' | 'wrong' | 'reveal'
@@ -138,14 +139,7 @@ export default function MultipleChoicePage() {
       <TopBar
         title="Multiple Choice"
         onBack={() => router.push('/study/' + deckId)}
-        rightSlot={
-          <button
-            onClick={() => session.handleRestart()}
-            className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-sm"
-          >
-            &times;
-          </button>
-        }
+        rightSlot={<RestartButton onRestart={() => session.handleRestart()} />}
       />
 
       <QuizProgressBar

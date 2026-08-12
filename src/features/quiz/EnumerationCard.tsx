@@ -8,10 +8,8 @@ interface EnumerationCardProps {
   topic: string
   items: string[]
   userAnswers: string[]
-  currentPage: number
   onCheckAnswers: () => void
   onAdvance: () => void
-  onPageChange: (page: number) => void
   onAnswerChange: (index: number, value: string) => void
   chapter: string
   subject: string
@@ -21,28 +19,19 @@ export default function EnumerationCard({
   topic,
   items,
   userAnswers,
-  currentPage,
   onCheckAnswers,
   onAdvance,
-  onPageChange,
   onAnswerChange,
   chapter,
   subject,
 }: EnumerationCardProps) {
-  const totalPages = Math.ceil(items.length / ITEMS_PER_ENUM_PAGE)
-  const pageItems = items.slice(
-    currentPage * ITEMS_PER_ENUM_PAGE,
-    (currentPage + 1) * ITEMS_PER_ENUM_PAGE
-  )
-  const startIndex = currentPage * ITEMS_PER_ENUM_PAGE
-
   const [checked, setChecked] = useState(false)
 
   const allExpected = items.map((s) => s.toLowerCase().trim())
   const used = new Array(allExpected.length).fill(false)
 
-  const results = pageItems.map((item, i) => {
-    const globalIndex = startIndex + i
+  const results = items.map((item, i) => {
+    const globalIndex = i
     const user = (userAnswers[globalIndex] ?? '').toLowerCase().trim()
     const matchIdx = allExpected.findIndex((e, idx) => !used[idx] && user === e)
     const correct = matchIdx !== -1
@@ -76,11 +65,11 @@ export default function EnumerationCard({
         </p>
         <div className="mx-auto w-full max-w-md border-b-2 border-[var(--color-border-strong)]" />
         <p className="text-xs text-[var(--color-text-muted)] text-center mb-6">
-          {items.length} items · {totalPages} page(s)
+          {items.length} items
         </p>
-        <div className="space-y-3 max-w-md mx-auto">
-          {pageItems.map((item, i) => {
-            const globalIndex = startIndex + i
+        <div className="space-y-3 max-w-md mx-auto max-h-[50vh] overflow-y-auto pr-2 styled-scrollbar">
+          {items.map((item, i) => {
+            const globalIndex = i
             const answer = userAnswers[globalIndex] ?? ''
             return (
               <div key={globalIndex} className="flex items-center gap-3 overflow-hidden min-w-0">
@@ -102,42 +91,13 @@ export default function EnumerationCard({
           })}
         </div>
 
-        {items.length > ITEMS_PER_ENUM_PAGE && (
-          <div className="flex gap-2 justify-center mt-4">
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentPage
-                    ? 'bg-[var(--color-accent)]'
-                    : 'bg-[var(--color-border)]'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="flex justify-between mt-3">
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-            className="text-sm text-[var(--color-accent)] hover:underline disabled:opacity-30 disabled:pointer-events-none"
-          >
-            ← Prev
-          </button>
+        <div className="flex flex-col gap-4 mt-6">
           <button
             onClick={handleCheck}
-            className="bg-[var(--color-accent)] text-white rounded-xl py-3 px-6 font-medium hover:opacity-90 transition-opacity"
+            className="w-full bg-[var(--color-accent)] text-white rounded-xl py-3 px-6 font-medium hover:opacity-90 transition-opacity"
           >
             <Eye size={18} className="inline-block mr-2" />
             Check Answers
-          </button>
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages - 1}
-            className="text-sm text-[var(--color-accent)] hover:underline disabled:opacity-30 disabled:pointer-events-none"
-          >
-            Next →
           </button>
         </div>
       </div>
@@ -153,7 +113,7 @@ export default function EnumerationCard({
       </div>
       <p className="text-lg font-medium text-center text-[var(--color-text-primary)] mb-4">{topic}</p>
 
-      <div className="space-y-3 max-w-md mx-auto">
+      <div className="space-y-3 max-w-md mx-auto max-h-[50vh] overflow-y-auto pr-2 styled-scrollbar">
         {results.map((r) => {
           const answer = userAnswers[r.globalIndex] ?? ''
           return (
