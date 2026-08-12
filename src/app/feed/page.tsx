@@ -37,6 +37,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true)
   const [addingId, setAddingId] = useState<string | null>(null)
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set())
+  const [addedDeckIds, setAddedDeckIds] = useState<Record<string, string>>({})
   const [activeFolder, setActiveFolder] = useState<string | null>(null)
   const [showNewFolder, setShowNewFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
@@ -52,11 +53,18 @@ export default function FeedPage() {
       setDecks(data.decks ?? [])
 
       const localDecks = await getAllDecks()
-      const localTitles = new Set(localDecks.map((d) => d.title))
-      const preAdded = new Set<string>(
-        (data.decks ?? []).filter((d: FeedDeck) => localTitles.has(d.title)).map((d: FeedDeck) => d.id)
-      )
+      const localByTitle = new Map(localDecks.map((d) => [d.title, d.id]))
+      const preAdded = new Set<string>()
+      const preAddedDeckIds: Record<string, string> = {}
+      for (const d of data.decks ?? []) {
+        const localId = localByTitle.get(d.title)
+        if (localId) {
+          preAdded.add(d.id)
+          preAddedDeckIds[d.id] = localId
+        }
+      }
       setAddedIds(preAdded)
+      setAddedDeckIds(preAddedDeckIds)
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to load feed', 'error')
     }
@@ -114,6 +122,7 @@ export default function FeedPage() {
       await createCards(cardsWithDeckId)
 
       setAddedIds((prev) => new Set(prev).add(feedDeck.id))
+      setAddedDeckIds((prev) => ({ ...prev, [feedDeck.id]: deckId }))
       addToast('Deck added to your app!', 'success')
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to add deck', 'error')
@@ -423,18 +432,28 @@ export default function FeedPage() {
                          >
                            <Trash2 size={14} />
                          </button>
-                         <button
-                           onClick={() => handleAddToApp(deck)}
-                           disabled={addingId === deck.id || addedIds.has(deck.id)}
-                           className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm shrink-0 squishy-btn cyber-glow-hover"
-                         >
-                           {addingId === deck.id ? (
-                             <Loader2 size={14} className="animate-spin" />
-                           ) : (
-                             <Download size={14} />
-                           )}
-                           {addedIds.has(deck.id) ? 'Added' : 'Add to My App'}
-                         </button>
+{addedIds.has(deck.id) ? (
+                            <button
+                              onClick={() => addedDeckIds[deck.id] && router.push('/study/' + addedDeckIds[deck.id])}
+                              className="flex items-center gap-2 bg-[var(--color-know)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 transition-opacity text-sm shrink-0 squishy-btn cyber-glow-hover"
+                            >
+                              <BookOpen size={14} />
+                              Open project
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleAddToApp(deck)}
+                              disabled={addingId === deck.id}
+                              className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm shrink-0 squishy-btn cyber-glow-hover"
+                            >
+                              {addingId === deck.id ? (
+                                <Loader2 size={14} className="animate-spin" />
+                              ) : (
+                                <Download size={14} />
+                              )}
+                              Add to My App
+                            </button>
+                          )}
                        </div>
                      </div>
                    </div>

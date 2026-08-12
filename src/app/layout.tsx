@@ -3,6 +3,8 @@ import { Playfair_Display, Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/goog
 import { ThemeProvider } from 'next-themes'
 import ToastContainer from '@/components/ToastContainer'
 import AuthWrapper from '@/components/AuthWrapper'
+import Sidebar from '@/components/Sidebar'
+import UploadModal from '@/components/UploadModal'
 import './globals.css'
 
 const playfairDisplay = Playfair_Display({
@@ -41,7 +43,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthWrapper>{children}</AuthWrapper>
+          <AuthWrapper>
+            <div className="flex flex-1">
+              <Sidebar />
+              <main className="flex-1 min-w-0">{children}</main>
+            </div>
+          </AuthWrapper>
+          <UploadModal />
           <ToastContainer />
         </ThemeProvider>
       </body>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { LogOut, Loader2 } from 'lucide-react'
 import { createBrowserSupabase } from '@/lib/supabase'
 
-export default function SignOutButton({ className = '' }: { className?: string }) {
+export default function SignOutButton({ className = '', iconOnly = false }: { className?: string; iconOnly?: boolean }) {
   const [loading, setLoading] = useState(false)
 
   const handleSignOut = async () => {
@@ -24,7 +24,7 @@ export default function SignOutButton({ className = '' }: { className?: string }
       aria-label="Sign out"
     >
       {loading ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
-      <span>Sign out</span>
+      <span className={iconOnly ? 'hidden lg:inline' : ''}>Sign out</span>
     </button>
   )
 }

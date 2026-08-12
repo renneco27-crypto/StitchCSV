@@ -13,9 +13,7 @@ import {
   Share2,
 } from 'lucide-react'
 import { getDeck, updateDeck } from '@/db/deckRepository'
-import { createCards, getCardsByDeck } from '@/db/cardRepository'
-import { parseCSVFile } from '@/features/upload/csvParser'
-import { auditAndFixCSV } from '@/features/upload/csvFixer'
+import { getCardsByDeck } from '@/db/cardRepository'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { useStatsStore } from '@/store/statsStore'
 import { useToastStore } from '@/store/toastStore'
@@ -57,8 +55,6 @@ export default function StudyDashboard() {
     load()
   }, [deckId, router, addToast, initStats])
 
-  const [addingCsv, setAddingCsv] = useState(false)
-  const [addingDocx, setAddingDocx] = useState(false)
   const [showCreator, setShowCreator] = useState(false)
   const [showPublish, setShowPublish] = useState(false)
   const [publishing, setPublishing] = useState(false)
@@ -87,85 +83,6 @@ export default function StudyDashboard() {
     await updateDeck(deckId, { title: trimmed })
     setDeck({ ...deck, title: trimmed })
     setEditingTitle(false)
-  }
-
-  const handleAddCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setAddingCsv(true)
-    try {
-      const reader = new FileReader()
-      reader.onload = async () => {
-        try {
-          const text = reader.result as string
-          const title = deck?.title ?? file.name.replace(/\.csv$/i, '')
-          const parsed = parseCSVFile(auditAndFixCSV(text), title)
-
-          const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))
-          await createCards(cardsWithDeckId)
-          if (parsed.deck.quizItems.length > 0 && deck) {
-            const merged = [...(deck.quizItems || []), ...parsed.deck.quizItems]
-            await updateDeck(deckId, { quizItems: merged })
-          }
-          addToast('CSV added to deck!', 'success')
-          window.location.reload()
-        } catch (err) {
-          console.error(err)
-          addToast(err instanceof Error ? err.message : 'Failed to add CSV', 'error')
-        }
-      }
-      reader.readAsText(file)
-    } catch (err) {
-      console.error(err)
-      addToast(err instanceof Error ? err.message : 'Failed to add CSV', 'error')
-    } finally {
-      setAddingCsv(false)
-      e.target.value = ''
-    }
-  }
-
-  const handleAddDocx = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setAddingDocx(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      if (deck && deck.cards.length > 0) {
-        const csvHeaders = ['front', 'back', 'chapter', 'subject', 'lesson', 'type',
-          'mc_correct', 'mc_distractor1', 'mc_distractor2', 'mc_distractor3',
-          'tf_answer', 'enum_items', 'id_answer', 'id_variants']
-        formData.append('csvHeaders', JSON.stringify(csvHeaders))
-      }
-
-      const res = await fetch('/api/convert-docx', { method: 'POST', body: formData })
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: 'Conversion failed' }))
-        throw new Error(errData.error || `Server error: ${res.status}`)
-      }
-
-      const csvText = await res.text()
-      const title = deck?.title ?? file.name.replace(/\.docx$/i, '')
-      const parsed = parseCSVFile(auditAndFixCSV(csvText), title)
-
-      const cardsWithDeckId = parsed.cards.map((c) => ({ ...c, deckId }))
-      await createCards(cardsWithDeckId)
-      if (parsed.deck.quizItems.length > 0 && deck) {
-        const merged = [...(deck.quizItems || []), ...parsed.deck.quizItems]
-        await updateDeck(deckId, { quizItems: merged })
-      }
-      addToast('DOCX converted and added to deck!', 'success')
-      window.location.reload()
-    } catch (err) {
-      console.error(err)
-      addToast(err instanceof Error ? err.message : 'Failed to add DOCX', 'error')
-    } finally {
-      setAddingDocx(false)
-      e.target.value = ''
-    }
   }
 
   const handlePublish = async () => {
@@ -305,30 +222,10 @@ export default function StudyDashboard() {
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
              <button
-               onClick={() => document.getElementById('docx-input')?.click()}
-               disabled={addingDocx}
-               className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto squishy-btn cyber-glow-hover"
-             >
-               <Plus size={16} /> Add DOCX
-             </button>
-             <button
-               onClick={() => document.getElementById('csv-input')?.click()}
-               disabled={addingCsv}
-               className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm w-full sm:w-auto squishy-btn cyber-glow-hover"
-             >
-               <Plus size={16} /> Add CSV
-             </button>
-             <button
                onClick={() => setShowCreator(true)}
                className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full sm:w-auto squishy-btn"
              >
-               <Plus size={16} /> Add Cards
-             </button>
-             <button
-               onClick={() => router.push('/new-deck')}
-               className="bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full sm:w-auto squishy-btn"
-             >
-               New Deck
+               <Plus size={16} /> Edit / Add Cards
              </button>
              {canPublish && (
                <button
@@ -429,21 +326,6 @@ export default function StudyDashboard() {
           />
         </div>
       </div>
-
-      <input
-        id="docx-input"
-        type="file"
-        accept=".docx,.txt"
-        onChange={handleAddDocx}
-        className="hidden"
-      />
-      <input
-        id="csv-input"
-        type="file"
-        accept=".csv,text/csv"
-        onChange={handleAddCsv}
-        className="hidden"
-      />
 
       {showCreator && (
         <FlashcardCreator

@@ -1,0 +1,28 @@
+'use client'
+
+import { create } from 'zustand'
+
+type UploadTab = 'file' | 'text'
+
+interface UIState {
+  isUploadModalOpen: boolean
+  uploadModalTab: UploadTab
+}
+
+interface UIActions {
+  openUploadModal: (tab?: UploadTab) => void
+  closeUploadModal: () => void
+  setUploadModalTab: (tab: UploadTab) => void
+}
+
+export const useUIStore = create<UIState & UIActions>()((set) => ({
+  isUploadModalOpen: false,
+  uploadModalTab: 'file',
+
+  openUploadModal: (tab = 'file') =>
+    set({ isUploadModalOpen: true, uploadModalTab: tab }),
+
+  closeUploadModal: () => set({ isUploadModalOpen: false }),
+
+  setUploadModalTab: (tab) => set({ uploadModalTab: tab }),
+}))
