@@ -21,7 +21,7 @@ export default function TopBar({ title, onBack, rightSlot }: TopBarProps) {
           <span>Back</span>
         </button>
       )}
-      <h1 className="text-base font-medium truncate max-w-[200px] flex-1">
+      <h1 className="text-base font-medium truncate flex-1">
         {title}
       </h1>
       {rightSlot && <div className="flex items-center gap-1">{rightSlot}</div>}
