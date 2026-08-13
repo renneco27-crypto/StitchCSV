@@ -141,6 +141,7 @@ export default function FlashcardsPage() {
           />
         ) : session.currentCard ? (
           <FlashcardDeck
+            key={session.currentCard.id}
             card={session.currentCard}
             isFlipped={session.isFlipped}
             animationClass={session.animationClass}
