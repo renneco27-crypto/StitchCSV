@@ -95,8 +95,8 @@ export default function FlashcardDeck({
               </div>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center py-4">
-            <p className="font-['Playfair_Display'] text-xl sm:text-2xl md:text-3xl text-center text-[var(--color-text-primary)] break-words">
+          <div className="flex-1 overflow-auto py-4 flex items-center justify-center">
+            <p className="font-['Playfair_Display'] text-xl sm:text-2xl md:text-3xl text-center text-[var(--color-text-primary)] break-words w-full">
               {card.front}
             </p>
           </div>
@@ -150,8 +150,8 @@ export default function FlashcardDeck({
             </span>
             <StatBadge label={card.status} value="" color={statusColor} />
           </div>
-          <div className="flex-1 flex items-center justify-center flex-col gap-3 py-4">
-            <p className="text-lg sm:text-xl font-medium text-center text-[var(--color-text-primary)] break-words">
+          <div className="flex-1 overflow-auto py-4 flex items-center justify-center flex-col gap-3">
+            <p className="text-lg sm:text-xl font-medium text-center text-[var(--color-text-primary)] break-words w-full">
               {card.back}
             </p>
             {card.type === 'formula' && (

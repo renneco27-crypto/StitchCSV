@@ -182,7 +182,7 @@ export default function FlashcardsPage() {
   const swipeHint = dragY < -30 ? 'know' : dragY > 30 ? 'dontknow' : null
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
+    <div className="h-screen overflow-hidden bg-[var(--color-bg)] flex flex-col">
       <TopBar
         title={'Batch ' + (session.batchIndex + 1) + ' of ' + session.totalBatches}
         onBack={handleBack}
