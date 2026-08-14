@@ -148,8 +148,9 @@ export function useFlashcardSession(deckId: string, cards: Card[]) {
     setFlipped(!isFlipped)
   }, [isAnimating, isFlipped, setFlipped])
 
-  const handleKnow = useCallback(async () => {
-    if (!isFlipped || isAnimating || !currentCard) return
+  const handleKnow = useCallback(async (skipGuard = false) => {
+    if (!currentCard) return
+    if (!skipGuard && (!isFlipped || isAnimating)) return
     setIsAnimating(true)
     setAnimationClass('slide-right')
 
@@ -231,7 +232,7 @@ export function useFlashcardSession(deckId: string, cards: Card[]) {
       setFlipped(true)
       
       setTimeout(() => {
-        handleKnow()
+        handleKnow(true)
       }, 1500)
     }
     
