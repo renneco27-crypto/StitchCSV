@@ -51,7 +51,7 @@ export default function FlashcardsPage() {
 
   // Track forward navigation into history
   const pushHistory = useCallback((idx: number) => {
-    historyStack.current = [...historyStack.current.slice(-MAX_HISTORY + 1), idx]
+    historyStack.current = [...historyStack.current.slice(-2), idx] // max 3 back
   }, [])
 
   const handleSwipeRight = useCallback(() => {
