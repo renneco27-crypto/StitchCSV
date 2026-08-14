@@ -53,7 +53,7 @@ export default function FlashcardsPage() {
   const historyStack = useRef<number[]>([]) // stores cardIndex values going back
 
   const pushHistory = useCallback((idx: number) => {
-    historyStack.current = [...historyStack.current.slice(-2), idx]
+    historyStack.current = [...historyStack.current, idx]
   }, [])
 
   const handleSwipeRight = useCallback(() => {
@@ -126,13 +126,13 @@ export default function FlashcardsPage() {
     if (absDx >= absDy) {
       if (absDx > threshold) {
         if (dx > 0) {
-          if (historyStack.current.length > 0 && !session.isAnimating) {
-            flyOut(window.innerWidth * 1.05, 0, () => handleSwipeLeft())
+          if (!session.isAnimating) {
+            flyOut(window.innerWidth * 1.05, 0, () => handleSwipeRight())
           } else {
             reset()
           }
-        } else if (!session.isAnimating) {
-          flyOut(-window.innerWidth * 1.05, 0, () => handleSwipeRight())
+        } else if (historyStack.current.length > 0 && !session.isAnimating) {
+          flyOut(-window.innerWidth * 1.05, 0, () => handleSwipeLeft())
         } else {
           reset()
         }

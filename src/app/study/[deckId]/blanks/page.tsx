@@ -83,7 +83,7 @@ function BlanksContent({ deckId }: { deckId: string }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
+    <div className="h-[calc(100dvh_-_57px)] lg:h-[100dvh] flex flex-col overflow-hidden bg-[var(--color-bg)]">
       <TopBar 
         title={deck ? `${deck.title} - Blanks` : 'Fill-in-the-Blanks'} 
         onBack={() => router.push(`/study/${deckId}`)}
@@ -113,9 +113,9 @@ function BlanksContent({ deckId }: { deckId: string }) {
         }
       />
       
-      <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
           {!activeBlank || tokens.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto h-full">
               <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-2)] border border-[var(--color-border)] flex items-center justify-center mb-6 shadow-sm">

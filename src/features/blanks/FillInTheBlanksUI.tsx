@@ -153,7 +153,7 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
 
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)]">
-      <div className="flex-1 overflow-auto p-4 md:p-8">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto glass-panel rounded-2xl border border-[var(--color-border)] shadow-sm p-6 md:p-10 leading-loose text-lg text-[var(--color-text-primary)]">
           {tokens.map((token) => {
             if (!token.isWord) {
@@ -185,7 +185,7 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
                       {answer} <CheckCircle2 size={14} className="inline" />
                     </span>
                   ) : isCurrent ? (
-                    <span className="tracking-widest text-sm">●●●</span>
+                    <span className="min-w-[2rem]"></span>
                   ) : (
                     <span className="text-[var(--color-border)]">{'_'.repeat(Math.max(3, token.text.length))}</span>
                   )}
@@ -214,29 +214,21 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
         )}
       </div>
 
-      <div className="sticky bottom-0 bg-[var(--color-surface)] border-t border-[var(--color-border)] px-4 py-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="sticky bottom-0 z-10 bg-[var(--color-surface)] border-t border-[var(--color-border)] px-4 py-3 flex flex-col items-center gap-2.5">
+        <div className="flex items-center justify-center gap-3 w-full max-w-md">
           <button
             onClick={toggleListening}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex-1 min-w-0 ${
               isListening
                 ? 'bg-[var(--color-know)]/20 text-[var(--color-know)] shadow-[0_0_12px_var(--color-know)]/30'
                 : 'bg-[var(--color-surface-3)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
             }`}
           >
             {isListening
-              ? <Mic size={18} className="animate-pulse" />
-              : <MicOff size={18} />}
-            {isListening ? 'Reading… keep going!' : 'Read Aloud'}
+              ? <Mic size={18} className="animate-pulse shrink-0" />
+              : <MicOff size={18} className="shrink-0" />}
+            <span className="truncate">{isListening ? 'Reading… keep going!' : 'Read Aloud'}</span>
           </button>
-          {isListening && (
-            <span className="text-xs text-[var(--color-text-muted)]">
-              {currentBlankId ? 'Say the highlighted word' : 'Read the sentence aloud'}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
           <button
             onClick={handleReset}
             title="Restart from beginning"
@@ -244,13 +236,20 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
           >
             <RotateCcw size={15} /> Restart
           </button>
-          <button
-            onClick={onReset}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-3)] transition-colors"
-          >
-            New Text
-          </button>
         </div>
+
+        {isListening && (
+          <span className="text-xs text-[var(--color-text-muted)] text-center">
+            {currentBlankId ? 'Say the highlighted word' : 'Read the sentence aloud'}
+          </span>
+        )}
+
+        <button
+          onClick={onReset}
+          className="w-full max-w-md px-4 py-2 rounded-xl text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-3)] transition-colors"
+        >
+          New Text
+        </button>
       </div>
     </div>
   )
