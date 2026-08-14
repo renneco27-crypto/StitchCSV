@@ -46,8 +46,8 @@ export default function FlashcardsPage() {
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
   const [dragX, setDragX] = useState(0)
+  const [dragY, setDragY] = useState(0)
   const historyStack = useRef<number[]>([]) // stores cardIndex values going back
-  const MAX_HISTORY = 3
 
   // Track forward navigation into history
   const pushHistory = useCallback((idx: number) => {
@@ -74,11 +74,15 @@ export default function FlashcardsPage() {
     if (touchStartX.current === null || touchStartY.current === null) return
     const dx = e.touches[0].clientX - touchStartX.current
     const dy = e.touches[0].clientY - touchStartY.current
-    // Only track horizontal swipes
     if (Math.abs(dx) > Math.abs(dy)) {
-      // If swiping left but no history, don't allow drag
+      // Horizontal swipe
       if (dx < 0 && historyStack.current.length === 0) return
-      setDragX(dx * 0.35) // dampened drag feel
+      setDragX(dx * 0.35)
+      setDragY(0)
+    } else {
+      // Vertical swipe
+      setDragY(dy * 0.35)
+      setDragX(0)
     }
   }, [])
 
@@ -87,16 +91,30 @@ export default function FlashcardsPage() {
     const dx = e.changedTouches[0].clientX - touchStartX.current
     const dy = e.changedTouches[0].clientY - touchStartY.current
     setDragX(0)
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
-      if (dx > 0) {
-        handleSwipeLeft() // swipe right = go back
-      } else {
-        handleSwipeRight() // swipe left = go forward
+    setDragY(0)
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // Horizontal: left/right navigation
+      if (Math.abs(dx) > 60) {
+        if (dx > 0) handleSwipeLeft()
+        else handleSwipeRight()
+      }
+    } else {
+      // Vertical: know / don't know
+      if (Math.abs(dy) > 60) {
+        if (dy < 0) {
+          // Swipe UP = Know
+          pushHistory(session.cardIndex)
+          session.handleKnow()
+        } else {
+          // Swipe DOWN = Don't Know
+          pushHistory(session.cardIndex)
+          session.handleDontKnow()
+        }
       }
     }
     touchStartX.current = null
     touchStartY.current = null
-  }, [handleSwipeLeft, handleSwipeRight])
+  }, [handleSwipeLeft, handleSwipeRight, pushHistory, session])
 
   const handleBack = useCallback(() => {
     session.handleEndSession()
@@ -203,8 +221,8 @@ export default function FlashcardsPage() {
           ) : session.currentCard ? (
             <div
               style={{
-                transform: `translateX(${dragX}px)`,
-                transition: dragX === 0 ? 'transform 0.25s ease' : 'none',
+                transform: `translateX(${dragX}px) translateY(${dragY}px)`,
+                transition: (dragX === 0 && dragY === 0) ? 'transform 0.25s ease' : 'none',
                 width: '100%',
               }}
             >
