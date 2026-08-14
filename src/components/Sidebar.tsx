@@ -42,6 +42,10 @@ export default function Sidebar() {
       setSavedBlanks(blanks)
     }
     loadBlanks()
+
+    const handleUpdate = () => loadBlanks()
+    window.addEventListener('blanks-updated', handleUpdate)
+    return () => window.removeEventListener('blanks-updated', handleUpdate)
   }, [currentDeckId])
 
   const NavContent = () => (

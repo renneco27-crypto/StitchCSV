@@ -49,6 +49,7 @@ function BlanksContent({ deckId }: { deckId: string }) {
     if (newBlank) {
       setSavedBlanks(prev => [newBlank, ...prev])
       handleSelectBlank(newBlank)
+      window.dispatchEvent(new CustomEvent('blanks-updated'))
     } else {
       // Fallback if saving fails or not logged in, just run it locally
       const generatedTokens = parseBlanks(text)
@@ -73,6 +74,7 @@ function BlanksContent({ deckId }: { deckId: string }) {
         setActiveBlank(null)
         setTokens([])
       }
+      window.dispatchEvent(new CustomEvent('blanks-updated'))
     }
   }
 
