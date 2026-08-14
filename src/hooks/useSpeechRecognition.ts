@@ -36,6 +36,21 @@ function buildRecognition(
   return r
 }
 
+// Continuous mode re-delivers the same finalized segment, so strip any tail of the
+// previously appended text that the new final starts with (e.g. "jeremy bentham" twice).
+function dedupeOverlap(prev: string, next: string): string {
+  const prevWords = prev.trim() ? prev.trim().split(/\s+/) : []
+  const nextWords = next.trim() ? next.trim().split(/\s+/) : []
+  if (!nextWords.length) return ''
+  if (!prevWords.length) return next.trim()
+  for (let n = Math.min(prevWords.length, nextWords.length); n >= 1; n--) {
+    if (prevWords.slice(-n).join(' ') === nextWords.slice(0, n).join(' ')) {
+      return nextWords.slice(n).join(' ')
+    }
+  }
+  return next.trim()
+}
+
 export function useSpeechRecognition() {
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState('')
@@ -46,6 +61,7 @@ export function useSpeechRecognition() {
   const warmRef = useRef<any>(null)       // pre-warmed next instance
   const userStoppedRef = useRef(false)    // did the user explicitly stop?
   const isListeningRef = useRef(false)
+  const lastFinalRef = useRef('')         // last finalized text appended (dedupe helper)
   isListeningRef.current = isListening
 
   // Pre-warm a new recognition instance in the background so it starts instantly
@@ -58,24 +74,13 @@ export function useSpeechRecognition() {
     } catch (_) {}
   }, [])
 
+  const maxDurationTimerRef = useRef<any>(null)
+
   useEffect(() => {
     prewarm()
-  }, [prewarm])
-
-  const silenceTimerRef = useRef<any>(null)
-
-  const resetSilenceTimer = useCallback(() => {
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
-    silenceTimerRef.current = setTimeout(() => {
-      if (isListeningRef.current) {
-        userStoppedRef.current = true
-        setIsListening(false)
-        setInterimTranscript('')
-        try { activeRef.current?.stop() } catch (_) {}
-        activeRef.current = null
-        setTimeout(prewarm, 200)
-      }
-    }, 2000)
+    return () => {
+      if (maxDurationTimerRef.current) clearTimeout(maxDurationTimerRef.current)
+    }
   }, [prewarm])
 
   const startInstance = useCallback(() => {
@@ -94,10 +99,12 @@ export function useSpeechRecognition() {
         if (event.results[i].isFinal) final += t + ' '
         else interim += t
       }
-      if (final) setTranscript(prev => prev + final)
+      if (final) {
+        const deduped = dedupeOverlap(lastFinalRef.current, final)
+        if (deduped) setTranscript(prev => prev + deduped + ' ')
+        lastFinalRef.current = final.trim()
+      }
       setInterimTranscript(interim)
-      // Reset the silence timer — only stop 2s after the last heard word
-      resetSilenceTimer()
     }
 
     r.onerror = (e: any) => {
@@ -134,23 +141,32 @@ export function useSpeechRecognition() {
     }
   }, [prewarm])
 
+  const stopListening = useCallback(() => {
+    userStoppedRef.current = true
+    setIsListening(false)
+    setInterimTranscript('')
+    if (maxDurationTimerRef.current) {
+      clearTimeout(maxDurationTimerRef.current)
+      maxDurationTimerRef.current = null
+    }
+    try { activeRef.current?.stop() } catch (_) {}
+    activeRef.current = null
+  }, [])
+
   const startListening = useCallback(() => {
     if (isListeningRef.current) return
     userStoppedRef.current = false
     setTranscript('')
     setInterimTranscript('')
+    lastFinalRef.current = ''
     setIsListening(true)
     startInstance()
-    resetSilenceTimer() // begin 2s silence countdown from the moment mic turns on
-  }, [startInstance, resetSilenceTimer])
-
-  const stopListening = useCallback(() => {
-    userStoppedRef.current = true
-    setIsListening(false)
-    setInterimTranscript('')
-    try { activeRef.current?.stop() } catch (_) {}
-    activeRef.current = null
-  }, [])
+    // Cap a single session at 20s — silence no longer stops it, so bound mic usage
+    if (maxDurationTimerRef.current) clearTimeout(maxDurationTimerRef.current)
+    maxDurationTimerRef.current = setTimeout(() => {
+      if (isListeningRef.current) stopListening()
+    }, 20000)
+  }, [startInstance, stopListening])
 
   const toggleListening = useCallback(() => {
     if (isListeningRef.current) stopListening()

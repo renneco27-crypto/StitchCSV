@@ -48,6 +48,8 @@ export default function FlashcardsPage() {
   const [dragX, setDragX] = useState(0)
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
+  const [exitReset, setExitReset] = useState(false)
   const historyStack = useRef<number[]>([]) // stores cardIndex values going back
 
   const pushHistory = useCallback((idx: number) => {
@@ -64,6 +66,23 @@ export default function FlashcardsPage() {
     historyStack.current = historyStack.current.slice(0, -1)
     session.handlePrev()
   }, [session])
+
+  const flyOut = useCallback(
+    (x: number, y: number, action: () => void) => {
+      setIsExiting(true)
+      setDragX(x)
+      setDragY(y)
+      action()
+      setTimeout(() => {
+        setExitReset(true)
+        setIsExiting(false)
+        setDragX(0)
+        setDragY(0)
+        setTimeout(() => setExitReset(false), 100)
+      }, 330)
+    },
+    []
+  )
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
@@ -90,34 +109,52 @@ export default function FlashcardsPage() {
     if (touchStartX.current === null || touchStartY.current === null) return
     const dx = e.changedTouches[0].clientX - touchStartX.current
     const dy = e.changedTouches[0].clientY - touchStartY.current
-    setDragX(0)
-    setDragY(0)
     setIsDragging(false)
+    touchStartX.current = null
+    touchStartY.current = null
 
     const absDx = Math.abs(dx)
     const absDy = Math.abs(dy)
     const threshold = 60
 
+    const reset = () => {
+      setDragX(0)
+      setDragY(0)
+    }
+
     // Pick the dominant axis — whichever had more movement wins
     if (absDx >= absDy) {
       if (absDx > threshold) {
-        if (dx > 0) handleSwipeLeft()
-        else handleSwipeRight()
+        if (dx > 0) {
+          if (historyStack.current.length > 0 && !session.isAnimating) {
+            flyOut(window.innerWidth * 1.05, 0, () => handleSwipeLeft())
+          } else {
+            reset()
+          }
+        } else if (!session.isAnimating) {
+          flyOut(-window.innerWidth * 1.05, 0, () => handleSwipeRight())
+        } else {
+          reset()
+        }
+      } else {
+        reset()
       }
-    } else {
-      if (absDy > threshold) {
+    } else if (absDy > threshold) {
+      if (session.isFlipped && !session.isAnimating) {
         if (dy < 0) {
           pushHistory(session.cardIndex)
-          session.handleKnow()
+          flyOut(0, -window.innerHeight * 1.05, () => session.handleKnow())
         } else {
           pushHistory(session.cardIndex)
-          session.handleDontKnow()
+          flyOut(0, window.innerHeight * 1.05, () => session.handleDontKnow())
         }
+      } else {
+        reset()
       }
+    } else {
+      reset()
     }
-    touchStartX.current = null
-    touchStartY.current = null
-  }, [handleSwipeLeft, handleSwipeRight, pushHistory, session])
+  }, [handleSwipeLeft, handleSwipeRight, pushHistory, session, flyOut])
 
   const handleBack = useCallback(() => {
     session.handleEndSession()
@@ -227,9 +264,16 @@ export default function FlashcardsPage() {
             />
           ) : session.currentCard ? (
             <div
+              key={session.currentCard.id}
               style={{
                 transform: `translateX(${dragX}px) translateY(${dragY}px) rotate(${dragX * 0.04}deg) scale(${isDragging ? 1.03 : 1})`,
-                transition: (dragX === 0 && dragY === 0) ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease' : 'none',
+                transition: exitReset
+                  ? 'none'
+                  : isExiting
+                    ? 'transform 0.32s cubic-bezier(0.33, 0.6, 0.44, 1), box-shadow 0.3s ease'
+                    : dragX === 0 && dragY === 0
+                      ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease'
+                      : 'none',
                 width: '100%',
                 boxShadow: isDragging ? '0 24px 48px rgba(0,0,0,0.35)' : undefined,
                 borderRadius: '1rem',
@@ -240,7 +284,7 @@ export default function FlashcardsPage() {
                 key={session.currentCard.id}
                 card={session.currentCard}
                 isFlipped={session.isFlipped}
-                animationClass={session.animationClass}
+                animationClass={isExiting ? 'none' : session.animationClass}
                 onFlip={session.handleFlip}
                 onVerify={session.handleVerifyAnswer}
               />
