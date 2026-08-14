@@ -1,10 +1,9 @@
 'use client'
 
-import { Star, Mic, MicOff, FileText } from 'lucide-react'
+import { Star, Mic, MicOff } from 'lucide-react'
 import type { Card } from '@/lib/zodSchemas'
 import StatBadge from '@/components/StatBadge'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
-import CardDocumentsModal from '../blanks/CardDocumentsModal'
 import { useState, useEffect } from 'react'
 
 interface FlashcardDeckProps {
@@ -35,7 +34,6 @@ export default function FlashcardDeck({
   const { isListening, transcript, interimTranscript, toggleListening, setTranscript } = useSpeechRecognition()
   const [userAnswer, setUserAnswer] = useState('')
   const [isCorrectState, setIsCorrectState] = useState<boolean | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Sync STT transcript with input
   useEffect(() => {
@@ -86,17 +84,6 @@ export default function FlashcardDeck({
               {card.chapter}
             </span>
             <div className="flex items-center gap-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsModalOpen(true)
-                }}
-                className="flex items-center gap-1.5 px-2 py-1 bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] rounded-lg text-xs font-medium transition-colors border border-[var(--color-border)] shadow-sm"
-                title="Community Notes & Blanks"
-              >
-                <FileText size={14} />
-                <span>Notes</span>
-              </button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
@@ -181,12 +168,6 @@ export default function FlashcardDeck({
           </p>
         </div>
       </div>
-      
-      <CardDocumentsModal
-        cardId={card.id}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   )
 }
