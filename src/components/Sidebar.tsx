@@ -7,7 +7,7 @@ import SignOutButton from '@/components/SignOutButton'
 import { useUIStore } from '@/store/uiStore'
 import { useCreditsStore } from '@/store/creditsStore'
 import { Coins, PlaySquare } from 'lucide-react'
-import { getAllUserBlanks, DeckBlank } from '@/features/blanks/deckBlanksApi'
+import { getDeckBlanks, DeckBlank } from '@/features/blanks/deckBlanksApi'
 
 interface NavItem {
   label: string
@@ -29,13 +29,20 @@ export default function Sidebar() {
   const [blanksDropdownOpen, setBlanksDropdownOpen] = useState(false)
   const [savedBlanks, setSavedBlanks] = useState<DeckBlank[]>([])
 
+  const deckMatch = pathname.match(/^\/study\/([^/]+)/)
+  const currentDeckId = deckMatch ? deckMatch[1] : null
+
   useEffect(() => {
     async function loadBlanks() {
-      const blanks = await getAllUserBlanks()
+      if (!currentDeckId) {
+        setSavedBlanks([])
+        return
+      }
+      const blanks = await getDeckBlanks(currentDeckId)
       setSavedBlanks(blanks)
     }
     loadBlanks()
-  }, [])
+  }, [currentDeckId])
 
   const NavContent = () => (
     <>

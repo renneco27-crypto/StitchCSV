@@ -35,7 +35,7 @@ function BlanksContent({ deckId }: { deckId: string }) {
         const target = blanks.find(b => b.id === initialBlankId)
         if (target) {
           setActiveBlank(target)
-          setTokens(parseBlanks(target.text_content, 0.15))
+          setTokens(parseBlanks(target.text_content))
         }
       }
       
@@ -51,7 +51,7 @@ function BlanksContent({ deckId }: { deckId: string }) {
       handleSelectBlank(newBlank)
     } else {
       // Fallback if saving fails or not logged in, just run it locally
-      const generatedTokens = parseBlanks(text, 0.15)
+      const generatedTokens = parseBlanks(text)
       setTokens(generatedTokens)
       setActiveBlank({ id: 'temp', deck_id: deckId, user_id: null, title, text_content: text, created_at: '' })
     }
@@ -60,7 +60,7 @@ function BlanksContent({ deckId }: { deckId: string }) {
 
   const handleSelectBlank = (blank: DeckBlank) => {
     setActiveBlank(blank)
-    const generatedTokens = parseBlanks(blank.text_content, 0.15)
+    const generatedTokens = parseBlanks(blank.text_content)
     setTokens(generatedTokens)
   }
 

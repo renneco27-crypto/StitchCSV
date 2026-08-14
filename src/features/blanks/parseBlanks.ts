@@ -7,7 +7,7 @@ export interface TextToken {
   isBlank: boolean
 }
 
-export function parseBlanks(text: string, blankPercentage: number = 0.15): TextToken[] {
+export function parseBlanks(text: string, blankPercentage: number = 0.25): TextToken[] {
   // Regex to split by words but keep whitespace and punctuation as separate tokens
   const tokens = text.split(/([a-zA-Z0-9_]+)/g).filter(Boolean)
   
@@ -16,7 +16,8 @@ export function parseBlanks(text: string, blankPercentage: number = 0.15): TextT
     return { text, isWord, originalIndex: i }
   }).filter(t => t.isWord)
   
-  const numBlanks = Math.max(1, Math.floor(wordTokens.length * blankPercentage))
+  // Use Math.ceil so even short sentences get a fair amount of blanks
+  const numBlanks = Math.max(1, Math.ceil(wordTokens.length * blankPercentage))
   const selectedBlankIndices = new Set<number>()
 
   // Step 1: Use Compromise NLP to find high-value entities

@@ -39,7 +39,7 @@ export default function CardDocumentsModal({ cardId, isOpen, onClose }: CardDocu
   }
 
   const handleStudyDocument = (text: string) => {
-    setStudyTokens(parseBlanks(text, 0.15))
+    setStudyTokens(parseBlanks(text))
     setActiveTab('study')
   }
 
