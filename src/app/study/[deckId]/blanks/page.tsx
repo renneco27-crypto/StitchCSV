@@ -37,6 +37,10 @@ function BlanksContent({ deckId }: { deckId: string }) {
           setActiveBlank(target)
           setTokens(parseBlanks(target.text_content))
         }
+      } else if (blanks.length > 0) {
+        // Auto-load the most recent blank instead of showing the create popup
+        setActiveBlank(blanks[0])
+        setTokens(parseBlanks(blanks[0].text_content))
       }
       
       setIsLoading(false)
@@ -84,19 +88,28 @@ function BlanksContent({ deckId }: { deckId: string }) {
         title={deck ? `${deck.title} - Blanks` : 'Fill-in-the-Blanks'} 
         onBack={() => router.push(`/study/${deckId}`)}
         rightSlot={
-          activeBlank && activeBlank.id !== 'temp' ? (
+          <div className="flex items-center gap-2">
             <button
-              onClick={(e) => {
-                if (window.confirm('Are you sure you want to delete this saved blank?')) {
-                  handleDelete(e, activeBlank.id)
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 rounded-lg transition-colors"
+              onClick={() => setPastePopupOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded-lg transition-colors"
             >
-              <Trash2 size={16} />
-              <span className="hidden sm:inline">Delete</span>
+              <Plus size={16} />
+              <span className="hidden sm:inline">New</span>
             </button>
-          ) : null
+            {activeBlank && activeBlank.id !== 'temp' && (
+              <button
+                onClick={(e) => {
+                  if (window.confirm('Are you sure you want to delete this saved blank?')) {
+                    handleDelete(e, activeBlank.id)
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 rounded-lg transition-colors"
+              >
+                <Trash2 size={16} />
+                <span className="hidden sm:inline">Delete</span>
+              </button>
+            )}
+          </div>
         }
       />
       
