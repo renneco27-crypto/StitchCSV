@@ -40,12 +40,20 @@ export async function POST(
       return NextResponse.json({ error: 'deckId is required' }, { status: 400 })
     }
 
-    const { error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'You must be signed in to categorize' }, { status: 401 })
+    }
+
+    const { error, count } = await supabase
       .from('decks')
-      .update({ folder_id: id })
+      .update({ folder_id: id }, { count: 'exact' })
       .eq('id', deckId)
 
     if (error) throw error
+    if (count === 0) {
+      return NextResponse.json({ error: 'Not authorized or deck not found' }, { status: 403 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {
@@ -70,13 +78,21 @@ export async function DELETE(
       return NextResponse.json({ error: 'deckId is required' }, { status: 400 })
     }
 
-    const { error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'You must be signed in to un-categorize' }, { status: 401 })
+    }
+
+    const { error, count } = await supabase
       .from('decks')
-      .update({ folder_id: null })
+      .update({ folder_id: null }, { count: 'exact' })
       .eq('id', deckId)
       .eq('folder_id', id)
 
     if (error) throw error
+    if (count === 0) {
+      return NextResponse.json({ error: 'Not authorized or deck not found' }, { status: 403 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {

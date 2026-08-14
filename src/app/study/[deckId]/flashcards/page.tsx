@@ -24,7 +24,7 @@ export default function FlashcardsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const allCards = await getCardsByDeck(deckId)
+      const allCards = (await getCardsByDeck(deckId)).filter((c) => c.type !== 'tf')
       if (allCards.length === 0) {
         setLoading(false)
         return
@@ -146,6 +146,7 @@ export default function FlashcardsPage() {
             isFlipped={session.isFlipped}
             animationClass={session.animationClass}
             onFlip={session.handleFlip}
+            onVerify={session.handleVerifyAnswer}
           />
         ) : null}
       </div>

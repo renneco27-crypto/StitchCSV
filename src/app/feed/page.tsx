@@ -167,7 +167,10 @@ export default function FeedPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deckId }),
       })
-      if (!res.ok) throw new Error('Failed to categorize')
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to categorize')
+      }
       if (activeFolder === null) {
         setDecks((prev) => prev.filter((d) => d.id !== deckId))
       }
@@ -374,56 +377,56 @@ export default function FeedPage() {
                              Remove
                            </button>
                          ) : (
-                           <div className="relative group/cat">
-                             <button
-                               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] border border-[var(--color-border)] disabled:opacity-50 transition-colors squishy-btn"
-                               disabled={categorizingId === deck.id}
-                             >
-                               {categorizingId === deck.id ? (
-                                 <Loader2 size={12} className="animate-spin" />
-                               ) : (
-                                 <Folder size={12} />
-                               )}
-                               Categorize
-                               <ChevronDown size={10} />
-                             </button>
-                             {folders.length > 0 && (
-                               <div className="absolute right-0 top-full mt-1 z-10 hidden group-hover/cat:block min-w-40">
-                                 <div className="glass-panel border border-[var(--color-border)] rounded-xl shadow-lg py-1">
-                                   {folders.map((f) => (
-                                     <button
-                                       key={f.id}
-                                       onClick={() => handleAddToFolder(f.id, deck.id)}
-                                       className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 transition-colors"
-                                     >
-                                       <FolderOpen size={13} />
-                                       {f.name}
-                                     </button>
-                                   ))}
-                                   <button
-                                     onClick={() => { setShowNewFolder(true); setCategorizingId(null) }}
-                                     className="w-full text-left px-3 py-2 text-sm text-[var(--color-accent)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 border-t border-[var(--color-border)] transition-colors"
-                                   >
-                                     <Plus size={13} />
-                                     New Folder…
-                                   </button>
-                                 </div>
-                               </div>
-                             )}
-                             {folders.length === 0 && (
-                               <div className="absolute right-0 top-full mt-1 z-10 hidden group-hover/cat:block min-w-40">
-                                 <div className="glass-panel border border-[var(--color-border)] rounded-xl shadow-lg py-3 px-3 text-center">
-                                   <p className="text-xs text-[var(--color-text-muted)]">No folders yet</p>
-                                   <button
-                                     onClick={() => setShowNewFolder(true)}
-                                     className="mt-1 text-xs text-[var(--color-accent)] font-medium hover:underline"
-                                   >
-                                     Create one
-                                   </button>
-                                 </div>
-                               </div>
-                             )}
-                           </div>
+                            <div className="relative group/cat">
+                              <button
+                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] border border-[var(--color-border)] disabled:opacity-50 transition-colors squishy-btn"
+                                disabled={categorizingId === deck.id}
+                              >
+                                {categorizingId === deck.id ? (
+                                  <Loader2 size={12} className="animate-spin" />
+                                ) : (
+                                  <Folder size={12} />
+                                )}
+                                Categorize
+                                <ChevronDown size={10} />
+                              </button>
+                              {folders.length > 0 && (
+                                <div className="absolute right-0 top-full pt-1 z-10 hidden group-hover/cat:block min-w-40">
+                                  <div className="glass-panel border border-[var(--color-border)] rounded-xl shadow-lg py-1">
+                                    {folders.map((f) => (
+                                      <button
+                                        key={f.id}
+                                        onClick={() => handleAddToFolder(f.id, deck.id)}
+                                        className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 transition-colors"
+                                      >
+                                        <FolderOpen size={13} />
+                                        {f.name}
+                                      </button>
+                                    ))}
+                                    <button
+                                      onClick={() => { setShowNewFolder(true); setCategorizingId(null) }}
+                                      className="w-full text-left px-3 py-2 text-sm text-[var(--color-accent)] hover:bg-[var(--color-surface-2)] flex items-center gap-2 border-t border-[var(--color-border)] transition-colors"
+                                    >
+                                      <Plus size={13} />
+                                      New Folder…
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                              {folders.length === 0 && (
+                                <div className="absolute right-0 top-full pt-1 z-10 hidden group-hover/cat:block min-w-40">
+                                  <div className="glass-panel border border-[var(--color-border)] rounded-xl shadow-lg py-3 px-3 text-center">
+                                    <p className="text-xs text-[var(--color-text-muted)]">No folders yet</p>
+                                    <button
+                                      onClick={() => setShowNewFolder(true)}
+                                      className="mt-1 text-xs text-[var(--color-accent)] font-medium hover:underline"
+                                    >
+                                      Create one
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                          )}
                          <button
                            onClick={() => handleDeleteDeck(deck.id)}

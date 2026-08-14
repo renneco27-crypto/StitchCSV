@@ -9,12 +9,20 @@ export async function DELETE(
     const supabase = await createServerSupabase()
     const { id } = await params
 
-    const { error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'You must be signed in to delete a folder' }, { status: 401 })
+    }
+
+    const { error, count } = await supabase
       .from('feed_folders')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('id', id)
 
     if (error) throw error
+    if (count === 0) {
+      return NextResponse.json({ error: 'Not authorized to delete this folder or it does not exist' }, { status: 403 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {

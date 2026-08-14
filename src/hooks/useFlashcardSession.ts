@@ -10,6 +10,7 @@ import { buildCycle, getResumePosition } from '@/features/flashcards/FlashcardCy
 import { appendCycleResult } from '@/features/flashcards/cycleHistory'
 import { MASTERY_MAX, MASTERY_THRESHOLD } from '@/lib/constants'
 import type { Card } from '@/lib/zodSchemas'
+import { evaluateAnswer } from '@/app/actions/evaluateAnswer'
 
 function deduplicate(
   knownIds: string[],
@@ -219,6 +220,24 @@ export function useFlashcardSession(deckId: string, cards: Card[]) {
     }, 300)
   }, [isFlipped, isAnimating, currentCard, deckId, recordWrong, markCardCompleted, setFlipped, advanceCard])
 
+  const handleVerifyAnswer = useCallback(async (answer: string) => {
+    if (!currentCard || isAnimating) return { correct: false, isEvaluated: false }
+    
+    const { ratio } = await evaluateAnswer(answer, currentCard.back)
+    const isCorrect = ratio >= 85
+    
+    if (isCorrect) {
+      setIsAnimating(true)
+      setFlipped(true)
+      
+      setTimeout(() => {
+        handleKnow()
+      }, 1500)
+    }
+    
+    return { correct: isCorrect, isEvaluated: true }
+  }, [currentCard, isAnimating, handleKnow, setFlipped])
+
   const handleNext = useCallback(() => {
     if (isAnimating) return
     if (cardIndex < currentBatch.length - 1) {
@@ -311,5 +330,6 @@ export function useFlashcardSession(deckId: string, cards: Card[]) {
     handleNextBatch,
     handleResetCycle,
     handleEndSession,
+    handleVerifyAnswer,
   }
 }

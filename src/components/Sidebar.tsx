@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation'
 import { Home, Globe, Plus, Menu, X } from 'lucide-react'
 import SignOutButton from '@/components/SignOutButton'
 import { useUIStore } from '@/store/uiStore'
+import { useCreditsStore } from '@/store/creditsStore'
+import { FileText, Coins, PlaySquare } from 'lucide-react'
 
 interface NavItem {
   label: string
@@ -15,12 +17,14 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'My Library', icon: Home, href: '/' },
   { label: 'Public Feed', icon: Globe, href: '/feed' },
+  { label: 'Fill in Blanks', icon: FileText, href: '/blanks' },
 ]
 
 export default function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const openUploadModal = useUIStore((s) => s.openUploadModal)
+  const { credits, isPaidAccount, addCreditsFromAd, setPaidAccount } = useCreditsStore()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   const NavContent = () => (
@@ -74,6 +78,49 @@ export default function Sidebar() {
           <Plus size={20} className="shrink-0" />
           <span>Create Deck</span>
         </button>
+
+        {/* 
+        <div className="mt-8 px-4">
+          <div className="bg-[var(--color-surface-2)] rounded-xl border border-[var(--color-border)] p-4 flex flex-col items-center text-center">
+            <div className="bg-[var(--color-accent)]/20 p-2 rounded-full mb-2">
+              <Coins size={24} className="text-[var(--color-accent)]" />
+            </div>
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">
+              {isPaidAccount ? 'Unlimited Access' : `${credits} Credits`}
+            </p>
+            {!isPaidAccount && (
+              <p className="text-xs text-[var(--color-text-muted)] mt-1 mb-3">
+                Watch an ad to earn more credits for AI Generation!
+              </p>
+            )}
+            {!isPaidAccount ? (
+              <button
+                onClick={() => {
+                  // Simulate watching an ad
+                  alert('Watching an Ad...')
+                  setTimeout(() => {
+                    addCreditsFromAd()
+                    alert('You earned 10 credits!')
+                  }, 2000)
+                }}
+                className="w-full flex justify-center items-center gap-2 px-3 py-2 rounded-lg bg-[var(--color-know)]/20 text-[var(--color-know)] text-xs font-semibold hover:bg-[var(--color-know)]/30 transition-colors"
+              >
+                <PlaySquare size={14} />
+                Watch Ad
+              </button>
+            ) : (
+              <p className="text-xs text-[var(--color-know)] font-semibold mt-2">Premium Active</p>
+            )}
+            
+            <button
+              onClick={() => setPaidAccount(!isPaidAccount)}
+              className="mt-3 text-[10px] text-[var(--color-text-muted)] underline opacity-50 hover:opacity-100"
+            >
+              Toggle Paid Account (Dev)
+            </button>
+          </div>
+        </div>
+        */}
       </nav>
 
       <div className="p-4 border-t border-[var(--color-border)]">

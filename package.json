@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "@google/generative-ai": "^0.24.1",
     "@radix-ui/react-dialog": "^1.1.17",
     "@radix-ui/react-progress": "^1.1.10",
@@ -20,6 +23,7 @@
     "dexie": "^4.4.4",
     "docx": "^9.7.1",
     "fuse.js": "^7.4.2",
+    "fuzzball": "^2.2.6",
     "lucide-react": "^1.21.0",
     "mammoth": "^1.12.0",
     "next": "16.2.9",

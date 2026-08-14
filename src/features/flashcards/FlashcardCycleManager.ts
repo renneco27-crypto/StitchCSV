@@ -4,6 +4,7 @@ import { BATCH_SIZE } from '@/lib/constants'
 
 export function buildCycle(cards: Card[], cycleNumber: number): Card[][] {
   const shuffled = shuffleSeeded([...cards], cycleNumber)
+  shuffled.sort((a, b) => (a.mastery ?? 0) - (b.mastery ?? 0))
   const cycle: Card[][] = []
   for (let i = 0; i < shuffled.length; i += BATCH_SIZE) {
     cycle.push(shuffled.slice(i, i + BATCH_SIZE))

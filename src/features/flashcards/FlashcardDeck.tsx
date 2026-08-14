@@ -1,14 +1,18 @@
 'use client'
 
-import { Star } from 'lucide-react'
+import { Star, Mic, MicOff, FileText } from 'lucide-react'
 import type { Card } from '@/lib/zodSchemas'
 import StatBadge from '@/components/StatBadge'
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
+import CardDocumentsModal from '../blanks/CardDocumentsModal'
+import { useState, useEffect } from 'react'
 
 interface FlashcardDeckProps {
   card: Card
   isFlipped: boolean
   animationClass: 'none' | 'slide-right' | 'slide-left' | 'slide-in'
   onFlip: () => void
+  onVerify?: (answer: string) => Promise<{ correct: boolean, isEvaluated: boolean }>
 }
 
 export default function FlashcardDeck({
@@ -16,6 +20,7 @@ export default function FlashcardDeck({
   isFlipped,
   animationClass,
   onFlip,
+  onVerify
 }: FlashcardDeckProps) {
   const animClass =
     animationClass === 'none' ? '' : animationClass
@@ -27,14 +32,44 @@ export default function FlashcardDeck({
         ? 'mastered'
         : 'know'
 
+  const { isListening, transcript, interimTranscript, toggleListening, setTranscript } = useSpeechRecognition()
+  const [userAnswer, setUserAnswer] = useState('')
+  const [isCorrectState, setIsCorrectState] = useState<boolean | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Sync STT transcript with input
+  useEffect(() => {
+    if (transcript || interimTranscript) {
+      setUserAnswer((transcript + interimTranscript).trim())
+    }
+  }, [transcript, interimTranscript])
+
+  // Reset answer when card changes
+  useEffect(() => {
+    setUserAnswer('')
+    setTranscript('')
+    setIsCorrectState(null)
+  }, [card.id, setTranscript])
+
+  // Auto-verify debounce
+  useEffect(() => {
+    if (!userAnswer || isCorrectState === true || !onVerify) return
+    const timeout = setTimeout(async () => {
+      const res = await onVerify(userAnswer)
+      if (res.isEvaluated) {
+        setIsCorrectState(res.correct)
+      }
+    }, 800)
+    return () => clearTimeout(timeout)
+  }, [userAnswer, isCorrectState, onVerify])
+
   return (
     <div
-      className={`w-full cursor-pointer ${animClass}`}
+      className={`w-full ${animClass}`}
       style={{ perspective: '1000px' }}
-      onClick={onFlip}
     >
       <div
-        className="w-full transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] grid"
+        className="w-full transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] grid cursor-pointer"
         style={{
           transformStyle: 'preserve-3d',
           transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -42,37 +77,85 @@ export default function FlashcardDeck({
       >
         {/* Front face */}
         <div
-          className="col-start-1 row-start-1 min-h-[18rem] md:min-h-[24rem] h-full glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
+          className={`col-start-1 row-start-1 min-h-[22rem] md:min-h-[26rem] h-full glass-panel rounded-2xl border ${isCorrectState === true ? 'border-[var(--color-know)] shadow-[0_0_15px_var(--color-know)]' : isCorrectState === false ? 'border-[var(--color-dontknow)] shadow-[0_0_15px_var(--color-dontknow)]' : 'border-[var(--color-border)] shadow-lg'} p-6 flex flex-col transition-all duration-300`}
           style={{ backfaceVisibility: 'hidden' }}
+          onClick={onFlip}
         >
           <div className="flex justify-between items-start">
             <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
               {card.chapter}
             </span>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  size={14}
-                  className={i < card.mastery ? 'fill-[var(--color-mastered)] text-[var(--color-mastered)]' : 'text-[var(--color-text-muted)]'}
-                />
-              ))}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsModalOpen(true)
+                }}
+                className="flex items-center gap-1.5 px-2 py-1 bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] rounded-lg text-xs font-medium transition-colors border border-[var(--color-border)] shadow-sm"
+                title="Community Notes & Blanks"
+              >
+                <FileText size={14} />
+                <span>Notes</span>
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    className={i < card.mastery ? 'fill-[var(--color-mastered)] text-[var(--color-mastered)]' : 'text-[var(--color-text-muted)]'}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center py-4">
-            <p className="font-['Playfair_Display'] text-2xl sm:text-3xl md:text-4xl text-center text-[var(--color-text-primary)] break-words">
+            <p className="font-['Playfair_Display'] text-xl sm:text-2xl md:text-3xl text-center text-[var(--color-text-primary)] break-words">
               {card.front}
             </p>
           </div>
-          <p className="text-xs text-[var(--color-text-muted)] text-center">
-            Tap to reveal answer ↕
-          </p>
+          
+          <div className="interactive-area mt-2 w-full flex flex-col items-center gap-4 relative">
+            <input
+              type="text"
+              className="w-full max-w-sm text-center bg-[var(--color-surface-2)] border-b-2 border-transparent border-b-[var(--color-border)] px-4 py-2 text-lg font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-b-[var(--color-accent)] transition-colors"
+              placeholder="Type answer here..."
+              value={userAnswer}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                setUserAnswer(e.target.value)
+                setTranscript(e.target.value) // fix sync issue when deleting
+              }}
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleListening()
+              }}
+              className={`p-4 rounded-full transition-all shadow-md ${
+                isListening 
+                  ? 'bg-[var(--color-know)]/20 text-[var(--color-know)] scale-110 animate-pulse' 
+                  : 'bg-[var(--color-surface-3)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)] hover:scale-105'
+              }`}
+              title={isListening ? "Stop listening" : "Start dictating"}
+            >
+              {isListening ? <Mic size={28} /> : <MicOff size={28} />}
+            </button>
+            <div className="flex flex-col items-center mt-1 h-8">
+               <span className="text-xs text-[var(--color-text-muted)] h-4">
+                {isListening ? 'Listening...' : ''}
+              </span>
+              <p className="text-xs text-[var(--color-text-muted)] text-center cursor-pointer hover:text-[var(--color-accent)] transition-colors mt-1" onClick={onFlip}>
+                Tap here or outside to reveal answer ↕
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Back face */}
         <div
-          className="col-start-1 row-start-1 min-h-[18rem] md:min-h-[24rem] h-full glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-8 flex flex-col"
+          className="col-start-1 row-start-1 min-h-[22rem] md:min-h-[26rem] h-full glass-panel rounded-2xl border border-[var(--color-border)] shadow-lg p-6 flex flex-col"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+          onClick={onFlip}
         >
           <div className="flex justify-between items-start">
             <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
@@ -98,6 +181,12 @@ export default function FlashcardDeck({
           </p>
         </div>
       </div>
+      
+      <CardDocumentsModal
+        cardId={card.id}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   )
 }

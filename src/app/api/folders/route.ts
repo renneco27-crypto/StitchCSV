@@ -32,7 +32,12 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabase()
-    const { name, createdBy } = await request.json()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'You must be signed in to create a folder' }, { status: 401 })
+    }
+
+    const { name } = await request.json()
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: 'Folder name is required' }, { status: 400 })
@@ -40,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('feed_folders')
-      .insert({ name: name.trim(), created_by: createdBy ?? '' })
+      .insert({ name: name.trim(), created_by: user.id })
       .select('id, name, created_at')
       .single()
 

@@ -169,7 +169,6 @@ export default function StudyDashboard() {
   }
 
   const mcCount = deck?.quizItems.filter((q) => q.mode === 'multiple_choice').length ?? 0
-  const idCount = deck?.quizItems.filter((q) => q.mode === 'identification').length ?? 0
   const tfCount = deck?.quizItems.filter((q) => q.mode === 'true_false').length ?? 0
   const enumCount = deck?.quizItems.filter((q) => q.mode === 'enumeration').length ?? 0
 
@@ -288,15 +287,6 @@ export default function StudyDashboard() {
             href={`/study/${deckId}/quiz/multiple-choice`}
             count={`${mcCount} questions`}
             disabled={mcCount === 0}
-          />
-          <ModeCard
-            icon={PenLine}
-            label="Identification"
-            description="Fill in the blank"
-            color="var(--color-know)"
-            href={`/study/${deckId}/quiz/identification`}
-            count={`${idCount} questions`}
-            disabled={idCount === 0}
           />
           <ModeCard
             icon={ToggleLeft}
