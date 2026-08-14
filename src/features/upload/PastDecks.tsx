@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { BookOpen, Trash2 } from 'lucide-react'
 import { getAllDecks, deleteDeck } from '@/db/deckRepository'
 import { getCardsByDeck } from '@/db/cardRepository'
@@ -12,12 +12,13 @@ import type { Deck } from '@/lib/zodSchemas'
 
 export default function PastDecks() {
   const router = useRouter()
+  const pathname = usePathname()
   const [decks, setDecks] = useState<Deck[]>(() => [])
   const stats = useStatsStore((s) => s.stats)
 
   useEffect(() => {
     getAllDecks().then(setDecks)
-  }, [])
+  }, [pathname])
 
   const handleDelete = async (e: React.MouseEvent, deckId: string) => {
     e.stopPropagation()
