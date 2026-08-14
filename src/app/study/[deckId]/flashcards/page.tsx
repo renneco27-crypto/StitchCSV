@@ -24,7 +24,7 @@ export default function FlashcardsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const allCards = (await getCardsByDeck(deckId)).filter((c) => c.type !== 'tf')
+      const allCards = (await getCardsByDeck(deckId)).filter((c) => (c.type as string) !== 'tf')
       if (allCards.length === 0) {
         setLoading(false)
         return
