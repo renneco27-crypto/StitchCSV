@@ -47,11 +47,11 @@ export default function FlashcardsPage() {
   const touchStartY = useRef<number | null>(null)
   const [dragX, setDragX] = useState(0)
   const [dragY, setDragY] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const historyStack = useRef<number[]>([]) // stores cardIndex values going back
 
-  // Track forward navigation into history
   const pushHistory = useCallback((idx: number) => {
-    historyStack.current = [...historyStack.current.slice(-2), idx] // max 3 back
+    historyStack.current = [...historyStack.current.slice(-2), idx]
   }, [])
 
   const handleSwipeRight = useCallback(() => {
@@ -60,7 +60,7 @@ export default function FlashcardsPage() {
   }, [session, pushHistory])
 
   const handleSwipeLeft = useCallback(() => {
-    if (historyStack.current.length === 0) return // nothing to go back to
+    if (historyStack.current.length === 0) return
     historyStack.current = historyStack.current.slice(0, -1)
     session.handlePrev()
   }, [session])
@@ -68,22 +68,22 @@ export default function FlashcardsPage() {
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
+    setIsDragging(false)
   }, [])
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (touchStartX.current === null || touchStartY.current === null) return
+    e.preventDefault() // prevent page scroll during card drag
     const dx = e.touches[0].clientX - touchStartX.current
     const dy = e.touches[0].clientY - touchStartY.current
-    if (Math.abs(dx) > Math.abs(dy)) {
-      // Horizontal swipe
-      if (dx < 0 && historyStack.current.length === 0) return
-      setDragX(dx * 0.35)
-      setDragY(0)
-    } else {
-      // Vertical swipe
-      setDragY(dy * 0.35)
-      setDragX(0)
-    }
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    if (dist > 8) setIsDragging(true)
+    // Allow full diagonal drag — both axes move simultaneously
+    const dampX = dx * 0.4
+    const dampY = dy * 0.4
+    // Block left drag if no history
+    setDragX(dx < 0 && historyStack.current.length === 0 ? 0 : dampX)
+    setDragY(dampY)
   }, [])
 
   const onTouchEnd = useCallback((e: React.TouchEvent) => {
@@ -92,21 +92,24 @@ export default function FlashcardsPage() {
     const dy = e.changedTouches[0].clientY - touchStartY.current
     setDragX(0)
     setDragY(0)
-    if (Math.abs(dx) > Math.abs(dy)) {
-      // Horizontal: left/right navigation
-      if (Math.abs(dx) > 60) {
+    setIsDragging(false)
+
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+    const threshold = 60
+
+    // Pick the dominant axis — whichever had more movement wins
+    if (absDx >= absDy) {
+      if (absDx > threshold) {
         if (dx > 0) handleSwipeLeft()
         else handleSwipeRight()
       }
     } else {
-      // Vertical: know / don't know
-      if (Math.abs(dy) > 60) {
+      if (absDy > threshold) {
         if (dy < 0) {
-          // Swipe UP = Know
           pushHistory(session.cardIndex)
           session.handleKnow()
         } else {
-          // Swipe DOWN = Don't Know
           pushHistory(session.cardIndex)
           session.handleDontKnow()
         }
@@ -209,6 +212,7 @@ export default function FlashcardsPage() {
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
+          style={{ touchAction: 'none' }}
         >
           {session.showSessionEnd ? (
             <SessionEndCard
@@ -224,9 +228,12 @@ export default function FlashcardsPage() {
           ) : session.currentCard ? (
             <div
               style={{
-                transform: `translateX(${dragX}px) translateY(${dragY}px)`,
-                transition: (dragX === 0 && dragY === 0) ? 'transform 0.25s ease' : 'none',
+                transform: `translateX(${dragX}px) translateY(${dragY}px) rotate(${dragX * 0.04}deg) scale(${isDragging ? 1.03 : 1})`,
+                transition: (dragX === 0 && dragY === 0) ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease' : 'none',
                 width: '100%',
+                boxShadow: isDragging ? '0 24px 48px rgba(0,0,0,0.35)' : undefined,
+                borderRadius: '1rem',
+                willChange: 'transform',
               }}
             >
               <FlashcardDeck
