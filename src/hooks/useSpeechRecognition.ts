@@ -28,61 +28,62 @@ export function useSpeechRecognition() {
     }
   }, [transcript, interimTranscript, isListening, stopListening])
 
+  const SpeechRecognitionClass = typeof window !== 'undefined'
+    ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
+    : null
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition()
-        recognition.continuous = true
-        recognition.interimResults = true
-        recognition.lang = 'en-US'
+    if (!SpeechRecognitionClass) setSupported(false)
+  }, [SpeechRecognitionClass])
 
-        recognition.onresult = (event: any) => {
-          let final = ''
-          let interim = ''
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              final += event.results[i][0].transcript + ' '
-            } else {
-              interim += event.results[i][0].transcript
-            }
-          }
-          if (final) {
-            setTranscript((prev) => prev + final)
-          }
-          setInterimTranscript(interim)
+  // Creates a fresh recognition instance to avoid first-word doubling on reuse
+  const createRecognition = useCallback(() => {
+    if (!SpeechRecognitionClass) return null
+    const recognition = new SpeechRecognitionClass()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+
+    recognition.onresult = (event: any) => {
+      let final = ''
+      let interim = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          final += event.results[i][0].transcript + ' '
+        } else {
+          interim += event.results[i][0].transcript
         }
-
-        recognition.onerror = (event: any) => {
-          console.error('Speech recognition error', event.error)
-          if (event.error !== 'no-speech') {
-            setIsListening(false)
-          }
-        }
-
-        recognition.onend = () => {
-          setIsListening(false)
-        }
-
-        recognitionRef.current = recognition
-      } else {
-        setSupported(false)
       }
+      if (final) setTranscript((prev) => prev + final)
+      setInterimTranscript(interim)
     }
-  }, [])
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error', event.error)
+      if (event.error !== 'no-speech') setIsListening(false)
+    }
+
+    recognition.onend = () => setIsListening(false)
+
+    return recognition
+  }, [SpeechRecognitionClass])
 
   const startListening = useCallback(() => {
-    if (recognitionRef.current && !isListening) {
+    if (!isListening) {
       try {
+        // Create a fresh instance each time to prevent first-word doubling
+        const recognition = createRecognition()
+        if (!recognition) return
+        recognitionRef.current = recognition
         setTranscript('')
         setInterimTranscript('')
-        recognitionRef.current.start()
+        recognition.start()
         setIsListening(true)
       } catch (e) {
         console.error('Could not start speech recognition:', e)
       }
     }
-  }, [isListening])
+  }, [isListening, createRecognition])
 
 
 
