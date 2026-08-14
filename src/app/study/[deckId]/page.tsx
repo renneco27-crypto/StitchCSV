@@ -307,6 +307,14 @@ export default function StudyDashboard() {
             disabled={enumCount === 0}
           />
           <ModeCard
+            icon={PenLine}
+            label="Fill in Blanks"
+            description="Interactive reading"
+            color="var(--color-accent-soft)"
+            href={`/study/${deckId}/blanks`}
+            count="Docs"
+          />
+          <ModeCard
             icon={BarChart2}
             label="Stats"
             description="Your progress"

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Home, Globe, Plus, Menu, X } from 'lucide-react'
+import { Home, Globe, Plus, Menu, X, ChevronDown, ChevronRight, FileText } from 'lucide-react'
 import SignOutButton from '@/components/SignOutButton'
 import { useUIStore } from '@/store/uiStore'
 import { useCreditsStore } from '@/store/creditsStore'
-import { FileText, Coins, PlaySquare } from 'lucide-react'
+import { Coins, PlaySquare } from 'lucide-react'
+import { getAllUserBlanks, DeckBlank } from '@/features/blanks/deckBlanksApi'
 
 interface NavItem {
   label: string
@@ -17,7 +18,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'My Library', icon: Home, href: '/' },
   { label: 'Public Feed', icon: Globe, href: '/feed' },
-  { label: 'Fill in Blanks', icon: FileText, href: '/blanks' },
 ]
 
 export default function Sidebar() {
@@ -26,6 +26,16 @@ export default function Sidebar() {
   const openUploadModal = useUIStore((s) => s.openUploadModal)
   const { credits, isPaidAccount, addCreditsFromAd, setPaidAccount } = useCreditsStore()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [blanksDropdownOpen, setBlanksDropdownOpen] = useState(false)
+  const [savedBlanks, setSavedBlanks] = useState<DeckBlank[]>([])
+
+  useEffect(() => {
+    async function loadBlanks() {
+      const blanks = await getAllUserBlanks()
+      setSavedBlanks(blanks)
+    }
+    loadBlanks()
+  }, [])
 
   const NavContent = () => (
     <>
@@ -78,6 +88,40 @@ export default function Sidebar() {
           <Plus size={20} className="shrink-0" />
           <span>Create Deck</span>
         </button>
+
+        {/* Saved Blanks Dropdown */}
+        {savedBlanks.length > 0 && (
+          <div className="mt-4 flex flex-col gap-1">
+            <button
+              onClick={() => setBlanksDropdownOpen(!blanksDropdownOpen)}
+              className="flex items-center justify-between px-4 py-2 rounded-xl text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-colors squishy-btn"
+            >
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="shrink-0 text-[var(--color-accent)]" />
+                <span>Saved Blanks</span>
+              </div>
+              {blanksDropdownOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </button>
+            
+            {blanksDropdownOpen && (
+              <div className="flex flex-col gap-1 pl-4 pr-2 border-l-2 border-[var(--color-border)] ml-4 mt-1">
+                {savedBlanks.map(blank => (
+                  <button
+                    key={blank.id}
+                    onClick={() => {
+                      router.push(`/study/${blank.deck_id}/blanks?blankId=${blank.id}`)
+                      setIsMobileOpen(false)
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-colors text-left truncate"
+                    title={blank.title}
+                  >
+                    <span className="truncate">{blank.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 
         <div className="mt-8 px-4">

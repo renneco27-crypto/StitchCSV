@@ -5,6 +5,7 @@ import { Mic, MicOff, CheckCircle2, XCircle } from 'lucide-react'
 import { TextToken } from './parseBlanks'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { evaluateAnswer } from '@/app/actions/evaluateAnswer'
+import confetti from 'canvas-confetti'
 
 interface FillInTheBlanksUIProps {
   tokens: TextToken[]
@@ -36,25 +37,20 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
     setTranscript('')
   }, [focusedTokenId, setTranscript])
 
-  const handleVerifyAll = async () => {
-    const newScores: Record<string, number> = {}
-    for (const token of tokens) {
-      if (token.isBlank) {
-        const userAnswer = answers[token.id] || ''
-        const { ratio } = await evaluateAnswer(userAnswer, token.text)
-        newScores[token.id] = ratio
-      }
-    }
-    setScores(newScores)
-  }
+  const [hasWon, setHasWon] = useState(false)
 
   // Auto-verify debounce
   useEffect(() => {
     const timeout = setTimeout(async () => {
       const newScores = { ...scores }
       let changed = false
+      
+      let allCorrect = true
+      let totalBlanks = 0
+
       for (const token of tokens) {
         if (token.isBlank) {
+          totalBlanks++
           const val = answers[token.id]
           // If they typed something and we haven't scored it yet, verify it
           if (val && scores[token.id] === undefined) {
@@ -62,12 +58,24 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
              newScores[token.id] = ratio
              changed = true
           }
+          if ((newScores[token.id] || 0) < 85) {
+             allCorrect = false
+          }
         }
       }
       if (changed) setScores(newScores)
+
+      if (totalBlanks > 0 && allCorrect && !hasWon) {
+        setHasWon(true)
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 }
+        })
+      }
     }, 800)
     return () => clearTimeout(timeout)
-  }, [answers, scores, tokens])
+  }, [answers, scores, tokens, hasWon])
 
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)]">
@@ -154,12 +162,6 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
             className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-3)] transition-colors"
           >
             Paste New Text
-          </button>
-          <button
-            onClick={handleVerifyAll}
-            className="flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity shadow-sm"
-          >
-            Verify Answers
           </button>
         </div>
       </div>

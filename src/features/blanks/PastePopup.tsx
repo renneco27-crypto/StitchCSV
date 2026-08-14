@@ -6,10 +6,11 @@ import { X, ClipboardPaste } from 'lucide-react'
 interface PastePopupProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (text: string) => void
+  onSubmit: (title: string, text: string) => void
 }
 
 export default function PastePopup({ isOpen, onClose, onSubmit }: PastePopupProps) {
+  const [title, setTitle] = useState('')
   const [text, setText] = useState('')
 
   if (!isOpen) return null
@@ -30,16 +31,33 @@ export default function PastePopup({ isOpen, onClose, onSubmit }: PastePopupProp
           </button>
         </div>
         
-        <div className="p-4 flex-1 flex flex-col min-h-0">
-          <p className="text-sm text-[var(--color-text-muted)] mb-3">
-            Paste your notes or document below. We will randomly generate fill-in-the-blanks for you to study.
-          </p>
-          <textarea
-            className="w-full flex-1 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-4 text-sm text-[var(--color-text-primary)] resize-none focus:outline-none focus:border-[var(--color-accent)] transition-colors min-h-[200px]"
-            placeholder="Paste text here..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
+        <div className="p-4 flex-1 flex flex-col min-h-0 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">
+              Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Chapter 1 Notes"
+              className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
+            />
+          </div>
+          <div className="flex-1 flex flex-col min-h-0">
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1 mt-2">
+              Content
+            </label>
+            <p className="text-xs text-[var(--color-text-muted)] mb-2">
+              Paste your notes or document below. We will randomly generate fill-in-the-blanks for you to study.
+            </p>
+            <textarea
+              className="w-full flex-1 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-4 text-sm text-[var(--color-text-primary)] resize-none focus:outline-none focus:border-[var(--color-accent)] transition-colors min-h-[200px]"
+              placeholder="Paste text here..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+          </div>
         </div>
         
         <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-surface-2)] flex justify-end gap-3">
@@ -51,12 +69,13 @@ export default function PastePopup({ isOpen, onClose, onSubmit }: PastePopupProp
           </button>
           <button
             onClick={() => {
-              if (text.trim()) {
-                onSubmit(text)
+              if (text.trim() && title.trim()) {
+                onSubmit(title.trim(), text.trim())
                 setText('')
+                setTitle('')
               }
             }}
-            disabled={!text.trim()}
+            disabled={!text.trim() || !title.trim()}
             className="px-5 py-2 rounded-xl text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity shadow-sm"
           >
             Generate Blanks
