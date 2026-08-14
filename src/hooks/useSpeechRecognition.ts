@@ -62,6 +62,22 @@ export function useSpeechRecognition() {
     prewarm()
   }, [prewarm])
 
+  const silenceTimerRef = useRef<any>(null)
+
+  const resetSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+    silenceTimerRef.current = setTimeout(() => {
+      if (isListeningRef.current) {
+        userStoppedRef.current = true
+        setIsListening(false)
+        setInterimTranscript('')
+        try { activeRef.current?.stop() } catch (_) {}
+        activeRef.current = null
+        setTimeout(prewarm, 200)
+      }
+    }, 2000)
+  }, [prewarm])
+
   const startInstance = useCallback(() => {
     const SRC = getSRClass()
     if (!SRC) return
@@ -80,6 +96,8 @@ export function useSpeechRecognition() {
       }
       if (final) setTranscript(prev => prev + final)
       setInterimTranscript(interim)
+      // Reset the silence timer — only stop 2s after the last heard word
+      resetSilenceTimer()
     }
 
     r.onerror = (e: any) => {
@@ -123,7 +141,8 @@ export function useSpeechRecognition() {
     setInterimTranscript('')
     setIsListening(true)
     startInstance()
-  }, [startInstance])
+    resetSilenceTimer() // begin 2s silence countdown from the moment mic turns on
+  }, [startInstance, resetSilenceTimer])
 
   const stopListening = useCallback(() => {
     userStoppedRef.current = true
