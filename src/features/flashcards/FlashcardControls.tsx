@@ -7,6 +7,7 @@ interface FlashcardControlsProps {
   isFirst: boolean
   isLast: boolean
   isAnimating: boolean
+  swipeHint?: 'know' | 'dontknow' | null
   onPrev: () => void
   onNext: () => void
   onKnow: () => void
@@ -18,6 +19,7 @@ export default function FlashcardControls({
   isFirst,
   isLast,
   isAnimating,
+  swipeHint,
   onPrev,
   onNext,
   onKnow,
@@ -38,7 +40,11 @@ export default function FlashcardControls({
         <button
           onClick={onDontKnow}
           disabled={!isFlipped || isAnimating}
-          className="flex-1 border border-[var(--color-dontknow)] text-[var(--color-dontknow)] px-4 py-3 rounded-xl font-medium hover:bg-[var(--color-dontknow-soft)] disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          className={`flex-1 border text-[var(--color-dontknow)] px-4 py-3 rounded-xl font-medium disabled:opacity-30 disabled:pointer-events-none transition-all duration-150
+            ${swipeHint === 'dontknow'
+              ? 'border-[var(--color-dontknow)] bg-[var(--color-dontknow)]/20 shadow-[0_0_20px_var(--color-dontknow)] scale-105'
+              : 'border-[var(--color-dontknow)] hover:bg-[var(--color-dontknow-soft)]'
+            }`}
           aria-label="I don't know this card"
         >
           I Don&apos;t Know
@@ -47,7 +53,11 @@ export default function FlashcardControls({
         <button
           onClick={onKnow}
           disabled={!isFlipped || isAnimating}
-          className="flex-1 bg-[var(--color-know)] text-white px-4 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-30 disabled:pointer-events-none transition-opacity"
+          className={`flex-1 text-white px-4 py-3 rounded-xl font-medium disabled:opacity-30 disabled:pointer-events-none transition-all duration-150
+            ${swipeHint === 'know'
+              ? 'bg-[var(--color-know)] shadow-[0_0_24px_var(--color-know)] scale-105 opacity-100'
+              : 'bg-[var(--color-know)] hover:opacity-90'
+            }`}
           aria-label="I know this card"
         >
           I Know

@@ -178,6 +178,9 @@ export default function FlashcardsPage() {
   const isLastCardInBatch = session.cardIndex >= session.currentBatch.length - 1
   const isLastOverall = isLastCardInBatch && session.batchIndex >= session.totalBatches - 1
 
+  // Glow hint for buttons during vertical swipe
+  const swipeHint = dragY < -30 ? 'know' : dragY > 30 ? 'dontknow' : null
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       <TopBar
@@ -244,6 +247,7 @@ export default function FlashcardsPage() {
           isFirst={isFirst}
           isLast={isLastOverall}
           isAnimating={session.isAnimating}
+          swipeHint={swipeHint}
           onPrev={session.handlePrev}
           onNext={session.handleNext}
           onKnow={session.handleKnow}
