@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { getCardsByDeck, getCardsForReview } from '@/db/cardRepository'
@@ -41,6 +41,62 @@ export default function FlashcardsPage() {
   }, [deckId, modeReview])
 
   const session = useFlashcardSession(deckId, cards)
+
+  // Swipe gesture tracking
+  const touchStartX = useRef<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
+  const [dragX, setDragX] = useState(0)
+  const historyStack = useRef<number[]>([]) // stores cardIndex values going back
+  const MAX_HISTORY = 3
+
+  // Track forward navigation into history
+  const pushHistory = useCallback((idx: number) => {
+    historyStack.current = [...historyStack.current.slice(-MAX_HISTORY + 1), idx]
+  }, [])
+
+  const handleSwipeRight = useCallback(() => {
+    pushHistory(session.cardIndex)
+    session.handleNext()
+  }, [session, pushHistory])
+
+  const handleSwipeLeft = useCallback(() => {
+    if (historyStack.current.length === 0) return // nothing to go back to
+    historyStack.current = historyStack.current.slice(0, -1)
+    session.handlePrev()
+  }, [session])
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }, [])
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return
+    const dx = e.touches[0].clientX - touchStartX.current
+    const dy = e.touches[0].clientY - touchStartY.current
+    // Only track horizontal swipes
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // If swiping left but no history, don't allow drag
+      if (dx < 0 && historyStack.current.length === 0) return
+      setDragX(dx * 0.35) // dampened drag feel
+    }
+  }, [])
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    const dy = e.changedTouches[0].clientY - touchStartY.current
+    setDragX(0)
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+      if (dx > 0) {
+        handleSwipeLeft() // swipe right = go back
+      } else {
+        handleSwipeRight() // swipe left = go forward
+      }
+    }
+    touchStartX.current = null
+    touchStartY.current = null
+  }, [handleSwipeLeft, handleSwipeRight])
 
   const handleBack = useCallback(() => {
     session.handleEndSession()
@@ -127,29 +183,42 @@ export default function FlashcardsPage() {
         totalBatches={session.totalBatches}
       />
 
-      <div className="flex-1 p-4 overflow-hidden flex items-center">
-        {session.showSessionEnd ? (
-          <SessionEndCard
-            knownCount={session.cycleKnownIds.length}
-            unknownCount={session.cycleUnknownIds.length}
-            totalCards={cards.length}
-            deckId={deckId}
-            cycleNumber={session.cycleNumber}
-            hasMoreBatches={session.batchIndex < session.totalBatches - 1}
-            onNextBatch={session.handleNextBatch}
-            onResetCycle={session.handleResetCycle}
-          />
-        ) : session.currentCard ? (
-          <FlashcardDeck
-            key={session.currentCard.id}
-            card={session.currentCard}
-            isFlipped={session.isFlipped}
-            animationClass={session.animationClass}
-            onFlip={session.handleFlip}
-            onVerify={session.handleVerifyAnswer}
-          />
-        ) : null}
-      </div>
+      <div
+          className="flex-1 p-4 overflow-hidden flex items-center"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {session.showSessionEnd ? (
+            <SessionEndCard
+              knownCount={session.cycleKnownIds.length}
+              unknownCount={session.cycleUnknownIds.length}
+              totalCards={cards.length}
+              deckId={deckId}
+              cycleNumber={session.cycleNumber}
+              hasMoreBatches={session.batchIndex < session.totalBatches - 1}
+              onNextBatch={session.handleNextBatch}
+              onResetCycle={session.handleResetCycle}
+            />
+          ) : session.currentCard ? (
+            <div
+              style={{
+                transform: `translateX(${dragX}px)`,
+                transition: dragX === 0 ? 'transform 0.25s ease' : 'none',
+                width: '100%',
+              }}
+            >
+              <FlashcardDeck
+                key={session.currentCard.id}
+                card={session.currentCard}
+                isFlipped={session.isFlipped}
+                animationClass={session.animationClass}
+                onFlip={session.handleFlip}
+                onVerify={session.handleVerifyAnswer}
+              />
+            </div>
+          ) : null}
+        </div>
 
       {!session.showSessionEnd && (
         <FlashcardControls
