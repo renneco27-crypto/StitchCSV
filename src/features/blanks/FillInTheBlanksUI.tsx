@@ -75,7 +75,7 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
       if (expected.isBlank) {
         if (isMatch(word, expected.text)) {
           newCorrect.add(expected.id)
-          newFilled[expected.id] = word
+          newFilled[expected.id] = expected.text // autocorrect to the correct answer
           cur++
           // skip non-blank words after this blank
           cur = skipNonBlanks(cur)
