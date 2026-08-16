@@ -31,9 +31,14 @@ export default function FlashcardDeck({
         ? 'mastered'
         : 'know'
 
-  const { isListening, transcript, interimTranscript, toggleListening, setTranscript } = useSpeechRecognition()
+  const { isListening, transcript, interimTranscript, toggleListening, stopListening, setTranscript } = useSpeechRecognition()
   const [userAnswer, setUserAnswer] = useState('')
   const [isCorrectState, setIsCorrectState] = useState<boolean | null>(null)
+
+  // Stop the mic when this card unmounts (card changed) so the next card's mic can start cleanly
+  useEffect(() => {
+    return () => { stopListening() }
+  }, [stopListening])
 
   // Sync STT transcript with input
   useEffect(() => {
