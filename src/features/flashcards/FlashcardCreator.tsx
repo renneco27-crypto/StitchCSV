@@ -224,8 +224,8 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
         if (!front.trim() || !back.trim()) {
           addToast('Both keyword and notes content are required', 'error'); return
         }
-        const headers = ['front', 'back', 'type']
-        const row = [esc(front), esc(back), 'keyword'].join(',')
+        const headers = ['front', 'back', 'chapter', 'subject', 'lesson', 'type']
+        const row = [esc(front), esc(back), '', '', '', 'keyword'].join(',')
         csvText = [headers.join(','), row].join('\n')
         break
       }
@@ -233,8 +233,8 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
         if (!front.trim() || !back.trim()) {
           addToast('Both front and back are required', 'error'); return
         }
-        const headers = ['front', 'back', 'type']
-        const row = [esc(front), esc(back), 'definition'].join(',')
+        const headers = ['front', 'back', 'chapter', 'subject', 'lesson', 'type']
+        const row = [esc(front), esc(back), '', '', '', 'definition'].join(',')
         csvText = [headers.join(','), row].join('\n')
       }
     }

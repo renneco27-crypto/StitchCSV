@@ -32,35 +32,76 @@ function quoteField(val: string): string {
   return val
 }
 
-function fixRow(row: string[]): string[] {
-  const type = (row[5] || '').toLowerCase().trim().replace(/"/g, '')
-  const cols = row.length
+const KNOWN_TYPES = new Set([
+  'definition', 'concept', 'formula', 'process', 'list', 'keyword',
+  'multiple_choice', 'mc', 'true_false', 'tf', 'enumeration', 'enum', 'identification', 'id'
+])
 
-  if (cols === EXPECTED_COLS) return row
+function fixRow(row: string[]): string[] {
+  let r = [...row]
+
+  // If short row where type is in column 2 (e.g. front, back, type)
+  if (r.length === 3 && KNOWN_TYPES.has(r[2]?.toLowerCase().trim())) {
+    r = [r[0], r[1], '', '', '', r[2]]
+  } else if (r.length === 4 && KNOWN_TYPES.has(r[3]?.toLowerCase().trim())) {
+    r = [r[0], r[1], r[2], '', '', r[3]]
+  }
+
+  const type = (r[5] || '').toLowerCase().trim().replace(/"/g, '')
+  const cols = r.length
+
+  if (cols === EXPECTED_COLS) return r
 
   if (cols === 16) {
     if (type === 'identification') {
-      const answer = row[14] || ''
-      const variants = row[15] || ''
-      return [row[0], row[1], row[2], row[3], row[4], row[5], '', '', '', '', '', '', '', answer, variants]
+      const answer = r[14] || ''
+      const variants = r[15] || ''
+      return [r[0], r[1], r[2], r[3], r[4], r[5], '', '', '', '', '', '', '', answer, variants]
     }
-    return row.slice(0, EXPECTED_COLS)
+    return r.slice(0, EXPECTED_COLS)
   }
 
   if (cols === 14) {
-    return [...row.slice(0, 11), '', ...row.slice(11)]
+    return [...r.slice(0, 11), '', ...r.slice(11)]
   }
 
   if (cols < 14) {
-    const padded = [...row, ...Array(14 - cols).fill('')]
+    const padded = [...r, ...Array(14 - cols).fill('')]
     return [...padded.slice(0, 11), '', ...padded.slice(11)]
   }
 
-  return row
+  return r
+}
+
+function splitCSVRows(text: string): string[] {
+  const rows: string[] = []
+  let cur = ''
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        cur += '""'
+        i++
+      } else {
+        inQuotes = !inQuotes
+        cur += '"'
+      }
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (ch === '\r' && text[i + 1] === '\n') i++
+      if (cur.trim()) rows.push(cur.trim())
+      cur = ''
+    } else {
+      cur += ch
+    }
+  }
+  if (cur.trim()) rows.push(cur.trim())
+  return rows
 }
 
 export function auditAndFixCSV(csvText: string): string {
-  const lines = csvText.trim().split(/\r?\n/)
+  const lines = splitCSVRows(csvText.trim())
 
   if (!lines.length) return ''
 
@@ -83,6 +124,6 @@ export function auditAndFixCSV(csvText: string): string {
 }
 
 export function isCSVInput(text: string): boolean {
-  const firstLine = text.trim().split('\n')[0]?.trim() ?? ''
+  const firstLine = text.trim().split(/\r?\n/)[0]?.trim() ?? ''
   return /^front[,\t]/.test(firstLine)
 }

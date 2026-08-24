@@ -59,8 +59,36 @@ function parseCSVLine(line: string): string[] {
   return result
 }
 
+function splitCSVRows(text: string): string[] {
+  const rows: string[] = []
+  let cur = ''
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        cur += '""'
+        i++
+      } else {
+        inQuotes = !inQuotes
+        cur += '"'
+      }
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (ch === '\r' && text[i + 1] === '\n') i++
+      if (cur.trim()) rows.push(cur.trim())
+      cur = ''
+    } else {
+      cur += ch
+    }
+  }
+  if (cur.trim()) rows.push(cur.trim())
+  return rows
+}
+
 function parseCSV(text: string): CSVRow[] {
-  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim())
+  const cleanText = text.replace(/^\uFEFF/, '').trim()
+  const lines = splitCSVRows(cleanText)
 
   if (lines.length < 2) return []
 
