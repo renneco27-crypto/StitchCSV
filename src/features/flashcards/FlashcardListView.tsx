@@ -122,23 +122,23 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
   return (
     <div className="flex-1 overflow-auto flex flex-col w-full">
       {/* Search & Bulk Action Bar */}
-      <div className="px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/50 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/50 backdrop-blur sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto flex items-center gap-1.5 sm:gap-2">
+          <div className="relative flex-1 min-w-[120px]">
+            <Search size={14} className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search cards, questions, answers…"
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs sm:text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
+              placeholder="Search cards…"
+              className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs sm:text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
             />
           </div>
 
           {filtered.length > 0 && (
             <button
               onClick={() => toggleSelectAll(filtered)}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] transition-colors shrink-0"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] transition-colors shrink-0"
               title="Select / Deselect all visible cards"
             >
               <CheckSquare size={14} />
@@ -149,10 +149,10 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
           {selectedIds.size > 0 && (
             <button
               onClick={promptDeleteBulk}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl bg-[var(--color-dontknow)] text-white hover:opacity-90 transition-opacity shrink-0 shadow-sm"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-xl bg-[var(--color-dontknow)] text-white hover:opacity-90 transition-opacity shrink-0 shadow-sm"
             >
               <Trash2 size={14} />
-              <span>Delete ({selectedIds.size})</span>
+              <span className="text-[11px] sm:text-xs">Delete ({selectedIds.size})</span>
             </button>
           )}
 
@@ -161,7 +161,7 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
               setHideAnswers(!hideAnswers)
               setRevealedIds(new Set())
             }}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl border transition-colors shrink-0 ${
+            className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-xl border transition-colors shrink-0 ${
               hideAnswers
                 ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
                 : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
@@ -169,7 +169,7 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
             title="Toggle hide answers to test your recall"
           >
             {hideAnswers ? <EyeOff size={14} /> : <Eye size={14} />}
-            <span className="hidden sm:inline">{hideAnswers ? 'Answers Hidden' : 'Hide Answers'}</span>
+            <span className="hidden md:inline">{hideAnswers ? 'Answers Hidden' : 'Hide Answers'}</span>
           </button>
         </div>
       </div>

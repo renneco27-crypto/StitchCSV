@@ -342,30 +342,30 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col cyber-border"
+        className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] overflow-hidden flex flex-col cyber-border"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] sticky top-0 z-10">
-          <h2 className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">Add Cards</h2>
+        <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-[var(--color-border)] sticky top-0 z-10">
+          <h2 className="text-base sm:text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">Add / Manage Cards</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--color-surface-2)] transition-colors">
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <div className="flex gap-1 p-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto">
+        <div className="flex gap-1 p-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto no-scrollbar">
           {(['manual', 'ai', 'manage'] as const).map((m) => (
             <button
               key={m}
               onClick={() => { setMode(m); resetAi() }}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors shrink-0 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors shrink-0 ${
                 mode === m
                   ? 'bg-[var(--color-accent)] text-white'
                   : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
               }`}
             >
-              {m === 'manual' ? <PenLine size={16} /> : m === 'ai' ? <Sparkles size={16} /> : <ListFilter size={16} />}
+              {m === 'manual' ? <PenLine size={15} /> : m === 'ai' ? <Sparkles size={15} /> : <ListFilter size={15} />}
               {m === 'manual' ? 'Manual' : m === 'ai' ? 'AI Generate' : `Manage (${existingCards.length || deck?.cards.length || 0})`}
             </button>
           ))}

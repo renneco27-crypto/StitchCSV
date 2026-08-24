@@ -154,13 +154,13 @@ function NotesContent({ deckId }: { deckId: string }) {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       <TopBar
-        title={deck ? `${deck.title} — Notes` : 'Notes'}
+        title={deck?.title ?? 'Notes'}
         onBack={() => router.push(`/study/${deckId}`)}
         rightSlot={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => setHideKeywords(!hideKeywords)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
                 hideKeywords
                   ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
                   : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
@@ -168,11 +168,12 @@ function NotesContent({ deckId }: { deckId: string }) {
               title="Hide keywords to test yourself"
             >
               <Tag size={13} />
-              <span>{hideKeywords ? 'Keywords Hidden' : 'Hide Keywords'}</span>
+              <span className="hidden xs:inline">{hideKeywords ? 'Keywords Hidden' : 'Hide Keywords'}</span>
             </button>
             <button
               onClick={handleToggleNotes}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] rounded-lg transition-colors"
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] rounded-lg transition-colors"
+              title={revealAll ? 'Collapse all notes' : 'Expand all notes'}
             >
               {revealAll ? <EyeOff size={13} /> : <Eye size={13} />}
               <span className="hidden sm:inline">{revealAll ? 'Collapse All' : 'Expand All'}</span>
