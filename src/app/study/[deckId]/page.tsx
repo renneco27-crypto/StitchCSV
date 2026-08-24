@@ -39,21 +39,22 @@ export default function StudyDashboard() {
   const { stats, masteredCount, learningCount, newCount, accuracy, progress, dueCount, loading } =
     useStudyStats(deckId)
 
-  useEffect(() => {
-    const load = async () => {
-      const d = await getDeck(deckId)
-      if (!d) {
-        router.replace('/')
-        addToast('Deck not found', 'error')
-        setDeck(null)
-        setDeckLoading(false)
-        return
-      }
-      setDeck(d)
-      initStats(deckId, d.cards.length)
+  const reloadDeck = async () => {
+    const d = await getDeck(deckId)
+    if (!d) {
+      router.replace('/')
+      addToast('Deck not found', 'error')
+      setDeck(null)
       setDeckLoading(false)
+      return
     }
-    load()
+    setDeck(d)
+    initStats(deckId, d.cards.length)
+    setDeckLoading(false)
+  }
+
+  useEffect(() => {
+    reloadDeck()
   }, [deckId, router, addToast, initStats])
 
   const [showCreator, setShowCreator] = useState(false)
@@ -177,6 +178,7 @@ export default function StudyDashboard() {
   const tfCount = deck?.quizItems.filter((q) => q.mode === 'true_false').length ?? 0
   const enumCount = deck?.quizItems.filter((q) => q.mode === 'enumeration').length ?? 0
   const keywordCount = deck?.cards.filter((c) => c.type === 'keyword').length ?? 0
+  const flashcardCount = deck?.cards.filter((c) => c.type !== 'keyword' && (c.type as string) !== 'tf').length ?? 0
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
@@ -283,7 +285,8 @@ export default function StudyDashboard() {
             description="Review all cards"
             color="var(--color-accent)"
             href={`/study/${deckId}/flashcards`}
-            count={`${deck?.cards.length ?? 0} cards`}
+            count={`${flashcardCount} cards`}
+            disabled={flashcardCount === 0}
           />
           <ModeCard
             icon={ListChecks}
@@ -345,7 +348,7 @@ export default function StudyDashboard() {
           deckId={deckId}
           deck={deck}
           onClose={() => setShowCreator(false)}
-          onCardsAdded={() => window.location.reload()}
+          onCardsAdded={reloadDeck}
         />
       )}
 

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Sparkles, Plus, X, PenLine, Check, Trash2, Search, ListFilter } from 'lucide-react'
+import { Loader2, Sparkles, Plus, X, PenLine, Check, Trash2, Search, ListFilter, CheckSquare, Square, AlertTriangle } from 'lucide-react'
 import { parseCSVFile } from '@/features/upload/csvParser'
 import { auditAndFixCSV, isCSVInput } from '@/features/upload/csvFixer'
-import { createCards, deleteCard, getCardsByDeck } from '@/db/cardRepository'
+import { createCards, deleteCard, bulkDeleteCards, getCardsByDeck } from '@/db/cardRepository'
 import { updateDeck } from '@/db/deckRepository'
 import { useToastStore } from '@/store/toastStore'
 import type { Card, Deck } from '@/lib/zodSchemas'
@@ -68,12 +68,19 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
   const [existingCards, setExistingCards] = useState<Card[]>([])
   const [existingLoading, setExistingLoading] = useState(false)
   const [existingSearch, setExistingSearch] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
+    isOpen: boolean
+    cardIds: string[]
+    description: string
+  } | null>(null)
 
   const loadExistingCards = async () => {
     setExistingLoading(true)
     try {
       const all = await getCardsByDeck(deckId)
       setExistingCards(all)
+      setSelectedIds(new Set())
     } finally {
       setExistingLoading(false)
     }
@@ -85,15 +92,69 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
     }
   }, [mode, deckId])
 
-  const handleDeleteExistingCard = async (cardId: string) => {
-    if (!window.confirm('Are you sure you want to delete this card?')) return
+  const toggleSelectCard = (cardId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(cardId)) next.delete(cardId)
+      else next.add(cardId)
+      return next
+    })
+  }
+
+  const toggleSelectAll = (filteredCards: Card[]) => {
+    const allFilteredIds = filteredCards.map((c) => c.id)
+    const allSelected = allFilteredIds.every((id) => selectedIds.has(id))
+
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allSelected) {
+        allFilteredIds.forEach((id) => next.delete(id))
+      } else {
+        allFilteredIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const promptDeleteCard = (card: Card) => {
+    setConfirmDeleteModal({
+      isOpen: true,
+      cardIds: [card.id],
+      description: `"${card.front.length > 50 ? card.front.slice(0, 50) + '...' : card.front}"`,
+    })
+  }
+
+  const promptBulkDelete = () => {
+    if (selectedIds.size === 0) return
+    setConfirmDeleteModal({
+      isOpen: true,
+      cardIds: Array.from(selectedIds),
+      description: `${selectedIds.size} selected card${selectedIds.size !== 1 ? 's' : ''}`,
+    })
+  }
+
+  const executeDelete = async () => {
+    if (!confirmDeleteModal || confirmDeleteModal.cardIds.length === 0) return
+    const idsToDelete = confirmDeleteModal.cardIds
     try {
-      await deleteCard(cardId)
-      setExistingCards((prev) => prev.filter((c) => c.id !== cardId))
-      addToast('Card deleted', 'success')
-      onCardsAdded()
+      if (idsToDelete.length === 1) {
+        await deleteCard(idsToDelete[0])
+      } else {
+        await bulkDeleteCards(idsToDelete)
+      }
+      setExistingCards((prev) => prev.filter((c) => !idsToDelete.includes(c.id)))
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        idsToDelete.forEach((id) => next.delete(id))
+        return next
+      })
+      addToast(
+        idsToDelete.length === 1 ? 'Card deleted' : `${idsToDelete.length} cards deleted`,
+        'success'
+      )
+      setConfirmDeleteModal(null)
     } catch (err) {
-      addToast('Failed to delete card', 'error')
+      addToast('Failed to delete card(s)', 'error')
     }
   }
 
@@ -498,16 +559,48 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
               </button>
             </div>
           ) : mode === 'manage' ? (
-            <div className="space-y-4">
-              <div className="relative">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-                <input
-                  type="text"
-                  value={existingSearch}
-                  onChange={(e) => setExistingSearch(e.target.value)}
-                  placeholder="Search existing cards in this deck…"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
-                />
+            <div className="space-y-3">
+              {/* Search & Bulk Action Bar */}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                  <input
+                    type="text"
+                    value={existingSearch}
+                    onChange={(e) => setExistingSearch(e.target.value)}
+                    placeholder="Search existing cards…"
+                    className="w-full pl-9 pr-4 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-xs sm:text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                  />
+                </div>
+
+                {existingCards.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const filtered = existingCards.filter((c) =>
+                        !existingSearch ||
+                        c.front.toLowerCase().includes(existingSearch.toLowerCase()) ||
+                        c.back.toLowerCase().includes(existingSearch.toLowerCase()) ||
+                        c.type.toLowerCase().includes(existingSearch.toLowerCase())
+                      )
+                      toggleSelectAll(filtered)
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] transition-colors shrink-0"
+                    title="Select/Deselect all visible cards"
+                  >
+                    <CheckSquare size={14} />
+                    <span className="hidden sm:inline">Select All</span>
+                  </button>
+                )}
+
+                {selectedIds.size > 0 && (
+                  <button
+                    onClick={promptBulkDelete}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl bg-[var(--color-dontknow)] text-white hover:opacity-90 transition-opacity shrink-0 shadow-sm"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete ({selectedIds.size})</span>
+                  </button>
+                )}
               </div>
 
               {existingLoading ? (
@@ -527,39 +620,61 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                       c.back.toLowerCase().includes(existingSearch.toLowerCase()) ||
                       c.type.toLowerCase().includes(existingSearch.toLowerCase())
                     )
-                    .map((card, idx) => (
-                      <div
-                        key={card.id}
-                        className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] hover:border-[var(--color-accent)]/40 transition-colors flex items-start justify-between gap-3"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-mono text-[var(--color-text-muted)]">#{idx + 1}</span>
-                            <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
-                              {card.type}
-                            </span>
-                            {card.chapter && (
-                              <span className="text-[11px] text-[var(--color-text-muted)] truncate max-w-[120px]">
-                                {card.chapter}
-                              </span>
+                    .map((card, idx) => {
+                      const isSelected = selectedIds.has(card.id)
+
+                      return (
+                        <div
+                          key={card.id}
+                          onClick={() => toggleSelectCard(card.id)}
+                          className={`p-3 rounded-xl border transition-all flex items-start gap-3 cursor-pointer select-none ${
+                            isSelected
+                              ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)]/20'
+                              : 'border-[var(--color-border)] bg-[var(--color-bg)] hover:border-[var(--color-accent)]/40'
+                          }`}
+                        >
+                          {/* Checkbox */}
+                          <div className="pt-0.5 shrink-0 text-[var(--color-text-muted)]">
+                            {isSelected ? (
+                              <CheckSquare size={17} className="text-[var(--color-accent)]" />
+                            ) : (
+                              <Square size={17} />
                             )}
                           </div>
-                          <p className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
-                            {card.front}
-                          </p>
-                          <p className="text-xs text-[var(--color-text-secondary)] mt-1 line-clamp-2">
-                            {card.back}
-                          </p>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-mono text-[var(--color-text-muted)]">#{idx + 1}</span>
+                              <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                                {card.type}
+                              </span>
+                              {card.chapter && (
+                                <span className="text-[11px] text-[var(--color-text-muted)] truncate max-w-[120px]">
+                                  {card.chapter}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
+                              {card.front}
+                            </p>
+                            <p className="text-xs text-[var(--color-text-secondary)] mt-1 line-clamp-2">
+                              {card.back}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              promptDeleteCard(card)
+                            }}
+                            className="shrink-0 p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
+                            title="Delete card"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleDeleteExistingCard(card.id)}
-                          className="shrink-0 p-2 rounded-lg text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
-                          title="Delete card"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    ))}
+                      )
+                    })}
                 </div>
               )}
             </div>
@@ -601,13 +716,17 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                             </p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="shrink-0 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-medium">
-                              {card.type}
+                            <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium ${
+                              card.type === 'keyword'
+                                ? 'bg-[var(--color-mastered)]/20 text-[var(--color-mastered)]'
+                                : 'bg-[var(--color-accent-soft)] text-[var(--color-accent)]'
+                            }`}>
+                              {card.type === 'keyword' ? 'Notes' : card.type}
                             </span>
                             <button
                               onClick={() => handleDeletePreviewCard(i)}
                               className="shrink-0 p-1 rounded-lg text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
-                              title="Remove card"
+                              title="Remove item"
                             >
                               <X size={14} />
                             </button>
@@ -623,7 +742,15 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                       className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex-1"
                     >
                       {addingCards ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                      {addingCards ? 'Adding…' : `Add ${previewResult?.cards.length ?? 0} Card${(previewResult?.cards.length ?? 0) !== 1 ? 's' : ''} to Deck`}
+                      {addingCards
+                        ? 'Adding…'
+                        : (() => {
+                            const kwCount = previewResult?.cards.filter((c: any) => c.type === 'keyword').length ?? 0
+                            const fcCount = (previewResult?.cards.length ?? 0) - kwCount
+                            if (kwCount > 0 && fcCount > 0) return `Add ${fcCount} Cards & ${kwCount} Notes`
+                            if (kwCount > 0) return `Add ${kwCount} Note${kwCount !== 1 ? 's' : ''} to Deck`
+                            return `Add ${fcCount} Card${fcCount !== 1 ? 's' : ''} to Deck`
+                          })()}
                     </button>
                     <button
                       onClick={resetAi}
@@ -639,6 +766,47 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
           )}
         </div>
       </div>
+
+      {/* In-app HTML Confirmation Modal for Delete */}
+      {confirmDeleteModal?.isOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setConfirmDeleteModal(null)}
+        >
+          <div
+            className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-sm p-6 cyber-border shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 text-[var(--color-dontknow)]">
+              <div className="p-2.5 rounded-xl bg-[var(--color-dontknow)]/15">
+                <AlertTriangle size={22} />
+              </div>
+              <h3 className="text-base font-bold text-[var(--color-text-primary)]">
+                Delete {confirmDeleteModal.cardIds.length === 1 ? 'Card' : `${confirmDeleteModal.cardIds.length} Cards`}?
+              </h3>
+            </div>
+
+            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              Are you sure you want to delete <span className="font-semibold text-[var(--color-text-primary)]">{confirmDeleteModal.description}</span>? This action cannot be undone.
+            </p>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setConfirmDeleteModal(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] text-sm font-medium hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDelete}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--color-dontknow)] text-white text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

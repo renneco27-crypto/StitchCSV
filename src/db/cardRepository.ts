@@ -52,3 +52,11 @@ export async function deleteCard(cardId: string): Promise<void> {
     throw new Error(`Failed to delete card: ${err instanceof Error ? err.message : String(err)}`)
   }
 }
+
+export async function bulkDeleteCards(cardIds: string[]): Promise<void> {
+  try {
+    await db.cards.bulkDelete(cardIds)
+  } catch (err) {
+    throw new Error(`Failed to delete cards: ${err instanceof Error ? err.message : String(err)}`)
+  }
+}

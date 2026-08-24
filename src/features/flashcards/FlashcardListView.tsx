@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Eye, EyeOff, Trash2 } from 'lucide-react'
-import { deleteCard } from '@/db/cardRepository'
+import { Search, Eye, EyeOff, Trash2, CheckSquare, Square, AlertTriangle } from 'lucide-react'
+import { deleteCard, bulkDeleteCards } from '@/db/cardRepository'
 import { useToastStore } from '@/store/toastStore'
 import type { Card } from '@/lib/zodSchemas'
 
@@ -17,17 +17,79 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
   const [search, setSearch] = useState('')
   const [hideAnswers, setHideAnswers] = useState(false)
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    cardIds: string[]
+    description: string
+  } | null>(null)
 
-  const handleDeleteCard = async (e: React.MouseEvent, cardId: string) => {
-    e.stopPropagation()
-    if (!window.confirm('Are you sure you want to delete this card?')) return
+  const toggleSelectCard = (cardId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(cardId)) next.delete(cardId)
+      else next.add(cardId)
+      return next
+    })
+  }
+
+  const toggleSelectAll = (filteredCards: Card[]) => {
+    const allFilteredIds = filteredCards.map((c) => c.id)
+    const allSelected = allFilteredIds.every((id) => selectedIds.has(id))
+
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allSelected) {
+        allFilteredIds.forEach((id) => next.delete(id))
+      } else {
+        allFilteredIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const promptDeleteSingle = (card: Card) => {
+    setConfirmModal({
+      isOpen: true,
+      cardIds: [card.id],
+      description: `"${card.front.length > 50 ? card.front.slice(0, 50) + '...' : card.front}"`,
+    })
+  }
+
+  const promptDeleteBulk = () => {
+    if (selectedIds.size === 0) return
+    setConfirmModal({
+      isOpen: true,
+      cardIds: Array.from(selectedIds),
+      description: `${selectedIds.size} selected card${selectedIds.size !== 1 ? 's' : ''}`,
+    })
+  }
+
+  const executeDelete = async () => {
+    if (!confirmModal || confirmModal.cardIds.length === 0) return
+    const ids = confirmModal.cardIds
     try {
-      await deleteCard(cardId)
-      setCards(prev => prev.filter(c => c.id !== cardId))
-      addToast('Card deleted', 'success')
-      if (onCardDeleted) onCardDeleted(cardId)
+      if (ids.length === 1) {
+        await deleteCard(ids[0])
+      } else {
+        await bulkDeleteCards(ids)
+      }
+      setCards((prev) => prev.filter((c) => !ids.includes(c.id)))
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        ids.forEach((id) => next.delete(id))
+        return next
+      })
+      addToast(
+        ids.length === 1 ? 'Card deleted' : `${ids.length} cards deleted`,
+        'success'
+      )
+      if (onCardDeleted) {
+        ids.forEach((id) => onCardDeleted(id))
+      }
+      setConfirmModal(null)
     } catch {
-      addToast('Failed to delete card', 'error')
+      addToast('Failed to delete card(s)', 'error')
     }
   }
 
@@ -59,7 +121,7 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
 
   return (
     <div className="flex-1 overflow-auto flex flex-col w-full">
-      {/* Search & Answer Toggle Controls */}
+      {/* Search & Bulk Action Bar */}
       <div className="px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/50 backdrop-blur sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center gap-2">
           <div className="relative flex-1">
@@ -72,6 +134,28 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
               className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs sm:text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
             />
           </div>
+
+          {filtered.length > 0 && (
+            <button
+              onClick={() => toggleSelectAll(filtered)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] transition-colors shrink-0"
+              title="Select / Deselect all visible cards"
+            >
+              <CheckSquare size={14} />
+              <span className="hidden sm:inline">Select All</span>
+            </button>
+          )}
+
+          {selectedIds.size > 0 && (
+            <button
+              onClick={promptDeleteBulk}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl bg-[var(--color-dontknow)] text-white hover:opacity-90 transition-opacity shrink-0 shadow-sm"
+            >
+              <Trash2 size={14} />
+              <span>Delete ({selectedIds.size})</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               setHideAnswers(!hideAnswers)
@@ -103,16 +187,32 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
             <div className="flex flex-col gap-3">
               {grouped[chapter].map((card, i) => {
                 const isHidden = hideAnswers && !revealedIds.has(card.id)
+                const isSelected = selectedIds.has(card.id)
 
                 return (
                   <div
                     key={card.id}
-                    className="glass-panel rounded-2xl border border-[var(--color-border)] overflow-hidden shadow-sm hover:border-[var(--color-border-neon)] transition-all"
+                    className={`glass-panel rounded-2xl border overflow-hidden shadow-sm transition-all ${
+                      isSelected
+                        ? 'border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]'
+                        : 'border-[var(--color-border)] hover:border-[var(--color-border-neon)]'
+                    }`}
                   >
                     {/* Question / front */}
                     <div className="p-4 bg-[var(--color-surface)]">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            onClick={() => toggleSelectCard(card.id)}
+                            className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors p-0.5"
+                            title="Select card"
+                          >
+                            {isSelected ? (
+                              <CheckSquare size={16} className="text-[var(--color-accent)]" />
+                            ) : (
+                              <Square size={16} />
+                            )}
+                          </button>
                           <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
                             #{i + 1} • {card.type}
                           </span>
@@ -123,8 +223,8 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
                           )}
                         </div>
                         <button
-                          onClick={(e) => handleDeleteCard(e, card.id)}
-                          className="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
+                          onClick={() => promptDeleteSingle(card)}
+                          className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
                           title="Delete card"
                         >
                           <Trash2 size={15} />
@@ -177,6 +277,47 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
           </div>
         )}
       </div>
+
+      {/* In-app HTML Confirmation Modal for Delete */}
+      {confirmModal?.isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setConfirmModal(null)}
+        >
+          <div
+            className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-sm p-6 cyber-border shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 text-[var(--color-dontknow)]">
+              <div className="p-2.5 rounded-xl bg-[var(--color-dontknow)]/15">
+                <AlertTriangle size={22} />
+              </div>
+              <h3 className="text-base font-bold text-[var(--color-text-primary)]">
+                Delete {confirmModal.cardIds.length === 1 ? 'Card' : `${confirmModal.cardIds.length} Cards`}?
+              </h3>
+            </div>
+
+            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              Are you sure you want to delete <span className="font-semibold text-[var(--color-text-primary)]">{confirmModal.description}</span>? This action cannot be undone.
+            </p>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] text-sm font-medium hover:bg-[var(--color-surface)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDelete}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--color-dontknow)] text-white text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

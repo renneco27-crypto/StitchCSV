@@ -21,7 +21,7 @@ interface CSVRow {
 }
 
 // Types that should appear in flashcard mode (have a readable front/back)
-const FLASHCARD_TYPES = new Set(['definition', 'concept', 'formula', 'process', 'list', 'keyword',
+const FLASHCARD_TYPES = new Set(['definition', 'concept', 'formula', 'process', 'list',
   'multiple_choice', 'mc', 'true_false', 'tf', 'enumeration', 'enum', 'identification', 'id'])
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
