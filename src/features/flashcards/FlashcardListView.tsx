@@ -1,17 +1,35 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Eye, EyeOff } from 'lucide-react'
+import { Search, Eye, EyeOff, Trash2 } from 'lucide-react'
+import { deleteCard } from '@/db/cardRepository'
+import { useToastStore } from '@/store/toastStore'
 import type { Card } from '@/lib/zodSchemas'
 
 interface FlashcardListViewProps {
   cards: Card[]
+  onCardDeleted?: (cardId: string) => void
 }
 
-export default function FlashcardListView({ cards }: FlashcardListViewProps) {
+export default function FlashcardListView({ cards: initialCards, onCardDeleted }: FlashcardListViewProps) {
+  const addToast = useToastStore((s) => s.addToast)
+  const [cards, setCards] = useState<Card[]>(initialCards)
   const [search, setSearch] = useState('')
   const [hideAnswers, setHideAnswers] = useState(false)
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set())
+
+  const handleDeleteCard = async (e: React.MouseEvent, cardId: string) => {
+    e.stopPropagation()
+    if (!window.confirm('Are you sure you want to delete this card?')) return
+    try {
+      await deleteCard(cardId)
+      setCards(prev => prev.filter(c => c.id !== cardId))
+      addToast('Card deleted', 'success')
+      if (onCardDeleted) onCardDeleted(cardId)
+    } catch {
+      addToast('Failed to delete card', 'error')
+    }
+  }
 
   const toggleAnswer = (id: string) => {
     setRevealedIds(prev => {
@@ -94,14 +112,23 @@ export default function FlashcardListView({ cards }: FlashcardListViewProps) {
                     {/* Question / front */}
                     <div className="p-4 bg-[var(--color-surface)]">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
-                          #{i + 1} • {card.type}
-                        </span>
-                        {card.lesson && (
-                          <span className="text-[11px] text-[var(--color-text-muted)] truncate max-w-[150px]">
-                            {card.lesson}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
+                            #{i + 1} • {card.type}
                           </span>
-                        )}
+                          {card.lesson && (
+                            <span className="text-[11px] text-[var(--color-text-muted)] truncate max-w-[150px]">
+                              {card.lesson}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => handleDeleteCard(e, card.id)}
+                          className="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
+                          title="Delete card"
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </div>
                       <p className="font-['Playfair_Display'] text-base sm:text-lg text-[var(--color-text-primary)] leading-snug">
                         {card.front}

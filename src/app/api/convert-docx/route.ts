@@ -57,7 +57,91 @@ interface ParsedCard {
   type: string
 }
 
+function parseStructuredNotes(rawText: string): ParsedCard[] {
+  const cards: ParsedCard[] = []
+  // Split by horizontal rules, double newlines, or multiple linebreaks
+  const rawSections = rawText
+    .split(/(?:_{3,}|-{3,}|\n{2,})/)
+    .map(s => s.trim())
+    .filter(Boolean)
+
+  for (const section of rawSections) {
+    const lines = section.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+    if (lines.length === 0) continue
+
+    // The first non-bullet line is the topic / header
+    let header = lines[0].replace(/^[•\-\*]\s*/, '').trim()
+    const contentLines = lines.slice(1).filter(l => l.trim().length > 0)
+
+    // If section contains bullets or key-value colons
+    const hasBullets = lines.some(l => /^[•\-\*]/.test(l) || l.includes('•'))
+    const hasColons = lines.some(l => l.includes(':') || l.includes(' – ') || l.includes(' - '))
+
+    if (hasBullets || hasColons || contentLines.length > 0) {
+      // 1. Create a primary keyword note card for the Notes tab
+      const combinedNotes = (contentLines.length > 0 ? contentLines : lines)
+        .map(l => l.startsWith('•') ? l : `• ${l}`)
+        .join('\n')
+
+      cards.push({
+        front: header,
+        back: combinedNotes,
+        subject: header,
+        topic: 'Notes',
+        type: 'keyword',
+      })
+
+      // 2. Also extract individual key facts as flashcards
+      for (const line of (contentLines.length > 0 ? contentLines : lines)) {
+        const cleanLine = line.replace(/^[•\-\*]\s*/, '').trim()
+        if (!cleanLine) continue
+
+        // Check for multiple segments like "Born: ... | Died: ..."
+        const segments = cleanLine.split('|').map(s => s.trim()).filter(Boolean)
+        for (const seg of segments) {
+          const colonIdx = seg.indexOf(':')
+          const dashIdx = seg.indexOf(' – ') !== -1 ? seg.indexOf(' – ') : seg.indexOf(' - ')
+
+          if (colonIdx > 0 && colonIdx < 35) {
+            const key = seg.slice(0, colonIdx).trim()
+            const val = seg.slice(colonIdx + 1).trim()
+            if (val) {
+              cards.push({
+                front: `${header}: ${key}`,
+                back: val,
+                subject: header,
+                topic: key,
+                type: 'definition',
+              })
+            }
+          } else if (dashIdx > 0 && dashIdx < 45) {
+            const key = seg.slice(0, dashIdx).trim()
+            const val = seg.slice(dashIdx + (seg.indexOf(' – ') !== -1 ? 3 : 3)).trim()
+            if (val) {
+              cards.push({
+                front: `${header} (${key})`,
+                back: val,
+                subject: header,
+                topic: key,
+                type: 'definition',
+              })
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return cards
+}
+
 function parseTextToCards(rawText: string): ParsedCard[] {
+  // Check if input is structured notes (contains bullets, colons, or dividers)
+  if (rawText.includes('•') || /_{3,}/.test(rawText) || /\n[A-Z\s]{3,}\n/.test(rawText)) {
+    const noteCards = parseStructuredNotes(rawText)
+    if (noteCards.length > 0) return noteCards
+  }
+
   const sentences = rawText
     .split(/(?<=[.!?])\s+/)
     .map(s => s.trim())

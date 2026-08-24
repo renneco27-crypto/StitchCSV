@@ -44,3 +44,11 @@ export async function getCardsForReview(deckId: string, today: Date): Promise<Ca
     throw new Error(`Failed to get cards for review: ${err instanceof Error ? err.message : String(err)}`)
   }
 }
+
+export async function deleteCard(cardId: string): Promise<void> {
+  try {
+    await db.cards.delete(cardId)
+  } catch (err) {
+    throw new Error(`Failed to delete card: ${err instanceof Error ? err.message : String(err)}`)
+  }
+}

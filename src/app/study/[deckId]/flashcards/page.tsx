@@ -250,7 +250,10 @@ export default function FlashcardsPage() {
       />
 
       {viewMode === 'list' ? (
-        <FlashcardListView cards={cards} />
+        <FlashcardListView
+          cards={cards}
+          onCardDeleted={(deletedId) => setCards(prev => prev.filter(c => c.id !== deletedId))}
+        />
       ) : (
         <>
           <FlashcardProgress

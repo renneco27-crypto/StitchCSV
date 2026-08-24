@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Sparkles, Plus, X, PenLine, Check } from 'lucide-react'
+import { Loader2, Sparkles, Plus, X, PenLine, Check, Trash2, Search, ListFilter } from 'lucide-react'
 import { parseCSVFile } from '@/features/upload/csvParser'
 import { auditAndFixCSV, isCSVInput } from '@/features/upload/csvFixer'
-import { createCards } from '@/db/cardRepository'
+import { createCards, deleteCard, getCardsByDeck } from '@/db/cardRepository'
 import { updateDeck } from '@/db/deckRepository'
 import { useToastStore } from '@/store/toastStore'
-import type { Deck } from '@/lib/zodSchemas'
+import type { Card, Deck } from '@/lib/zodSchemas'
 
 interface FlashcardCreatorProps {
   deckId: string
@@ -16,7 +16,7 @@ interface FlashcardCreatorProps {
   onCardsAdded: () => void
 }
 
-type CreatorMode = 'manual' | 'ai'
+type CreatorMode = 'manual' | 'ai' | 'manage'
 
 interface PreviewCard {
   front: string
@@ -64,6 +64,38 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
   const [previewCards, setPreviewCards] = useState<PreviewCard[]>([])
   const [previewResult, setPreviewResult] = useState<{ cards: any[]; quizItems: any[] } | null>(null)
   const [addingCards, setAddingCards] = useState(false)
+
+  const [existingCards, setExistingCards] = useState<Card[]>([])
+  const [existingLoading, setExistingLoading] = useState(false)
+  const [existingSearch, setExistingSearch] = useState('')
+
+  const loadExistingCards = async () => {
+    setExistingLoading(true)
+    try {
+      const all = await getCardsByDeck(deckId)
+      setExistingCards(all)
+    } finally {
+      setExistingLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (mode === 'manage') {
+      loadExistingCards()
+    }
+  }, [mode, deckId])
+
+  const handleDeleteExistingCard = async (cardId: string) => {
+    if (!window.confirm('Are you sure you want to delete this card?')) return
+    try {
+      await deleteCard(cardId)
+      setExistingCards((prev) => prev.filter((c) => c.id !== cardId))
+      addToast('Card deleted', 'success')
+      onCardsAdded()
+    } catch (err) {
+      addToast('Failed to delete card', 'error')
+    }
+  }
 
   const resetAi = () => {
     setAiText('')
@@ -261,19 +293,19 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
           </button>
         </div>
 
-        <div className="flex gap-1 p-2 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-          {(['manual', 'ai'] as const).map((m) => (
+        <div className="flex gap-1 p-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto">
+          {(['manual', 'ai', 'manage'] as const).map((m) => (
             <button
               key={m}
               onClick={() => { setMode(m); resetAi() }}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors shrink-0 ${
                 mode === m
                   ? 'bg-[var(--color-accent)] text-white'
                   : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
               }`}
             >
-              {m === 'manual' ? <PenLine size={16} /> : <Sparkles size={16} />}
-              {m === 'manual' ? 'Manual' : 'AI Generate'}
+              {m === 'manual' ? <PenLine size={16} /> : m === 'ai' ? <Sparkles size={16} /> : <ListFilter size={16} />}
+              {m === 'manual' ? 'Manual' : m === 'ai' ? 'AI Generate' : `Manage (${existingCards.length || deck?.cards.length || 0})`}
             </button>
           ))}
         </div>
@@ -464,6 +496,72 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                 {manualLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                 {manualLoading ? 'Saving…' : 'Save Card'}
               </button>
+            </div>
+          ) : mode === 'manage' ? (
+            <div className="space-y-4">
+              <div className="relative">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                <input
+                  type="text"
+                  value={existingSearch}
+                  onChange={(e) => setExistingSearch(e.target.value)}
+                  placeholder="Search existing cards in this deck…"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                />
+              </div>
+
+              {existingLoading ? (
+                <div className="flex items-center justify-center py-12 text-sm text-[var(--color-text-muted)]">
+                  <Loader2 size={18} className="animate-spin mr-2" /> Loading cards…
+                </div>
+              ) : existingCards.length === 0 ? (
+                <div className="text-center py-12 text-sm text-[var(--color-text-muted)]">
+                  No cards in this deck yet.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                  {existingCards
+                    .filter((c) =>
+                      !existingSearch ||
+                      c.front.toLowerCase().includes(existingSearch.toLowerCase()) ||
+                      c.back.toLowerCase().includes(existingSearch.toLowerCase()) ||
+                      c.type.toLowerCase().includes(existingSearch.toLowerCase())
+                    )
+                    .map((card, idx) => (
+                      <div
+                        key={card.id}
+                        className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] hover:border-[var(--color-accent)]/40 transition-colors flex items-start justify-between gap-3"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-mono text-[var(--color-text-muted)]">#{idx + 1}</span>
+                            <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                              {card.type}
+                            </span>
+                            {card.chapter && (
+                              <span className="text-[11px] text-[var(--color-text-muted)] truncate max-w-[120px]">
+                                {card.chapter}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
+                            {card.front}
+                          </p>
+                          <p className="text-xs text-[var(--color-text-secondary)] mt-1 line-clamp-2">
+                            {card.back}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteExistingCard(card.id)}
+                          className="shrink-0 p-2 rounded-lg text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
+                          title="Delete card"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
