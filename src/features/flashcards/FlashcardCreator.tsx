@@ -127,6 +127,15 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
         csvText = [headers.join(','), row].join('\n')
         break
       }
+      case 'keyword': {
+        if (!front.trim() || !back.trim()) {
+          addToast('Both keyword and notes content are required', 'error'); return
+        }
+        const headers = ['front', 'back', 'type']
+        const row = [esc(front), esc(back), 'keyword'].join(',')
+        csvText = [headers.join(','), row].join('\n')
+        break
+      }
       default: {
         if (!front.trim() || !back.trim()) {
           addToast('Both front and back are required', 'error'); return
@@ -273,7 +282,7 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
           {mode === 'manual' ? (
             <div className="space-y-4">
               <div className="flex flex-wrap gap-1">
-                {(['definition', 'multiple_choice', 'true_false', 'enumeration', 'identification'] as const).map((t) => (
+                {(['definition', 'keyword', 'multiple_choice', 'true_false', 'enumeration', 'identification'] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setCardType(t)}
@@ -283,10 +292,25 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                         : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
                     }`}
                   >
-                    {t === 'definition' ? 'Definition' : t === 'multiple_choice' ? 'MC' : t === 'true_false' ? 'T/F' : t === 'enumeration' ? 'Enum' : 'ID'}
+                    {t === 'definition' ? 'Definition' : t === 'keyword' ? 'Notes / Key' : t === 'multiple_choice' ? 'MC' : t === 'true_false' ? 'T/F' : t === 'enumeration' ? 'Enum' : 'ID'}
                   </button>
                 ))}
               </div>
+
+              {cardType === 'keyword' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Topic / Keyword</label>
+                    <input type="text" value={front} onChange={(e) => setFront(e.target.value)} placeholder="e.g. CLARO M. RECTO or RIZAL BILL"
+                      className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Notes / Bullet Points / Dates</label>
+                    <textarea value={back} onChange={(e) => setBack(e.target.value)} placeholder={`e.g.\n• Born: Feb 8, 1890 | Died: Oct 2, 1960\n• Parents: Claro Recto Sr. & Micaela Mayo\n• Authored by Senator Claro M. Recto`}
+                      rows={5} className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none font-sans" />
+                  </div>
+                </div>
+              )}
 
               {cardType === 'definition' && (
                 <div className="space-y-4">

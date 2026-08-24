@@ -26,24 +26,34 @@ Every single row must have exactly 15 comma-separated values. Unused columns mus
 chapter = column 3, subject = column 4, lesson = column 5, type = column 6.
 
 2. QUIZ TYPE PARAMETERS & ROW STRUCTURAL RULES
-Apply the correct comma-padding so optional values always map to the correct absolute column index. For ALL types except "definition" and "keyword", the back column (column 2) must be empty "".
-definition: Populate ONLY the front and back fields. The front contains the description; the back contains the term.
-keyword: Populate front with the keyword, topic title, or person/event, and back with structured notes, bullet points, dates, or key facts (e.g. • Born: ... | Died: ...). Uses front and back columns.
-multiple_choice: Populate mc_correct and exactly three distractors.
-COLUMN COUNT RULE: After mc_distractor3 (column 10), there must be exactly 5 empty columns to reach column 15.
-Correct Format: "Question","","Ch","Subj","Les",multiple_choice,Correct,D1,D2,D3,,,,,
-true_false: Populate tf_answer with "true" or "false" and explanation with a brief justification.
-enumeration: Populate enum_items only. Include exactly 6 empty commas after the type value.
-Example: "enumeration",,,,,,,"item1;item2",,
-identification: Populate id_answer and id_variants only. Include exactly 8 empty commas after the type value.
-Example: "identification",,,,,,,,,"Answer","variant1;variant2"
+Apply the correct comma-padding so optional values always map to the correct absolute column index.
+
+• definition: Populate ONLY the front and back fields. The front contains the description; the back contains the term.
+  Format: "Description / Question","Term","Chapter","Subject","Lesson",definition,,,,,,,,,
+
+• keyword (NOTES TAB): Populate front with the Topic / Person / Section / Keyword, and back with structured notes, dates, or bullet points.
+  Format: "CLARO M. RECTO","• Born: Feb 8, 1890 | Died: Oct 2, 1960\n• Parents: Claro Recto Sr. & Micaela Mayo\n• Spouses: Angeles Silos, Aurora Reyes","Chapter","Subject","Lesson",keyword,,,,,,,,,
+
+• multiple_choice: Populate mc_correct and exactly three distractors.
+  COLUMN COUNT RULE: After mc_distractor3 (column 10), there must be exactly 5 empty columns to reach column 15.
+  Format: "Question","","Chapter","Subject","Lesson",multiple_choice,Correct,D1,D2,D3,,,,,
+
+• true_false: Populate tf_answer with "true" or "false" and explanation with a brief justification.
+  Format: "Statement","","Chapter","Subject","Lesson",true_false,,,,,true,"Explanation",,,
+
+• enumeration: Populate enum_items only. Include exactly 6 empty commas after the type value.
+  Format: "Topic / Category","","Chapter","Subject","Lesson",enumeration,,,,,,,"item1;item2;item3",,
+
+• identification: Populate id_answer and id_variants only. Include exactly 8 empty commas after the type value.
+  Format: "Definition / Clue","","Chapter","Subject","Lesson",identification,,,,,,,,,"Answer","variant1;variant2"
 
 3. SYNTAX & FORMATTING CONSTRAINTS
 Output ONLY the raw plain-text CSV. Do NOT output Markdown, do not explain anything, and do not number the rows.
-Wrap any field containing spaces, commas, punctuation, or quotes inside double quotes.
+Wrap any field containing spaces, commas, newlines, punctuation, or quotes inside double quotes.
 Enumeration items must be inside ONE cell, lowercase, separated with semicolons.
 Identification variants must be lowercase and separated with semicolons.
-MANDATORY TYPE DISTRIBUTION RULE: Generate cards of all relevant types (definition, keyword, multiple_choice, true_false, enumeration, identification). For study notes, key dates, and important person/concept breakdowns, generate keyword note cards for the Notes study tab.
+MANDATORY TYPE DISTRIBUTION RULE: Generate cards of all relevant types (definition, keyword, multiple_choice, true_false, enumeration, identification).
+For study notes, key dates, biographies, and section summaries, generate keyword note cards for the Notes study tab.
 
 TOPIC: [INSERT TOPIC]
 CHAPTER: [INSERT CHAPTER]

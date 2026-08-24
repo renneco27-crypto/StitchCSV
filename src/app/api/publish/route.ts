@@ -37,7 +37,21 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingDeck) {
-      return NextResponse.json({ error: 'A deck with this title already exists' }, { status: 409 })
+      const { data, error } = await supabase
+        .from('decks')
+        .update({
+          subject: subject || 'General',
+          csv_content: csvContent,
+          author_name: authorName || user.user_metadata?.display_name || user.email || 'Anonymous',
+          device_id: user.id,
+        })
+        .eq('id', existingDeck.id)
+        .select('id')
+        .single()
+
+      if (error) throw error
+
+      return NextResponse.json({ id: data.id, updated: true })
     }
 
     const { data, error } = await supabase

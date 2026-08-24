@@ -130,12 +130,16 @@ export default function StudyDashboard() {
         }),
       })
 
+      const resData = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: 'Publish failed' }))
-        throw new Error(errData.error || `Server error: ${res.status}`)
+        throw new Error(resData.error || `Server error: ${res.status}`)
       }
 
-      addToast('Published! Anyone can now find your deck in the feed.', 'success')
+      if (resData.updated) {
+        addToast('Updated existing published deck in the feed!', 'success')
+      } else {
+        addToast('Published! Anyone can now find your deck in the feed.', 'success')
+      }
       setShowPublish(false)
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to publish', 'error')
