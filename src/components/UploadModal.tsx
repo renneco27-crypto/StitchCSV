@@ -26,8 +26,9 @@ Every single row must have exactly 15 comma-separated values. Unused columns mus
 chapter = column 3, subject = column 4, lesson = column 5, type = column 6.
 
 2. QUIZ TYPE PARAMETERS & ROW STRUCTURAL RULES
-Apply the correct comma-padding so optional values always map to the correct absolute column index. For ALL types except "definition", the back column (column 2) must be empty "". Only "definition" type uses the back column.
-definition: Populate ONLY the front and back fields. The front column contains the description; the back column contains the term.
+Apply the correct comma-padding so optional values always map to the correct absolute column index. For ALL types except "definition" and "keyword", the back column (column 2) must be empty "".
+definition: Populate ONLY the front and back fields. The front contains the description; the back contains the term.
+keyword: Populate front with the keyword, topic title, or person/event, and back with structured notes, bullet points, dates, or key facts (e.g. • Born: ... | Died: ...). Uses front and back columns.
 multiple_choice: Populate mc_correct and exactly three distractors.
 COLUMN COUNT RULE: After mc_distractor3 (column 10), there must be exactly 5 empty columns to reach column 15.
 Correct Format: "Question","","Ch","Subj","Les",multiple_choice,Correct,D1,D2,D3,,,,,
@@ -42,7 +43,7 @@ Output ONLY the raw plain-text CSV. Do NOT output Markdown, do not explain anyth
 Wrap any field containing spaces, commas, punctuation, or quotes inside double quotes.
 Enumeration items must be inside ONE cell, lowercase, separated with semicolons.
 Identification variants must be lowercase and separated with semicolons.
-MANDATORY TYPE DISTRIBUTION RULE: You MUST generate cards of ALL five types. Aim for a balanced mix. Every major fact must be covered by at least one multiple_choice, true_false, or identification card in addition to its definition card.
+MANDATORY TYPE DISTRIBUTION RULE: Generate cards of all relevant types (definition, keyword, multiple_choice, true_false, enumeration, identification). For study notes, key dates, and important person/concept breakdowns, generate keyword note cards for the Notes study tab.
 
 TOPIC: [INSERT TOPIC]
 CHAPTER: [INSERT CHAPTER]

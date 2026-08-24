@@ -11,6 +11,7 @@ import {
   Bell,
   Plus,
   Share2,
+  BookOpen,
 } from 'lucide-react'
 import { getDeck, updateDeck } from '@/db/deckRepository'
 import { getCardsByDeck } from '@/db/cardRepository'
@@ -171,6 +172,7 @@ export default function StudyDashboard() {
   const mcCount = deck?.quizItems.filter((q) => q.mode === 'multiple_choice').length ?? 0
   const tfCount = deck?.quizItems.filter((q) => q.mode === 'true_false').length ?? 0
   const enumCount = deck?.quizItems.filter((q) => q.mode === 'enumeration').length ?? 0
+  const keywordCount = deck?.cards.filter((c) => c.type === 'keyword').length ?? 0
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
@@ -313,6 +315,15 @@ export default function StudyDashboard() {
             color="var(--color-accent-soft)"
             href={`/study/${deckId}/blanks`}
             count="Docs"
+          />
+          <ModeCard
+            icon={BookOpen}
+            label="Notes"
+            description="Key terms & definitions"
+            color="var(--color-mastered)"
+            href={`/study/${deckId}/notes`}
+            count={keywordCount > 0 ? `${keywordCount} terms` : 'No keywords'}
+            disabled={keywordCount === 0}
           />
           <ModeCard
             icon={BarChart2}

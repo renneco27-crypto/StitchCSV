@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { X } from 'lucide-react'
+import { X, Layers, List } from 'lucide-react'
 import { getCardsByDeck, getCardsForReview } from '@/db/cardRepository'
 import { useFlashcardSession } from '@/hooks/useFlashcardSession'
 import TopBar from '@/components/TopBar'
@@ -10,6 +10,7 @@ import FlashcardProgress from '@/features/flashcards/FlashcardProgress'
 import FlashcardDeck from '@/features/flashcards/FlashcardDeck'
 import FlashcardControls from '@/features/flashcards/FlashcardControls'
 import SessionEndCard from '@/features/flashcards/SessionEndCard'
+import FlashcardListView from '@/features/flashcards/FlashcardListView'
 import type { Card } from '@/lib/zodSchemas'
 
 export default function FlashcardsPage() {
@@ -21,6 +22,7 @@ export default function FlashcardsPage() {
 
   const [cards, setCards] = useState<Card[]>([])
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<'stack' | 'list'>('stack')
 
   useEffect(() => {
     const load = async () => {
@@ -224,86 +226,102 @@ export default function FlashcardsPage() {
   return (
     <div className="h-[calc(100dvh_-_57px)] lg:h-[100dvh] overflow-hidden bg-[var(--color-bg)] flex flex-col">
       <TopBar
-        title={'Batch ' + (session.batchIndex + 1) + ' of ' + session.totalBatches}
+        title={viewMode === 'list' ? 'All Cards (' + cards.length + ')' : 'Batch ' + (session.batchIndex + 1) + ' of ' + session.totalBatches}
         onBack={handleBack}
         rightSlot={
-          <button
-            onClick={session.handleEndSession}
-            className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors p-1"
-            aria-label="End session"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode(viewMode === 'stack' ? 'list' : 'stack')}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] transition-colors"
+              title={viewMode === 'stack' ? 'Switch to scrollable list' : 'Switch to flashcard stack'}
+            >
+              {viewMode === 'stack' ? <List size={14} /> : <Layers size={14} />}
+              <span className="hidden sm:inline">{viewMode === 'stack' ? 'List View' : 'Card View'}</span>
+            </button>
+            <button
+              onClick={session.handleEndSession}
+              className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors p-1"
+              aria-label="End session"
+            >
+              <X size={20} />
+            </button>
+          </div>
         }
       />
 
-      <FlashcardProgress
-        cardIndex={session.cardIndex}
-        batchSize={session.currentBatch.length}
-        batchIndex={session.batchIndex}
-        totalBatches={session.totalBatches}
-      />
+      {viewMode === 'list' ? (
+        <FlashcardListView cards={cards} />
+      ) : (
+        <>
+          <FlashcardProgress
+            cardIndex={session.cardIndex}
+            batchSize={session.currentBatch.length}
+            batchIndex={session.batchIndex}
+            totalBatches={session.totalBatches}
+          />
 
-      <div
-          className="flex-1 p-4 overflow-hidden flex items-center"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          style={{ touchAction: 'none' }}
-        >
-          {session.showSessionEnd ? (
-            <SessionEndCard
-              knownCount={session.cycleKnownIds.length}
-              unknownCount={session.cycleUnknownIds.length}
-              totalCards={cards.length}
-              deckId={deckId}
-              cycleNumber={session.cycleNumber}
-              hasMoreBatches={session.batchIndex < session.totalBatches - 1}
-              onNextBatch={session.handleNextBatch}
-              onResetCycle={session.handleResetCycle}
-            />
-          ) : session.currentCard ? (
-            <div
-              key={session.currentCard.id}
-              style={{
-                transform: `translateX(${dragX}px) translateY(${dragY}px) rotate(${dragX * 0.04}deg) scale(${isDragging ? 1.03 : 1})`,
-                transition: exitReset
-                  ? 'none'
-                  : isExiting
-                    ? 'transform 0.32s cubic-bezier(0.33, 0.6, 0.44, 1), box-shadow 0.3s ease'
-                    : dragX === 0 && dragY === 0
-                      ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease'
-                      : 'none',
-                width: '100%',
-                boxShadow: isDragging ? '0 24px 48px rgba(0,0,0,0.35)' : undefined,
-                borderRadius: '1rem',
-                willChange: 'transform',
-              }}
-            >
-              <FlashcardDeck
-                key={session.currentCard.id}
-                card={session.currentCard}
-                isFlipped={session.isFlipped}
-                animationClass={isExiting ? 'none' : session.animationClass}
-                onFlip={session.handleFlip}
-                onVerify={session.handleVerifyAnswer}
+          <div
+            className="flex-1 p-4 overflow-hidden flex items-center"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            style={{ touchAction: 'none' }}
+          >
+            {session.showSessionEnd ? (
+              <SessionEndCard
+                knownCount={session.cycleKnownIds.length}
+                unknownCount={session.cycleUnknownIds.length}
+                totalCards={cards.length}
+                deckId={deckId}
+                cycleNumber={session.cycleNumber}
+                hasMoreBatches={session.batchIndex < session.totalBatches - 1}
+                onNextBatch={session.handleNextBatch}
+                onResetCycle={session.handleResetCycle}
               />
-            </div>
-          ) : null}
-        </div>
+            ) : session.currentCard ? (
+              <div
+                key={session.currentCard.id}
+                style={{
+                  transform: `translateX(${dragX}px) translateY(${dragY}px) rotate(${dragX * 0.04}deg) scale(${isDragging ? 1.03 : 1})`,
+                  transition: exitReset
+                    ? 'none'
+                    : isExiting
+                      ? 'transform 0.32s cubic-bezier(0.33, 0.6, 0.44, 1), box-shadow 0.3s ease'
+                      : dragX === 0 && dragY === 0
+                        ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.3s ease'
+                        : 'none',
+                  width: '100%',
+                  boxShadow: isDragging ? '0 24px 48px rgba(0,0,0,0.35)' : undefined,
+                  borderRadius: '1rem',
+                  willChange: 'transform',
+                }}
+              >
+                <FlashcardDeck
+                  key={session.currentCard.id}
+                  card={session.currentCard}
+                  isFlipped={session.isFlipped}
+                  animationClass={isExiting ? 'none' : session.animationClass}
+                  onFlip={session.handleFlip}
+                  onVerify={session.handleVerifyAnswer}
+                />
+              </div>
+            ) : null}
+          </div>
 
-      {!session.showSessionEnd && (
-        <FlashcardControls
-          isFlipped={session.isFlipped}
-          isFirst={isFirst}
-          isLast={isLastOverall}
-          isAnimating={session.isAnimating}
-          swipeHint={swipeHint}
-          onPrev={session.handlePrev}
-          onNext={session.handleNext}
-          onKnow={session.handleKnow}
-          onDontKnow={session.handleDontKnow}
-        />
+          {!session.showSessionEnd && (
+            <FlashcardControls
+              isFlipped={session.isFlipped}
+              isFirst={isFirst}
+              isLast={isLastOverall}
+              isAnimating={session.isAnimating}
+              swipeHint={swipeHint}
+              onPrev={session.handlePrev}
+              onNext={session.handleNext}
+              onKnow={session.handleKnow}
+              onDontKnow={session.handleDontKnow}
+            />
+          )}
+        </>
       )}
     </div>
   )

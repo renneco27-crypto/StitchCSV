@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const CardTypeSchema = z.enum(['definition', 'concept', 'formula', 'process', 'list'])
+export const CardTypeSchema = z.enum(['definition', 'concept', 'formula', 'process', 'list', 'keyword'])
 export type CardType = z.infer<typeof CardTypeSchema>
 
 export const CardStatusSchema = z.enum(['new', 'learning', 'mastered'])

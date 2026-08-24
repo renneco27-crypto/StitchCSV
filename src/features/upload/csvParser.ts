@@ -21,7 +21,7 @@ interface CSVRow {
 }
 
 // Types that should appear in flashcard mode (have a readable front/back)
-const FLASHCARD_TYPES = new Set(['definition', 'concept', 'formula', 'process', 'list',
+const FLASHCARD_TYPES = new Set(['definition', 'concept', 'formula', 'process', 'list', 'keyword',
   'multiple_choice', 'mc', 'true_false', 'tf', 'enumeration', 'enum', 'identification', 'id'])
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ function buildCards(rows: CSVRow[], deckId: string, primarySubject: string): Car
     if (!back) return
 
     const cardType = (
-      ['definition', 'concept', 'formula', 'process', 'list',
+      ['definition', 'concept', 'formula', 'process', 'list', 'keyword',
        'multiple_choice', 'true_false', 'enumeration', 'identification'].includes(type)
         ? type
         : 'definition'
