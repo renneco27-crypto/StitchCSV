@@ -165,3 +165,13 @@ export const CycleHistoryEntrySchema = z.object({
   unknownCount: z.number(),
 })
 export type CycleHistoryEntry = z.infer<typeof CycleHistoryEntrySchema>
+
+export const DeckImageSchema = z.object({
+  id: z.string(),
+  deckId: z.string(),
+  title: z.string(),
+  caption: z.string().optional(),
+  dataUrl: z.string(),
+  createdAt: z.string(),
+})
+export type DeckImage = z.infer<typeof DeckImageSchema>

@@ -38,12 +38,13 @@ export async function getAllDecks(): Promise<Deck[]> {
 
 export async function deleteDeck(deckId: string): Promise<void> {
   try {
-    await db.transaction('rw', [db.decks, db.cards, db.sessions, db.stats, db.cycleHistory], async () => {
+    await db.transaction('rw', [db.decks, db.cards, db.sessions, db.stats, db.cycleHistory, db.images], async () => {
       await db.decks.delete(deckId)
       await db.cards.where('deckId').equals(deckId).delete()
       await db.sessions.where('deckId').equals(deckId).delete()
       await db.stats.where('deckId').equals(deckId).delete()
       await db.cycleHistory.where('deckId').equals(deckId).delete()
+      await db.images.where('deckId').equals(deckId).delete()
     })
   } catch (err) {
     throw new Error(`Failed to delete deck: ${err instanceof Error ? err.message : String(err)}`)

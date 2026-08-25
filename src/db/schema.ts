@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { Deck, Card, FlashcardSession, DeckStats, CycleHistoryEntry } from '@/lib/zodSchemas'
+import type { Deck, Card, FlashcardSession, DeckStats, CycleHistoryEntry, DeckImage } from '@/lib/zodSchemas'
 
 export class StitchDB extends Dexie {
   decks!: Table<Deck, string>
@@ -7,6 +7,7 @@ export class StitchDB extends Dexie {
   sessions!: Table<FlashcardSession, string>
   stats!: Table<DeckStats, string>
   cycleHistory!: Table<CycleHistoryEntry, number>
+  images!: Table<DeckImage, string>
 
   constructor() {
     super('StitchDB')
@@ -16,6 +17,14 @@ export class StitchDB extends Dexie {
       sessions: '++id, deckId',
       stats: '++id, deckId',
       cycleHistory: '++id, deckId, cycleNumber',
+    })
+    this.version(2).stores({
+      decks: '++id, title, subject, uploadedAt',
+      cards: '++id, deckId, status, mastery, know, nextReview',
+      sessions: '++id, deckId',
+      stats: '++id, deckId',
+      cycleHistory: '++id, deckId, cycleNumber',
+      images: '++id, deckId, createdAt',
     })
   }
 }

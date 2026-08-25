@@ -1,4 +1,5 @@
-"use client";
+'use client'
+
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
@@ -12,9 +13,11 @@ import {
   Plus,
   Share2,
   BookOpen,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { getDeck, updateDeck } from '@/db/deckRepository'
 import { getCardsByDeck } from '@/db/cardRepository'
+import { getImagesByDeck } from '@/db/imageRepository'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { useStatsStore } from '@/store/statsStore'
 import { useToastStore } from '@/store/toastStore'
@@ -36,11 +39,12 @@ export default function StudyDashboard() {
 
   const [deck, setDeck] = useState<Deck | null>(null)
   const [deckLoading, setDeckLoading] = useState(true)
+  const [imageCount, setImageCount] = useState(0)
   const { stats, masteredCount, learningCount, newCount, accuracy, progress, dueCount, loading } =
     useStudyStats(deckId)
 
   const reloadDeck = async () => {
-    const d = await getDeck(deckId)
+    const [d, imgs] = await Promise.all([getDeck(deckId), getImagesByDeck(deckId)])
     if (!d) {
       router.replace('/')
       addToast('Deck not found', 'error')
@@ -49,6 +53,7 @@ export default function StudyDashboard() {
       return
     }
     setDeck(d)
+    setImageCount(imgs.length)
     initStats(deckId, d.cards.length)
     setDeckLoading(false)
   }
@@ -331,6 +336,14 @@ export default function StudyDashboard() {
             href={`/study/${deckId}/notes`}
             count={keywordCount > 0 ? `${keywordCount} terms` : 'No keywords'}
             disabled={keywordCount === 0}
+          />
+          <ModeCard
+            icon={ImageIcon}
+            label="Gallery"
+            description="Diagrams & visual notes"
+            color="var(--color-border-neon)"
+            href={`/study/${deckId}/images`}
+            count={imageCount > 0 ? `${imageCount} photo${imageCount !== 1 ? 's' : ''}` : 'No photos'}
           />
           <ModeCard
             icon={BarChart2}
