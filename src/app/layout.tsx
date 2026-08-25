@@ -26,7 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'MaeAI',
+  title: 'StudyUp',
   description: 'Turn notes into knowledge',
 }
 

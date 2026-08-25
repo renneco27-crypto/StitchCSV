@@ -54,13 +54,13 @@ export default function Sidebar() {
         <button
           onClick={() => router.push('/')}
           className="flex items-center gap-2.5 w-full squishy-btn"
-          title="MaeAI"
+          title="StudyUp"
         >
           <div className="w-9 h-9 rounded-xl bg-[var(--color-accent)] text-white flex items-center justify-center font-['Playfair_Display'] font-bold cyber-glow shrink-0">
-            M
+            S
           </div>
           <span className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
-            Mae<span className="text-[var(--color-accent)]">AI</span>
+            Study<span className="text-[var(--color-accent)]">Up</span>
           </span>
         </button>
       </div>
@@ -186,17 +186,20 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Mobile Top Spacing Clearance for App Wrapper / Status Bar */}
+      <div className="lg:hidden h-12 sm:h-14 w-full bg-[var(--color-bg)] shrink-0" />
+
       {/* Mobile Top Bar */}
-      <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-xl">
+      <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-xl">
         <button
           onClick={() => router.push('/')}
           className="flex items-center gap-2 squishy-btn"
         >
           <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)] text-white flex items-center justify-center font-['Playfair_Display'] font-bold cyber-glow">
-            M
+            S
           </div>
           <span className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
-            Mae<span className="text-[var(--color-accent)]">AI</span>
+            Study<span className="text-[var(--color-accent)]">Up</span>
           </span>
         </button>
         <button
