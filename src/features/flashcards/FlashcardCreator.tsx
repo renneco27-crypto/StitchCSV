@@ -627,7 +627,7 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                         <div
                           key={card.id}
                           onClick={() => toggleSelectCard(card.id)}
-                          className={`p-3 rounded-xl border transition-all flex items-start gap-3 cursor-pointer select-none ${
+                          className={`relative p-3 rounded-xl border transition-all flex items-start gap-3 cursor-pointer select-none ${
                             isSelected
                               ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)]/20'
                               : 'border-[var(--color-border)] bg-[var(--color-bg)] hover:border-[var(--color-accent)]/40'
@@ -667,7 +667,7 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                               e.stopPropagation()
                               promptDeleteCard(card)
                             }}
-                            className="shrink-0 p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
+                            className="relative z-10 shrink-0 p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
                             title="Delete card"
                           >
                             <Trash2 size={16} />
