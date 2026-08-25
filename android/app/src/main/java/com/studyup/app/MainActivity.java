@@ -7,7 +7,7 @@ import com.getcapacitor.Bridge;
 public class MainActivity extends BridgeActivity {
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         // Grant microphone access to the WebView for Web Speech API
         if (bridge != null && bridge.getWebView() != null) {
