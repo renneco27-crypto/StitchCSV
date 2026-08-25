@@ -8,6 +8,7 @@ import TopBar from '@/components/TopBar'
 import QuizProgressBar from '@/features/quiz/QuizProgressBar'
 import QuizSummary from '@/features/quiz/QuizSummary'
 import RestartButton from '@/components/RestartButton'
+import MathFormattedText from '@/components/MathFormattedText'
 import { Check, X } from 'lucide-react'
 import type { IdentificationItem } from '@/lib/zodSchemas'
 
@@ -123,9 +124,9 @@ export default function IdentificationPage() {
             <span>·</span>
             <span>{currentItem?.subject}</span>
           </div>
-          <p className="font-['Playfair_Display'] text-2xl text-center text-[var(--color-text-primary)]">
-            {currentItem?.definition}
-          </p>
+          <div className="font-['Playfair_Display'] text-2xl text-center text-[var(--color-text-primary)]">
+            <MathFormattedText text={currentItem?.definition || ''} />
+          </div>
         </div>
 
         {!result ? (
@@ -172,11 +173,13 @@ export default function IdentificationPage() {
               )}
             </div>
             <p className="text-sm text-[var(--color-text-muted)] mb-1">Correct answer:</p>
-            <p className="text-lg font-medium text-[var(--color-know)]">{currentItem?.answer || '(answer not available)'}</p>
+            <div className="text-lg font-medium text-[var(--color-know)]">
+              <MathFormattedText text={currentItem?.answer || '(answer not available)'} />
+            </div>
             {result.matchedVariant && result.matchedVariant !== currentItem?.answer && (
-              <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                Matched variant: {result.matchedVariant}
-              </p>
+              <div className="text-sm text-[var(--color-text-muted)] mt-2">
+                Matched variant: <MathFormattedText text={result.matchedVariant} />
+              </div>
             )}
             <button
               onClick={handleNext}

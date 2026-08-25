@@ -1,6 +1,7 @@
 'use client'
 
 import { CheckCircle2, XCircle } from 'lucide-react'
+import MathFormattedText from '@/components/MathFormattedText'
 
 type MCOptionState = 'default' | 'selected' | 'correct' | 'wrong' | 'reveal'
 
@@ -45,7 +46,9 @@ export default function MCOption({
       <span className="w-7 h-7 rounded-full bg-[var(--color-surface-2)] flex items-center justify-center text-xs font-medium flex-shrink-0">
         {label}
       </span>
-      <span className="flex-1 text-sm">{text}</span>
+      <span className="flex-1 text-sm">
+        <MathFormattedText text={text} />
+      </span>
       {showIcon && state === 'correct' && (
         <CheckCircle2 size={20} className="text-[var(--color-know)] flex-shrink-0" />
       )}

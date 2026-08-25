@@ -3,6 +3,7 @@
 import { Star, Mic, MicOff } from 'lucide-react'
 import type { Card } from '@/lib/zodSchemas'
 import StatBadge from '@/components/StatBadge'
+import MathFormattedText from '@/components/MathFormattedText'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { useState, useEffect } from 'react'
 
@@ -101,9 +102,9 @@ export default function FlashcardDeck({
             </div>
           </div>
           <div className="flex-1 overflow-auto py-4 flex items-center justify-center">
-            <p className="font-['Playfair_Display'] text-xl sm:text-2xl md:text-3xl text-center text-[var(--color-text-primary)] break-words w-full">
-              {card.front}
-            </p>
+            <div className="font-['Playfair_Display'] text-xl sm:text-2xl md:text-3xl text-center text-[var(--color-text-primary)] break-words w-full">
+              <MathFormattedText text={card.front} />
+            </div>
           </div>
           
           <div className="interactive-area mt-2 w-full flex flex-col items-center gap-4 relative">
@@ -156,9 +157,9 @@ export default function FlashcardDeck({
             <StatBadge label={card.status} value="" color={statusColor} />
           </div>
           <div className="flex-1 overflow-auto py-4 flex items-center justify-center flex-col gap-3">
-            <p className="text-lg sm:text-xl font-medium text-center text-[var(--color-text-primary)] break-words w-full">
-              {card.back}
-            </p>
+            <div className="text-lg sm:text-xl font-medium text-center text-[var(--color-text-primary)] break-words w-full">
+              <MathFormattedText text={card.back} />
+            </div>
             {card.type === 'formula' && (
               <>
                 <hr className="w-full border-[var(--color-border)]" />

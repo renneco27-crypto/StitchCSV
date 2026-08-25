@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Search, Eye, EyeOff, Trash2, CheckSquare, Square, AlertTriangle } from 'lucide-react'
 import { deleteCard, bulkDeleteCards } from '@/db/cardRepository'
 import { useToastStore } from '@/store/toastStore'
+import MathFormattedText from '@/components/MathFormattedText'
 import type { Card } from '@/lib/zodSchemas'
 
 interface FlashcardListViewProps {
@@ -230,9 +231,9 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
                           <Trash2 size={15} />
                         </button>
                       </div>
-                      <p className="font-['Playfair_Display'] text-base sm:text-lg text-[var(--color-text-primary)] leading-snug">
-                        {card.front}
-                      </p>
+                      <div className="font-['Playfair_Display'] text-base sm:text-lg text-[var(--color-text-primary)] leading-snug">
+                        <MathFormattedText text={card.front} />
+                      </div>
                     </div>
 
                     {/* Divider */}
@@ -259,9 +260,9 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
                           {card.back}
                         </p>
                       ) : (
-                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-line font-medium">
-                          {card.back}
-                        </p>
+                        <div className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-line font-medium">
+                          <MathFormattedText text={card.back} />
+                        </div>
                       )}
                     </div>
                   </div>

@@ -6,13 +6,18 @@ import { BookOpen, Eye, EyeOff, Search, ChevronDown, ChevronUp, Layers, Tag } fr
 import { getCardsByDeck } from '@/db/cardRepository'
 import { getDeck } from '@/db/deckRepository'
 import TopBar from '@/components/TopBar'
+import MathFormattedText from '@/components/MathFormattedText'
 import type { Card, Deck } from '@/lib/zodSchemas'
 
 function FormattedNoteText({ text }: { text: string }) {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
 
   if (lines.length <= 1 && !text.includes('•') && !text.includes('|') && !text.includes(';')) {
-    return <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{text}</p>
+    return (
+      <div className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+        <MathFormattedText text={text} />
+      </div>
+    )
   }
 
   // Split multiple lines or bullet points
@@ -45,8 +50,12 @@ function FormattedNoteText({ text }: { text: string }) {
                   const value = seg.slice(colonIdx + 1).trim()
                   return (
                     <span key={sIdx} className="inline-flex items-baseline gap-1">
-                      <span className="font-medium text-[var(--color-text-primary)]">{label}:</span>
-                      <span>{value}</span>
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        <MathFormattedText text={label} />:
+                      </span>
+                      <span>
+                        <MathFormattedText text={value} />
+                      </span>
                     </span>
                   )
                 } else if (dashIdx > 0) {
@@ -54,13 +63,21 @@ function FormattedNoteText({ text }: { text: string }) {
                   const value = seg.slice(dashIdx + 3).trim()
                   return (
                     <span key={sIdx} className="inline-flex items-baseline gap-1">
-                      <span className="font-medium text-[var(--color-text-primary)]">{label} –</span>
-                      <span>{value}</span>
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        <MathFormattedText text={label} /> –
+                      </span>
+                      <span>
+                        <MathFormattedText text={value} />
+                      </span>
                     </span>
                   )
                 }
 
-                return <span key={sIdx}>{seg}</span>
+                return (
+                  <span key={sIdx}>
+                    <MathFormattedText text={seg} />
+                  </span>
+                )
               })}
             </div>
           </div>
@@ -228,11 +245,13 @@ function NotesContent({ deckId }: { deckId: string }) {
                             className="inline-block px-2 py-0.5 rounded bg-[var(--color-surface-3)] text-transparent select-none blur-[5px] hover:blur-none hover:text-[var(--color-text-primary)] transition-all cursor-pointer text-sm font-semibold"
                             title="Hover or click to reveal keyword"
                           >
-                            {card.front}
+                            <span className="inline-block">
+                              <MathFormattedText text={card.front} />
+                            </span>
                           </span>
                         ) : (
                           <h4 className="font-['Playfair_Display'] font-semibold text-[var(--color-text-primary)] text-base tracking-wide leading-snug">
-                            {card.front}
+                            <MathFormattedText text={card.front} />
                           </h4>
                         )}
                       </div>

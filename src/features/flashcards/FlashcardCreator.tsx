@@ -7,6 +7,7 @@ import { auditAndFixCSV, isCSVInput } from '@/features/upload/csvFixer'
 import { createCards, deleteCard, bulkDeleteCards, getCardsByDeck } from '@/db/cardRepository'
 import { updateDeck } from '@/db/deckRepository'
 import { useToastStore } from '@/store/toastStore'
+import MathFormattedText from '@/components/MathFormattedText'
 import type { Card, Deck } from '@/lib/zodSchemas'
 
 interface FlashcardCreatorProps {
@@ -672,12 +673,12 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
-                              {card.front}
-                            </p>
-                            <p className="text-xs text-[var(--color-text-secondary)] mt-1 line-clamp-2">
-                              {card.back}
-                            </p>
+                            <div className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
+                              <MathFormattedText text={card.front} />
+                            </div>
+                            <div className="text-xs text-[var(--color-text-secondary)] mt-1 line-clamp-2">
+                              <MathFormattedText text={card.back} />
+                            </div>
                           </div>
 
                           <button
@@ -726,12 +727,12 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
                       <div key={i} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] group">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                              {card.front}
-                            </p>
-                            <p className="text-xs text-[var(--color-text-muted)] mt-1 line-clamp-2">
-                              {card.back}
-                            </p>
+                            <div className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                              <MathFormattedText text={card.front} />
+                            </div>
+                            <div className="text-xs text-[var(--color-text-muted)] mt-1 line-clamp-2">
+                              <MathFormattedText text={card.back} />
+                            </div>
                           </div>
                           <div className="flex items-center gap-1">
                             <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium ${

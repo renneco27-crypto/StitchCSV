@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import MathFormattedText from '@/components/MathFormattedText'
 
 interface ExplanationPanelProps {
   isTrue: boolean
@@ -39,7 +40,9 @@ export default function ExplanationPanel({
           {isTrue ? 'The statement was true.' : 'The statement was false.'}
         </p>
 
-        <p className="text-sm text-[var(--color-text-secondary)] mt-2">{explanation}</p>
+        <div className="text-sm text-[var(--color-text-secondary)] mt-2">
+          <MathFormattedText text={explanation} />
+        </div>
 
         <button
           onClick={onNext}

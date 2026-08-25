@@ -1,3 +1,5 @@
+import MathFormattedText from '@/components/MathFormattedText'
+
 interface TrueFalseCardProps {
   statement: string
   chapter: string
@@ -12,9 +14,9 @@ export default function TrueFalseCard({ statement, chapter, subject }: TrueFalse
         <span>·</span>
         <span>{subject}</span>
       </div>
-      <p className="font-['Playfair_Display'] text-2xl md:text-3xl text-center min-h-[120px] flex items-center justify-center text-[var(--color-text-primary)] mt-4">
-        {statement}
-      </p>
+      <div className="font-['Playfair_Display'] text-2xl md:text-3xl text-center min-h-[120px] flex items-center justify-center text-[var(--color-text-primary)] mt-4">
+        <MathFormattedText text={statement} />
+      </div>
     </div>
   )
 }

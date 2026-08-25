@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Mic, MicOff, CheckCircle2, RotateCcw } from 'lucide-react'
 import { TextToken } from './parseBlanks'
 import confetti from 'canvas-confetti'
+import { areMathExpressionsEquivalent } from '@/lib/mathEvaluator'
 
 interface FillInTheBlanksUIProps {
   tokens: TextToken[]
@@ -15,6 +16,8 @@ function normalize(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]/g, '').trim()
 }
 function isMatch(spoken: string, expected: string): boolean {
+  if (areMathExpressionsEquivalent(spoken, expected)) return true
+
   const a = normalize(spoken)
   const b = normalize(expected)
   if (!a || !b) return false

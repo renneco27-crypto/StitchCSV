@@ -9,6 +9,7 @@ import QuizProgressBar from '@/features/quiz/QuizProgressBar'
 import MCOption from '@/features/quiz/MCOption'
 import QuizSummary from '@/features/quiz/QuizSummary'
 import RestartButton from '@/components/RestartButton'
+import MathFormattedText from '@/components/MathFormattedText'
 import type { MultipleChoiceItem, MCOption as MCOptionType } from '@/lib/zodSchemas'
 
 type MCOptionState = 'default' | 'selected' | 'correct' | 'wrong' | 'reveal'
@@ -156,9 +157,9 @@ export default function MultipleChoicePage() {
             <span>&middot;</span>
             <span>{currentQuestion?.subject}</span>
           </div>
-          <p className="font-['Playfair_Display'] text-2xl mt-2 text-[var(--color-text-primary)]">
-            {currentQuestion?.question}
-          </p>
+          <div className="font-['Playfair_Display'] text-2xl mt-2 text-[var(--color-text-primary)]">
+            <MathFormattedText text={currentQuestion?.question || ''} />
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">

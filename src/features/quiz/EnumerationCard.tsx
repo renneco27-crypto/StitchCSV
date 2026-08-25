@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Eye, Check, X } from 'lucide-react'
+import MathFormattedText from '@/components/MathFormattedText'
 import { ITEMS_PER_ENUM_PAGE } from '@/lib/constants'
 
 interface EnumerationCardProps {
@@ -60,9 +61,9 @@ export default function EnumerationCard({
           <span>{subject}</span>
         </div>
         <p className="text-xs text-[var(--color-text-muted)] mb-2">Type each item, then reveal to check</p>
-        <p className="font-['Playfair_Display'] text-2xl text-center mb-6 text-[var(--color-text-primary)]">
-          {topic}
-        </p>
+        <div className="font-['Playfair_Display'] text-2xl text-center mb-6 text-[var(--color-text-primary)]">
+          <MathFormattedText text={topic} />
+        </div>
         <div className="mx-auto w-full max-w-md border-b-2 border-[var(--color-border-strong)]" />
         <p className="text-xs text-[var(--color-text-muted)] text-center mb-6">
           {items.length} items
@@ -111,7 +112,9 @@ export default function EnumerationCard({
         <span>·</span>
         <span>{subject}</span>
       </div>
-      <p className="text-lg font-medium text-center text-[var(--color-text-primary)] mb-4">{topic}</p>
+      <div className="text-lg font-medium text-center text-[var(--color-text-primary)] mb-4">
+        <MathFormattedText text={topic} />
+      </div>
 
       <div className="space-y-3 max-w-md mx-auto max-h-[50vh] overflow-y-auto pr-2 styled-scrollbar">
         {results.map((r) => {
@@ -142,9 +145,9 @@ export default function EnumerationCard({
                   />
               </div>
               {!r.correct && (
-                <p className="text-sm text-[var(--color-know)] ml-[4.5rem] mt-1">
-                  Correct: {r.expected}
-                </p>
+                <div className="text-sm text-[var(--color-know)] ml-[4.5rem] mt-1">
+                  Correct: <MathFormattedText text={r.expected} />
+                </div>
               )}
             </div>
           )

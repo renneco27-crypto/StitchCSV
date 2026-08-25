@@ -1,4 +1,5 @@
 import Fuse from 'fuse.js'
+import { areMathExpressionsEquivalent } from '@/lib/mathEvaluator'
 
 interface IdentificationResult {
   isCorrect: boolean
@@ -20,6 +21,17 @@ export function checkIdentificationAnswer(
 
   if (normalizedInput === normalizedCorrect) {
     return { isCorrect: true, matchedVariant: correctAnswer }
+  }
+
+  // Check mathematical equivalence (e.g. (2^3) == 8, 1/2 == 0.5, 2x+4=10 == 3)
+  if (areMathExpressionsEquivalent(trimmed, correctAnswer)) {
+    return { isCorrect: true, matchedVariant: correctAnswer }
+  }
+
+  for (const variant of acceptVariants) {
+    if (areMathExpressionsEquivalent(trimmed, variant)) {
+      return { isCorrect: true, matchedVariant: variant }
+    }
   }
 
   const allTargets = [correctAnswer, ...acceptVariants]
