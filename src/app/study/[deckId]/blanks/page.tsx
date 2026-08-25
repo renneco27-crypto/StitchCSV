@@ -83,7 +83,7 @@ function BlanksContent({ deckId }: { deckId: string }) {
   }
 
   return (
-    <div className="h-[calc(100dvh_-_57px)] lg:h-[100dvh] flex flex-col overflow-hidden bg-[var(--color-bg)]">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-[var(--color-bg)]">
       <TopBar 
         title={deck ? `${deck.title} - Blanks` : 'Fill-in-the-Blanks'} 
         onBack={() => router.push(`/study/${deckId}`)}

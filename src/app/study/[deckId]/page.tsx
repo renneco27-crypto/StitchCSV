@@ -211,7 +211,7 @@ export default function StudyDashboard() {
           </div>
         ) : (
           <h1
-            className="text-2xl font-['Playfair_Display'] text-[var(--color-text-primary)] truncate cursor-pointer hover:text-[var(--color-accent)] transition-colors"
+            className="text-2xl font-['Playfair_Display'] text-[var(--color-text-primary)] break-words cursor-pointer hover:text-[var(--color-accent)] transition-colors"
             onClick={() => { setEditTitle(deck?.title ?? ''); setEditingTitle(true) }}
             title="Click to edit title"
           >
@@ -241,11 +241,7 @@ export default function StudyDashboard() {
              </button>
              {canPublish && (
                <button
-                 onClick={() => {
-                   const saved = localStorage.getItem('authorName') || ''
-                   setAuthorName(saved)
-                   setShowPublish(true)
-                 }}
+                 onClick={() => setShowPublish(true)}
                  className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full col-span-2 sm:col-span-1 squishy-btn"
                >
                  <Share2 size={16} /> Publish

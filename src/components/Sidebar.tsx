@@ -184,28 +184,32 @@ export default function Sidebar() {
     </>
   )
 
+  const isStudyOrSearch = pathname.startsWith('/study') || pathname === '/search'
+
   return (
     <>
-      {/* Mobile Top Bar */}
-      <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-xl">
-        <button
-          onClick={() => router.push('/')}
-          className="flex items-center gap-2 squishy-btn"
-        >
-          <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)] text-white flex items-center justify-center font-['Playfair_Display'] font-bold cyber-glow">
-            S
-          </div>
-          <span className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
-            Study<span className="text-[var(--color-accent)]">Up</span>
-          </span>
-        </button>
-        <button
-          onClick={() => setIsMobileOpen(true)}
-          className="p-2 -mr-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors squishy-btn"
-        >
-          <Menu size={24} />
-        </button>
-      </div>
+      {/* Mobile Top Bar - Only on top-level navigation pages */}
+      {!isStudyOrSearch && (
+        <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-xl">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 squishy-btn"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)] text-white flex items-center justify-center font-['Playfair_Display'] font-bold cyber-glow">
+              S
+            </div>
+            <span className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
+              Study<span className="text-[var(--color-accent)]">Up</span>
+            </span>
+          </button>
+          <button
+            onClick={() => setIsMobileOpen(true)}
+            className="p-2 -mr-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors squishy-btn"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+      )}
 
       {/* Mobile Drawer Overlay */}
       {isMobileOpen && (

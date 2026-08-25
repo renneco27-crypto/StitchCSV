@@ -10,7 +10,7 @@ interface TopBarProps {
 
 export default function TopBar({ title, onBack, rightSlot }: TopBarProps) {
   return (
-    <header className="h-14 glass-panel border-b border-[var(--color-border)] px-4 flex items-center gap-3 sticky top-[57px] lg:top-0 z-40">
+    <header className="h-14 glass-panel border-b border-[var(--color-border)] px-4 flex items-center gap-3 sticky top-0 z-40">
       {onBack && (
         <button
           onClick={onBack}

@@ -136,6 +136,12 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
   const executeDelete = async () => {
     if (!confirmDeleteModal || confirmDeleteModal.cardIds.length === 0) return
     const idsToDelete = confirmDeleteModal.cardIds
+
+    // Capture fronts before removing from state (for the log)
+    const frontsToLog = idsToDelete.map(
+      (id) => existingCards.find((c) => c.id === id)?.front ?? ''
+    )
+
     try {
       if (idsToDelete.length === 1) {
         await deleteCard(idsToDelete[0])
@@ -153,6 +159,18 @@ export default function FlashcardCreator({ deckId, deck, onClose, onCardsAdded }
         'success'
       )
       setConfirmDeleteModal(null)
+
+      // Fire-and-forget backend log — non-fatal
+      fetch('/api/delete-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cardIds: idsToDelete,
+          deckId,
+          cardFronts: frontsToLog,
+        }),
+      }).catch(() => {/* swallow — log failure never blocks UX */})
+
     } catch (err) {
       addToast('Failed to delete card(s)', 'error')
     }

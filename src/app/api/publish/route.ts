@@ -24,11 +24,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Your account does not have publishing permission' }, { status: 403 })
     }
 
-    const { title, subject, csvContent, authorName } = await request.json()
+    const { title, subject, csvContent } = await request.json()
 
     if (!title || !csvContent) {
       return NextResponse.json({ error: 'Title and CSV content are required' }, { status: 400 })
     }
+
+    // Always use the server-side authenticated user name — never trust client input
+    const authorName = user.user_metadata?.full_name
+      || user.user_metadata?.display_name
+      || user.email?.split('@')[0]
+      || user.email
+      || 'Unknown'
 
     const { data: existingDeck } = await supabase
       .from('decks')
@@ -42,7 +49,7 @@ export async function POST(request: NextRequest) {
         .update({
           subject: subject || 'General',
           csv_content: csvContent,
-          author_name: authorName || user.user_metadata?.display_name || user.email || 'Anonymous',
+          author_name: authorName,
           device_id: user.id,
         })
         .eq('id', existingDeck.id)
@@ -60,7 +67,7 @@ export async function POST(request: NextRequest) {
         title,
         subject: subject || 'General',
         csv_content: csvContent,
-        author_name: authorName || user.user_metadata?.display_name || user.email || 'Anonymous',
+        author_name: authorName,
         device_id: user.id,
       })
       .select('id')

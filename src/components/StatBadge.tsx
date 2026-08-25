@@ -19,10 +19,10 @@ export default function StatBadge({ label, value, color }: StatBadgeProps) {
   const colors = colorMap[color]
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0"
       style={{ backgroundColor: colors.bg, color: colors.text }}
     >
-      <span>{value}</span>
+      {value !== '' && value !== undefined && value !== null && <span>{value}</span>}
       <span>{label}</span>
     </span>
   )
