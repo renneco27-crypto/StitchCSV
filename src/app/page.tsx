@@ -5,6 +5,7 @@ import { useStatsStore } from '@/store/statsStore'
 import PastDecks from '@/features/upload/PastDecks'
 import { getStreakStatus } from '@/features/stats/statsCalculator'
 import { fetchStatsFromSupabase, syncStatsToSupabase } from '@/features/stats/supabaseSync'
+import MatrixRainBackground from '@/components/MatrixRainBackground'
 
 export default function Home() {
   const stats = useStatsStore((s) => s.stats)
@@ -36,8 +37,11 @@ export default function Home() {
   const studiedToday = dbStudiedToday !== null ? Math.max(dbStudiedToday, localStudiedToday) : localStudiedToday
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] px-4 py-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen relative px-4 py-8">
+      {/* Background Matrix Rain */}
+      <MatrixRainBackground opacity={0.25} />
+
+      <div className="max-w-3xl mx-auto relative z-10">
         <div className="mb-6">
           <h1 className="text-2xl font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
             My Library
