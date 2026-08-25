@@ -186,9 +186,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Top Spacing Clearance for App Wrapper / Status Bar */}
-      <div className="lg:hidden h-12 sm:h-14 w-full bg-[var(--color-bg)] shrink-0" />
-
       {/* Mobile Top Bar */}
       <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-xl">
         <button

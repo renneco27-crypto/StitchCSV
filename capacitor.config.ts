@@ -5,12 +5,13 @@ const config: CapacitorConfig = {
   appName: 'StudyUp',
   webDir: 'out',
   server: {
+    url: 'https://stitchcsv.onrender.com',
     androidScheme: 'https',
     cleartext: true,
   },
   android: {
     allowMixedContent: true,
-    backgroundColor: '#050505',
+    backgroundColor: '#0a0c10',
   },
 }
 

@@ -154,7 +154,7 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)]">
       <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8">
-        <div className="max-w-4xl mx-auto glass-panel rounded-2xl border border-[var(--color-border)] shadow-sm p-6 md:p-10 leading-loose text-lg text-[var(--color-text-primary)]">
+        <div className="max-w-4xl mx-auto glass-panel rounded-2xl border border-[var(--color-border)] shadow-sm p-6 md:p-10 leading-[1.9] text-xl sm:text-lg text-[var(--color-text-primary)]">
           {tokens.map((token) => {
             if (!token.isWord) {
               // whitespace / punctuation — render as-is
@@ -218,23 +218,23 @@ export default function FillInTheBlanksUI({ tokens, onReset }: FillInTheBlanksUI
         <div className="flex items-center justify-center gap-3 w-full max-w-md">
           <button
             onClick={toggleListening}
-            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex-1 min-w-0 ${
+            className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-base font-semibold transition-all flex-1 min-w-0 ${
               isListening
                 ? 'bg-[var(--color-know)]/20 text-[var(--color-know)] shadow-[0_0_12px_var(--color-know)]/30'
                 : 'bg-[var(--color-surface-3)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
             }`}
           >
             {isListening
-              ? <Mic size={18} className="animate-pulse shrink-0" />
-              : <MicOff size={18} className="shrink-0" />}
+              ? <Mic size={20} className="animate-pulse shrink-0" />
+              : <MicOff size={20} className="shrink-0" />}
             <span className="truncate">{isListening ? 'Reading… keep going!' : 'Read Aloud'}</span>
           </button>
           <button
             onClick={handleReset}
             title="Restart from beginning"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-3)] transition-colors"
+            className="flex items-center gap-1.5 px-4 py-3 rounded-xl text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-3)] transition-colors"
           >
-            <RotateCcw size={15} /> Restart
+            <RotateCcw size={16} /> Restart
           </button>
         </div>
 

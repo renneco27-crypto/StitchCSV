@@ -145,13 +145,13 @@ function BlanksContent({ deckId }: { deckId: string }) {
             />
           )}
         </div>
-      </div>
 
-      <PastePopup 
-        isOpen={isPastePopupOpen}
-        onClose={() => setPastePopupOpen(false)}
-        onSubmit={handleGenerateAndSave}
-      />
+        <PastePopup 
+          isOpen={isPastePopupOpen}
+          onClose={() => setPastePopupOpen(false)}
+          onSubmit={handleGenerateAndSave}
+        />
+      </div>
     </div>
   )
 }
