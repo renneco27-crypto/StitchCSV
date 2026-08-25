@@ -9,7 +9,7 @@ interface MatrixRainBackgroundProps {
 
 export default function MatrixRainBackground({
   opacity = 0.35,
-  speedMultiplier = 1,
+  speedMultiplier = 0.3,
 }: MatrixRainBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -56,7 +56,7 @@ export default function MatrixRainBackground({
         }
         drops.push({
           y: Math.random() * -height,
-          speed: (Math.random() * 1.5 + 1.0) * speedMultiplier,
+          speed: (Math.random() * 0.9 + 0.6) * speedMultiplier,
           length,
           chars: charArr,
         })
@@ -66,7 +66,7 @@ export default function MatrixRainBackground({
     initColumns()
 
     let lastTime = performance.now()
-    const fpsInterval = 1000 / 40 // Target clean 40 FPS (smooth & zero flicker)
+    const fpsInterval = 1000 / 30 // Smooth 30 FPS gentle rain flow
 
     const render = (currentTime: number) => {
       animationFrameId = requestAnimationFrame(render)
@@ -89,7 +89,7 @@ export default function MatrixRainBackground({
           if (charY < -fontSize || charY > height + fontSize) continue
 
           // Random character mutation
-          if (Math.random() < 0.04) {
+          if (Math.random() < 0.02) {
             drop.chars[j] = chars[Math.floor(Math.random() * chars.length)]
           }
 
@@ -108,13 +108,13 @@ export default function MatrixRainBackground({
           ctx.fillText(drop.chars[j] || '0', x, charY)
         }
 
-        // Advance drop
-        drop.y += drop.speed * (fontSize * 0.6)
+        // Advance drop smoothly at slow relaxed speed
+        drop.y += drop.speed * (fontSize * 0.4)
 
         // Reset drop when tail passes bottom
         if (drop.y - drop.length * fontSize > height) {
           drop.y = -Math.random() * 100
-          drop.speed = (Math.random() * 1.5 + 1.0) * speedMultiplier
+          drop.speed = (Math.random() * 0.9 + 0.6) * speedMultiplier
           drop.length = Math.floor(Math.random() * 16) + 8
         }
       }
