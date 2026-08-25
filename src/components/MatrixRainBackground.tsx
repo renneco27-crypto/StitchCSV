@@ -5,11 +5,13 @@ import { useEffect, useRef } from 'react'
 interface MatrixRainBackgroundProps {
   opacity?: number
   speedMultiplier?: number
+  maxStreams?: number
 }
 
 export default function MatrixRainBackground({
   opacity = 0.35,
-  speedMultiplier = 0.3,
+  speedMultiplier = 0.4,
+  maxStreams = 10,
 }: MatrixRainBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -27,16 +29,16 @@ export default function MatrixRainBackground({
       if (!canvas) return
       width = canvas.width = window.innerWidth
       height = canvas.height = window.innerHeight
-      initColumns()
+      initDrops()
     }
     window.addEventListener('resize', handleResize)
 
     // Cyber / Matrix Glyphs
     const chars = '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜΣΩλπψ§∆∇'
     const fontSize = 15
-    let columns = Math.floor(width / fontSize)
 
     interface Drop {
+      columnIndex: number
       y: number
       speed: number
       length: number
@@ -45,28 +47,36 @@ export default function MatrixRainBackground({
 
     let drops: Drop[] = []
 
-    const initColumns = () => {
-      columns = Math.floor(width / fontSize)
+    const initDrops = () => {
+      const totalColumns = Math.max(1, Math.floor(width / fontSize))
       drops = []
-      for (let i = 0; i < columns; i++) {
-        const length = Math.floor(Math.random() * 16) + 8
+      for (let i = 0; i < maxStreams; i++) {
+        const length = Math.floor(Math.random() * 14) + 8
         const charArr: string[] = []
         for (let j = 0; j < length; j++) {
           charArr.push(chars[Math.floor(Math.random() * chars.length)])
         }
+        // Distribute columns evenly with slight randomness
+        const baseCol = Math.floor((i / maxStreams) * totalColumns)
+        const col = Math.min(
+          totalColumns - 1,
+          Math.max(0, baseCol + Math.floor(Math.random() * 5 - 2))
+        )
+
         drops.push({
+          columnIndex: col,
           y: Math.random() * -height,
-          speed: (Math.random() * 0.9 + 0.6) * speedMultiplier,
+          speed: (Math.random() * 1.0 + 0.8) * speedMultiplier,
           length,
           chars: charArr,
         })
       }
     }
 
-    initColumns()
+    initDrops()
 
     let lastTime = performance.now()
-    const fpsInterval = 1000 / 30 // Smooth 30 FPS gentle rain flow
+    const fpsInterval = 1000 / 35 // Smooth 35 FPS
 
     const render = (currentTime: number) => {
       animationFrameId = requestAnimationFrame(render)
@@ -75,14 +85,14 @@ export default function MatrixRainBackground({
       if (elapsed < fpsInterval) return
       lastTime = currentTime - (elapsed % fpsInterval)
 
-      // Solid background clear each frame prevents alpha strobe flicker
       ctx.clearRect(0, 0, width, height)
-
       ctx.font = `${fontSize}px monospace`
 
-      for (let i = 0; i < columns; i++) {
+      const totalColumns = Math.max(1, Math.floor(width / fontSize))
+
+      for (let i = 0; i < drops.length; i++) {
         const drop = drops[i]
-        const x = i * fontSize
+        const x = drop.columnIndex * fontSize
 
         for (let j = 0; j < drop.length; j++) {
           const charY = drop.y - j * fontSize
@@ -94,7 +104,7 @@ export default function MatrixRainBackground({
           }
 
           if (j === 0) {
-            // Bright white/lavender leading drop head
+            // Bright leading head
             ctx.fillStyle = '#f5d0fe'
           } else if (j === 1) {
             // Bright neon purple
@@ -108,14 +118,15 @@ export default function MatrixRainBackground({
           ctx.fillText(drop.chars[j] || '0', x, charY)
         }
 
-        // Advance drop smoothly at slow relaxed speed
-        drop.y += drop.speed * (fontSize * 0.4)
+        // Advance drop
+        drop.y += drop.speed * (fontSize * 0.5)
 
-        // Reset drop when tail passes bottom
+        // Reset drop when tail passes bottom to a new random column
         if (drop.y - drop.length * fontSize > height) {
-          drop.y = -Math.random() * 100
-          drop.speed = (Math.random() * 0.9 + 0.6) * speedMultiplier
-          drop.length = Math.floor(Math.random() * 16) + 8
+          drop.y = -Math.random() * 80
+          drop.columnIndex = Math.floor(Math.random() * totalColumns)
+          drop.speed = (Math.random() * 1.0 + 0.8) * speedMultiplier
+          drop.length = Math.floor(Math.random() * 14) + 8
         }
       }
     }
@@ -126,7 +137,7 @@ export default function MatrixRainBackground({
       window.removeEventListener('resize', handleResize)
       cancelAnimationFrame(animationFrameId)
     }
-  }, [speedMultiplier])
+  }, [speedMultiplier, maxStreams])
 
   return (
     <canvas
