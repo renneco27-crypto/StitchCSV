@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 
-type UploadTab = 'file' | 'text'
+type UploadTab = 'file' | 'text' | 'notes'
 
 interface UIState {
   isUploadModalOpen: boolean

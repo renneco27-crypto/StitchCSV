@@ -63,6 +63,35 @@ REFERENCE STUDY NOTES: [PASTE YOUR STUDY NOTES HERE]
 
 Tell me how many CSVs of the chapter you have created (e.g., 1/5). If I say "disregard and go to the next", delete from your memory any prior text I've said.`
 
+const CLAUDE_NOTES_PROMPT_TEMPLATE = `Analyze the entire reference material and extract ALL information into structured, comprehensive STUDY NOTES ONLY (Keyword cards for the Notes tab).
+
+1. EXTRACTION RULES
+• Identify every distinct topic, section, person, theory, concept, formula, process, and key term.
+• Do NOT generate quiz questions, multiple choice, or true/false questions.
+• Generate EXCLUSIVELY "keyword" type rows for study notes.
+• The "front" MUST be the Topic / Keyword / Person / Concept / Section title.
+• The "back" MUST be rich, detailed, structured study notes, key dates, bullet points, definitions, formulas, or summaries. Use "\\n• " for bullet points.
+• Never omit important details, examples, or conditions.
+
+2. UNIFIED 15-COLUMN CSV SCHEMA
+The header must be exactly this, word for word, no substitutions:
+front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,explanation,enum_items,id_answer,id_variants
+
+Every single row must have exactly 15 comma-separated values with type="keyword":
+"Topic / Concept / Keyword","• Bullet point 1\\n• Bullet point 2\\n• Key detail / date / formula","Chapter","Subject","Lesson",keyword,,,,,,,,,
+
+3. SYNTAX & FORMATTING CONSTRAINTS
+Output ONLY the raw plain-text CSV. Do NOT output Markdown, do not explain anything, and do not number the rows.
+Wrap any field containing spaces, commas, newlines, punctuation, or quotes inside double quotes.
+
+TOPIC: [INSERT TOPIC]
+CHAPTER: [INSERT CHAPTER]
+SUBJECT: [INSERT SUBJECT]
+LESSON: [INSERT LESSON]
+REFERENCE STUDY NOTES: [PASTE YOUR STUDY NOTES HERE]
+
+Tell me how many CSV notes you have created. If I say "disregard and go to the next", delete from your memory any prior text I've said.`
+
 export default function UploadModal() {
   const router = useRouter()
   const isOpen = useUIStore((s) => s.isUploadModalOpen)
@@ -173,17 +202,29 @@ export default function UploadModal() {
       .replace('[INSERT TOPIC]', deckName.trim() || '[INSERT TOPIC]')
     try {
       await navigator.clipboard.writeText(prompt)
-      addToast('Prompt copied — paste it in Claude', 'success')
+      addToast('Full Deck Prompt copied — paste it in Claude', 'success')
       window.open('https://claude.ai/', '_blank', 'noopener,noreferrer')
     } catch (err) {
       addToast('Failed to copy prompt', 'error')
     }
   }
 
-  const tabButton = (t: 'file' | 'text', label: string) => (
+  const handleCopyNotesToClaude = async () => {
+    const prompt = CLAUDE_NOTES_PROMPT_TEMPLATE
+      .replace('[INSERT TOPIC]', deckName.trim() || '[INSERT TOPIC]')
+    try {
+      await navigator.clipboard.writeText(prompt)
+      addToast('Notes Only Prompt copied — paste it in Claude', 'success')
+      window.open('https://claude.ai/', '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      addToast('Failed to copy prompt', 'error')
+    }
+  }
+
+  const tabButton = (t: 'file' | 'text' | 'notes', label: string) => (
     <button
       onClick={() => setTab(t)}
-      className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors squishy-btn ${
+      className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-colors squishy-btn shrink-0 ${
         tab === t
           ? 'bg-[var(--color-accent)] text-white cyber-glow'
           : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
@@ -215,8 +256,9 @@ export default function UploadModal() {
           </button>
         </div>
 
-        <div className="flex gap-1 px-4 pt-3">
+        <div className="flex gap-1 px-4 pt-3 overflow-x-auto no-scrollbar">
           {tabButton('text', 'Paste Text')}
+          {tabButton('notes', 'Notes Only (Claude)')}
           {tabButton('file', 'Upload File')}
         </div>
 
@@ -287,12 +329,44 @@ export default function UploadModal() {
                 </>
               )}
             </div>
+          ) : tab === 'notes' ? (
+            <div className="mt-4">
+              <p className="text-xs text-[var(--color-text-muted)] mb-2">
+                1. Click below to copy the <strong className="text-[var(--color-text-primary)]">Notes-Only Prompt</strong> to Claude.
+                <br />
+                2. Paste your reference material in Claude to generate keyword cards.
+                <br />
+                3. Paste the output CSV below to create your notes deck.
+              </p>
+              <textarea
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder="Paste generated Notes CSV here..."
+                rows={7}
+                className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow resize-none"
+              />
+              <button
+                onClick={handleCopyNotesToClaude}
+                className="mt-3 flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] transition-colors w-full justify-center squishy-btn"
+              >
+                <Bot size={16} />
+                Copy Notes Prompt to Claude
+              </button>
+              <button
+                onClick={handleGenerate}
+                disabled={textLoading || !pasteText.trim()}
+                className="mt-3 flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity w-full justify-center squishy-btn cyber-glow-hover"
+              >
+                {textLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                {textLoading ? 'Creating Notes Deck…' : 'Create Notes Deck'}
+              </button>
+            </div>
           ) : (
             <div className="mt-4">
               <textarea
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                placeholder="Paste study notes here after sending to ai."
+                placeholder="Paste study notes or full CSV here after sending to ai."
                 rows={7}
                 className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:shadow-[0_0_10px_rgba(255,45,133,0.18)] transition-shadow resize-none"
               />
@@ -301,7 +375,7 @@ export default function UploadModal() {
                 className="mt-3 flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] transition-colors w-full justify-center squishy-btn"
               >
                 <Bot size={16} />
-                Copy to Claude
+                Copy Full Deck Prompt to Claude
               </button>
               <button
                 onClick={handleGenerate}
