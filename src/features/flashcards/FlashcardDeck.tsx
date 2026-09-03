@@ -4,7 +4,6 @@ import { Star, Mic, MicOff } from 'lucide-react'
 import type { Card } from '@/lib/zodSchemas'
 import StatBadge from '@/components/StatBadge'
 import MathFormattedText from '@/components/MathFormattedText'
-import RealtimeSpeechTracker from '@/components/RealtimeSpeechTracker'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { useState, useEffect } from 'react'
 
@@ -68,9 +67,6 @@ export default function FlashcardDeck({
     return () => clearTimeout(timeout)
   }, [userAnswer, isCorrectState, onVerify])
 
-  const spokenLive = (transcript + ' ' + interimTranscript).trim()
-  const targetReference = card.back || card.front
-
   return (
     <div
       className={`w-full ${animClass}`}
@@ -111,19 +107,7 @@ export default function FlashcardDeck({
             </div>
           </div>
           
-          <div className="interactive-area mt-2 w-full flex flex-col items-center gap-3 relative" onClick={(e) => e.stopPropagation()}>
-            {/* Real-time word tracking visual feedback */}
-            {spokenLive.length > 0 && (
-              <div className="w-full max-w-md">
-                <RealtimeSpeechTracker
-                  targetText={targetReference}
-                  spokenText={spokenLive}
-                  isListening={isListening}
-                  showSummary={true}
-                />
-              </div>
-            )}
-
+          <div className="interactive-area mt-2 w-full flex flex-col items-center gap-4 relative" onClick={(e) => e.stopPropagation()}>
             <input
               type="text"
               className="w-full max-w-sm text-center bg-[var(--color-surface-2)] border-b-2 border-transparent border-b-[var(--color-border)] px-4 py-2 text-lg font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-b-[var(--color-accent)] transition-colors"
@@ -136,28 +120,26 @@ export default function FlashcardDeck({
               }}
             />
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggleListening()
-                }}
-                className={`p-3.5 rounded-full transition-all shadow-md ${
-                  isListening 
-                    ? 'bg-[var(--color-know)]/20 text-[var(--color-know)] scale-110 animate-pulse' 
-                    : 'bg-[var(--color-surface-3)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)] hover:scale-105'
-                }`}
-                title={isListening ? "Stop listening" : "Start speaking"}
-              >
-                {isListening ? <Mic size={24} /> : <MicOff size={24} />}
-              </button>
-            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleListening()
+              }}
+              className={`p-4 rounded-full transition-all shadow-md ${
+                isListening 
+                  ? 'bg-[var(--color-know)]/20 text-[var(--color-know)] scale-110 animate-pulse' 
+                  : 'bg-[var(--color-surface-3)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)] hover:scale-105'
+              }`}
+              title={isListening ? "Stop listening" : "Start speaking"}
+            >
+              {isListening ? <Mic size={28} /> : <MicOff size={28} />}
+            </button>
 
-            <div className="flex flex-col items-center h-7">
+            <div className="flex flex-col items-center mt-1 h-8">
               <span className="text-xs text-[var(--color-text-muted)] h-4">
-                {isListening ? 'Listening in real-time...' : ''}
+                {isListening ? 'Listening...' : ''}
               </span>
-              <p className="text-xs text-[var(--color-text-muted)] text-center cursor-pointer hover:text-[var(--color-accent)] transition-colors mt-0.5" onClick={onFlip}>
+              <p className="text-xs text-[var(--color-text-muted)] text-center cursor-pointer hover:text-[var(--color-accent)] transition-colors mt-1" onClick={onFlip}>
                 Tap here or outside to reveal answer ↕
               </p>
             </div>
