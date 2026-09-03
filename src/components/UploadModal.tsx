@@ -37,7 +37,10 @@ Apply the correct comma-padding so optional values always map to the correct abs
   Format: "Description / Question","Term","Chapter","Subject","Lesson",definition,,,,,,,,,
 
 • keyword (NOTES TAB): Populate front with the Topic / Person / Section / Keyword, and back with structured notes, dates, or bullet points.
-  IMPORTANT DIRECTIVE FOR NOTES: Bold all critical terms, key vocabulary, labels, definitions, and dates in the back using markdown **term** or clear delimiters (e.g. "• **Accessibility** – usable by everyone...", "• **Born**: Feb 8, 1890 | **Died**: Oct 2, 1960"). This allows the app's Active Recall Tag Mode to mask these bolded key terms as interactive cloze blanks while keeping the title visible.
+  IMPORTANT DIRECTIVE FOR NOTES (STRICT BOLDING RULE):
+  - Bold ONLY the definition / term / label name itself at the start of each bullet point (e.g. "• **Accessibility** – usable by everyone...", "• **Born**: Feb 8, 1890 | **Died**: Oct 2, 1960").
+  - NEVER bold words inside the definition sentence or explanation body. DO NOT treat this like fill-in-the-blanks.
+  - The explanation/body MUST be regular plain text so only the term name itself gets masked during active recall.
   Format: "CLARO M. RECTO","• **Born**: Feb 8, 1890 | **Died**: Oct 2, 1960\n• **Parents**: Claro Recto Sr. & Micaela Mayo\n• **Spouses**: Angeles Silos, Aurora Reyes","Chapter","Subject","Lesson",keyword,,,,,,,,,
 
 • multiple_choice: Populate mc_correct and exactly three distractors.
@@ -79,9 +82,10 @@ const CLAUDE_NOTES_PROMPT_TEMPLATE = `Analyze the entire reference material and 
 • Generate EXCLUSIVELY "keyword" type rows for study notes.
 • The "front" MUST be the Topic / Keyword / Person / Concept / Section title.
 • The "back" MUST be rich, detailed, structured study notes, key dates, bullet points, definitions, formulas, or summaries. Use "\\n• " for bullet points.
-• MANDATORY DIRECTIVE FOR IMPORTANT DEFINITIONS & KEYWORDS:
-  Always bold important terms, definitions, key vocabulary, and sub-labels using markdown **word** or standard key-value delimiters (e.g., "• **Accessibility** – usable by everyone...", "• **HCI sits at intersection of**: Computer Science...", "• **Born**: Feb 8, 1890 | **Died**: Oct 2, 1960").
-  RATIONALE: In the app's Notes tab, users click the Tag icon to enter Active Recall Mode, which masks only these bolded key terms/definitions into interactive click-to-reveal cloze slots while leaving the Section Title visible.
+• MANDATORY DIRECTIVE FOR BOLDING KEYWORDS (STRICT RULE):
+  - Bold ONLY the definition / term / concept / label name itself at the start of each bullet point (e.g., "• **Accessibility** – usable by everyone...", "• **Born**: Feb 8, 1890 | **Died**: Oct 2, 1960").
+  - DO NOT bold words inside the explanation or sentence body (e.g., NEVER bold random words like "usable by **everyone** including people with **disabilities**"). THIS IS NOT A FILL-IN-THE-BLANKS QUIZ.
+  - The explanation body must remain plain text so the student can read the entire clue while the term name is masked.
 • Never omit important details, examples, or conditions.
 
 2. UNIFIED 15-COLUMN CSV SCHEMA
@@ -89,7 +93,7 @@ The header must be exactly this, word for word, no substitutions:
 front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,explanation,enum_items,id_answer,id_variants
 
 Every single row must have exactly 15 comma-separated values with type="keyword":
-"Topic / Concept / Keyword","• **Key Term 1** – Definition / explanation\\n• **Key Term 2**: Detailed notes\\n• **Date**: Feb 8, 1890","Chapter","Subject","Lesson",keyword,,,,,,,,,
+"Topic / Concept / Keyword","• **Key Term 1** – Definition and explanation in plain text\\n• **Key Term 2**: Detailed notes in plain text\\n• **Date**: Feb 8, 1890","Chapter","Subject","Lesson",keyword,,,,,,,,,
 
 3. SYNTAX & FORMATTING CONSTRAINTS
 Output ONLY the raw plain-text CSV. Do NOT output Markdown, do not explain anything, and do not number the rows.
