@@ -115,25 +115,11 @@ export default function StudyDashboard() {
     return [csvHeaders, ...csvRows].join('\n')
   }
 
-  const downloadCsvToFolder = (filename: string, csvContent: string) => {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
   const handlePublish = async (mode: 'overwrite' | 'append') => {
     if (!deck) return
     setPublishing(true)
     try {
       const csvContent = await buildDeckCsv()
-      const date = new Date().toISOString().split('T')[0]
-      const filename = mode === 'append'
-        ? `${deck.title ?? 'Deck'}-updated-${date}.csv`
-        : `${deck.title ?? 'Deck'}-${date}.csv`
 
       const res = await fetch('/api/publish', {
         method: 'POST',
@@ -151,14 +137,12 @@ export default function StudyDashboard() {
         throw new Error(resData.error || `Server error: ${res.status}`)
       }
 
-      downloadCsvToFolder(filename, csvContent)
-
       if (resData.appended) {
-        addToast('Added new cards on top of the published deck. CSV saved to your folder.', 'success')
+        addToast('Added new cards on top of the published deck.', 'success')
       } else if (resData.updated) {
-        addToast('Overwrote the published deck. CSV saved to your folder.', 'success')
+        addToast('Overwrote the published deck.', 'success')
       } else {
-        addToast('Published to the feed. CSV saved to your folder.', 'success')
+        addToast('Published to the feed successfully.', 'success')
       }
       setShowRepublish(false)
     } catch (err) {
