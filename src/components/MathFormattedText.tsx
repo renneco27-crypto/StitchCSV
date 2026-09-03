@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 
 const NON_FRACTION_WORDS = new Set(['and/or', 'true/false', 'yes/no', 'w/o', 'either/or', 'n/a', 'c/o', 'km/h', 'm/s', 'mph'])
 
@@ -48,12 +50,12 @@ export function formatMathString(text: string): (string | React.ReactElement)[] 
       <span
         key={`frac-${keyIdx++}`}
         className="inline-flex flex-col text-center align-middle mx-1 text-[0.88em] leading-tight select-text inline-block"
-        style={{ verticalAlign: '-0.35em' }}
+        style={{ verticalAlign: 'middle' }}
       >
-        <span className="border-b border-[var(--color-border-strong)] pb-[1.5px] px-1 font-semibold text-[var(--color-text-primary)] leading-none text-center">
+        <span className="border-b border-[var(--color-border-strong)] pb-[1px] px-1 font-semibold text-[var(--color-text-primary)] leading-none text-center">
           {formatSubSup(rawNum, `num-${keyIdx++}`)}
         </span>
-        <span className="pt-[1.5px] px-1 font-semibold text-[var(--color-text-primary)] leading-none text-center">
+        <span className="pt-[1px] px-1 font-semibold text-[var(--color-text-primary)] leading-none text-center">
           {formatSubSup(rawDenom, `denom-${keyIdx++}`)}
         </span>
       </span>
@@ -118,9 +120,104 @@ function formatSubSup(text: string, prefix: string): (string | React.ReactElemen
   return elements
 }
 
-export default function MathFormattedText({ text, className = '' }: { text: string; className?: string }) {
-  if (!text) return null
-  const formatted = formatMathString(text)
+interface MathFormattedTextProps {
+  text: string
+  className?: string
+  hideBold?: boolean
+}
 
-  return <span className={`inline-block ${className}`}>{formatted}</span>
+function MaskedClozeText({ text }: { text: string }) {
+  const [revealed, setRevealed] = useState(false)
+
+  if (revealed) {
+    return (
+      <span
+        onClick={(e) => {
+          e.stopPropagation()
+          setRevealed(false)
+        }}
+        className="font-bold text-[var(--color-accent)] bg-[var(--color-accent)]/10 px-1 py-0.5 rounded cursor-pointer transition-colors"
+        title="Click to hide"
+      >
+        {formatMathString(text)}
+      </span>
+    )
+  }
+
+  return (
+    <span
+      onClick={(e) => {
+        e.stopPropagation()
+        setRevealed(true)
+      }}
+      className="inline-block px-2 py-0.5 rounded bg-[var(--color-surface-3)] text-transparent select-none blur-[5px] hover:blur-none hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-all cursor-pointer font-bold align-baseline mx-0.5 shadow-sm"
+      title="Click or hover to reveal keyword"
+    >
+      <span className="inline-block">{formatMathString(text)}</span>
+    </span>
+  )
+}
+
+export default function MathFormattedText({
+  text,
+  className = '',
+  hideBold = false,
+}: MathFormattedTextProps) {
+  if (!text) return null
+
+  // Check for bold markdown **bold text** or <b>bold text</b>
+  const boldPattern = /\*\*([^*]+)\*\*|<b>([^<]+)<\/b>/g
+
+  if (!boldPattern.test(text)) {
+    const formatted = formatMathString(text)
+    return <span className={`inline-block ${className}`}>{formatted}</span>
+  }
+
+  boldPattern.lastIndex = 0
+  const parts: (string | React.ReactElement)[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let partIdx = 0
+
+  while ((match = boldPattern.exec(text)) !== null) {
+    const matchIndex = match.index
+    if (matchIndex > lastIndex) {
+      const normalChunk = text.substring(lastIndex, matchIndex)
+      parts.push(
+        <React.Fragment key={`norm-${partIdx++}`}>
+          {formatMathString(normalChunk)}
+        </React.Fragment>
+      )
+    }
+
+    const boldContent = (match[1] || match[2] || '').trim()
+
+    if (hideBold) {
+      parts.push(
+        <MaskedClozeText key={`cloze-${partIdx++}`} text={boldContent} />
+      )
+    } else {
+      parts.push(
+        <strong
+          key={`bold-${partIdx++}`}
+          className="font-bold text-[var(--color-text-primary)]"
+        >
+          {formatMathString(boldContent)}
+        </strong>
+      )
+    }
+
+    lastIndex = matchIndex + match[0].length
+  }
+
+  if (lastIndex < text.length) {
+    const remainingChunk = text.substring(lastIndex)
+    parts.push(
+      <React.Fragment key={`norm-${partIdx++}`}>
+        {formatMathString(remainingChunk)}
+      </React.Fragment>
+    )
+  }
+
+  return <span className={`inline-block ${className}`}>{parts}</span>
 }

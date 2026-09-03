@@ -2,20 +2,20 @@
 
 import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Eye, EyeOff, Search, ChevronDown, ChevronUp, Layers, Tag } from 'lucide-react'
+import { BookOpen, Eye, EyeOff, Search, ChevronDown, ChevronUp, Tag } from 'lucide-react'
 import { getCardsByDeck } from '@/db/cardRepository'
 import { getDeck } from '@/db/deckRepository'
 import TopBar from '@/components/TopBar'
 import MathFormattedText from '@/components/MathFormattedText'
 import type { Card, Deck } from '@/lib/zodSchemas'
 
-function FormattedNoteText({ text }: { text: string }) {
+function FormattedNoteText({ text, hideBold = false }: { text: string; hideBold?: boolean }) {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
 
   if (lines.length <= 1 && !text.includes('•') && !text.includes('|') && !text.includes(';')) {
     return (
       <div className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-        <MathFormattedText text={text} />
+        <MathFormattedText text={text} hideBold={hideBold} />
       </div>
     )
   }
@@ -50,11 +50,11 @@ function FormattedNoteText({ text }: { text: string }) {
                   const value = seg.slice(colonIdx + 1).trim()
                   return (
                     <span key={sIdx} className="inline-flex items-baseline gap-1">
-                      <span className="font-medium text-[var(--color-text-primary)]">
-                        <MathFormattedText text={label} />:
+                      <span className="font-semibold text-[var(--color-text-primary)]">
+                        <MathFormattedText text={label} hideBold={hideBold} />:
                       </span>
                       <span>
-                        <MathFormattedText text={value} />
+                        <MathFormattedText text={value} hideBold={hideBold} />
                       </span>
                     </span>
                   )
@@ -63,11 +63,11 @@ function FormattedNoteText({ text }: { text: string }) {
                   const value = seg.slice(dashIdx + 3).trim()
                   return (
                     <span key={sIdx} className="inline-flex items-baseline gap-1">
-                      <span className="font-medium text-[var(--color-text-primary)]">
-                        <MathFormattedText text={label} /> –
+                      <span className="font-semibold text-[var(--color-text-primary)]">
+                        <MathFormattedText text={label} hideBold={hideBold} /> –
                       </span>
                       <span>
-                        <MathFormattedText text={value} />
+                        <MathFormattedText text={value} hideBold={hideBold} />
                       </span>
                     </span>
                   )
@@ -75,7 +75,7 @@ function FormattedNoteText({ text }: { text: string }) {
 
                 return (
                   <span key={sIdx}>
-                    <MathFormattedText text={seg} />
+                    <MathFormattedText text={seg} hideBold={hideBold} />
                   </span>
                 )
               })}
@@ -93,7 +93,7 @@ function NotesContent({ deckId }: { deckId: string }) {
   const [keywords, setKeywords] = useState<Card[]>([])
   const [revealed, setRevealed] = useState<Set<string>>(new Set())
   const [revealAll, setRevealAll] = useState(true)
-  const [hideKeywords, setHideKeywords] = useState(false)
+  const [hideBoldKeywords, setHideBoldKeywords] = useState(false)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -176,16 +176,16 @@ function NotesContent({ deckId }: { deckId: string }) {
         rightSlot={
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
-              onClick={() => setHideKeywords(!hideKeywords)}
+              onClick={() => setHideBoldKeywords(!hideBoldKeywords)}
               className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
-                hideKeywords
-                  ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                hideBoldKeywords
+                  ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-sm'
                   : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
               }`}
-              title="Hide keywords to test yourself"
+              title={hideBoldKeywords ? "Show bolded words" : "Mask bolded/important words for active recall"}
             >
               <Tag size={13} />
-              <span className="hidden xs:inline">{hideKeywords ? 'Keywords Hidden' : 'Hide Keywords'}</span>
+              <span className="hidden xs:inline">{hideBoldKeywords ? 'Important Masked' : 'Mask Key Words'}</span>
             </button>
             <button
               onClick={handleToggleNotes}
@@ -235,25 +235,11 @@ function NotesContent({ deckId }: { deckId: string }) {
                       onClick={() => toggleReveal(card.id)}
                       className="flex items-start justify-between gap-3 cursor-pointer select-none group"
                     >
+                      {/* Note Title remains always visible */}
                       <div className="flex-1">
-                        {hideKeywords ? (
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              // click blurred keyword directly to reveal that specific one
-                            }}
-                            className="inline-block px-2 py-0.5 rounded bg-[var(--color-surface-3)] text-transparent select-none blur-[5px] hover:blur-none hover:text-[var(--color-text-primary)] transition-all cursor-pointer text-sm font-semibold"
-                            title="Hover or click to reveal keyword"
-                          >
-                            <span className="inline-block">
-                              <MathFormattedText text={card.front} />
-                            </span>
-                          </span>
-                        ) : (
-                          <h4 className="font-['Playfair_Display'] font-semibold text-[var(--color-text-primary)] text-base tracking-wide leading-snug">
-                            <MathFormattedText text={card.front} />
-                          </h4>
-                        )}
+                        <h4 className="font-['Playfair_Display'] font-semibold text-[var(--color-text-primary)] text-base tracking-wide leading-snug">
+                          <MathFormattedText text={card.front} hideBold={false} />
+                        </h4>
                       </div>
                       <span className="shrink-0 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] transition-colors mt-0.5">
                         {isRevealed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -262,7 +248,7 @@ function NotesContent({ deckId }: { deckId: string }) {
 
                     {isRevealed && (
                       <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
-                        <FormattedNoteText text={card.back} />
+                        <FormattedNoteText text={card.back} hideBold={hideBoldKeywords} />
                       </div>
                     )}
                   </div>
