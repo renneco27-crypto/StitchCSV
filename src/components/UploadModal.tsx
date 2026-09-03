@@ -13,7 +13,11 @@ const CLAUDE_PROMPT_TEMPLATE = `Analyze the entire reference material.
 Identify every distinct topic and subtopic.
 Extract every examinable fact, including definitions, formulas, theories, processes, rules, exceptions, examples, and conditions.
 Merge duplicate facts but NEVER omit unique information.
-Automatically determine how many flashcards are required based on the amount of unique examinable information. Do not create filler questions and do not skip important concepts.
+
+VOLUME RULES (MANDATORY):
+• Prioritize KEYWORD NOTES over flashcards. Put the bulk of unique information into keyword rows for the Notes tab (rich structured backs). Flashcards are a short review set, not a dump of every fact.
+• Flashcard-mode rows (type definition, concept, formula, process, or list) MUST NOT exceed 130 total. If more unique facts exist, keep them in keyword notes instead of extra flashcards. Do not create filler flashcards. Never emit two flashcards with the same back/answer.
+• Keyword notes have no 130 cap — extract thoroughly into notes. Quiz types (multiple_choice, true_false, enumeration, identification) should cover major topics but stay concise.
 Before finishing, internally verify that every major topic is represented.
 If the output reaches the response limit, stop only after completing the current CSV row and output exactly: CONTINUE_FROM_NEXT_ROW. When I reply with "Continue", resume immediately from the next unfinished row.
 
@@ -53,6 +57,7 @@ Wrap any field containing spaces, commas, newlines, punctuation, or quotes insid
 Enumeration items must be inside ONE cell, lowercase, separated with semicolons.
 Identification variants must be lowercase and separated with semicolons.
 MANDATORY TYPE DISTRIBUTION RULE: Generate cards of all relevant types (definition, keyword, multiple_choice, true_false, enumeration, identification).
+Most rows should be keyword notes. Flashcards (definition/concept/formula/process/list) are capped at 130 and should only cover the highest-yield examinable facts.
 For study notes, key dates, biographies, and section summaries, generate keyword note cards for the Notes study tab.
 
 TOPIC: [INSERT TOPIC]
