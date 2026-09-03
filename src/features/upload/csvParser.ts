@@ -331,6 +331,49 @@ function generateQuizItems(rows: CSVRow[], primarySubject: string): QuizItem[] {
   return quizItems
 }
 
+const PUBLISH_CSV_HEADER = 'front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,explanation,enum_items,id_answer,id_variants'
+
+function csvEscape(value: string): string {
+  const s = value ?? ''
+  return s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')
+    ? `"${s.replace(/"/g, '""')}"`
+    : s
+}
+
+function flashcardAnswerKey(row: CSVRow): string {
+  const t = row.type.toLowerCase().trim()
+  if (t === 'keyword' || t === 'true_false' || t === 'tf') return ''
+  return (row.back || row.mc_correct || row.id_answer || row.enum_items || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
+function rowToCsvLine(row: CSVRow): string {
+  return [
+    row.front, row.back, row.chapter, row.subject, row.lesson, row.type,
+    row.mc_correct ?? '', row.mc_distractor1 ?? '', row.mc_distractor2 ?? '', row.mc_distractor3 ?? '',
+    row.tf_answer ?? '', row.explanation ?? '', row.enum_items ?? '', row.id_answer ?? '', row.id_variants ?? '',
+  ].map(csvEscape).join(',')
+}
+
+/** Keep existing rows, then append incoming ones, dropping flashcards with the same answer. */
+export function mergeDeckCsv(existing: string, incoming: string): string {
+  const prior = parseCSV(existing)
+  const next = parseCSV(incoming)
+  const seen = new Set<string>()
+  const out: CSVRow[] = []
+  for (const row of [...prior, ...next]) {
+    const key = flashcardAnswerKey(row)
+    if (key) {
+      if (seen.has(key)) continue
+      seen.add(key)
+    }
+    out.push(row)
+  }
+  return [PUBLISH_CSV_HEADER, ...out.map(rowToCsvLine)].join('\n')
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function parseCSVFile(

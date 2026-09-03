@@ -63,19 +63,14 @@ export default function StudyDashboard() {
   }, [deckId, router, addToast, initStats])
 
   const [showCreator, setShowCreator] = useState(false)
-  const [showPublish, setShowPublish] = useState(false)
+  const [showRepublish, setShowRepublish] = useState(false)
   const [publishing, setPublishing] = useState(false)
-  const [authorName, setAuthorName] = useState('')
   const [canPublish, setCanPublish] = useState(true)
   const [editingTitle, setEditingTitle] = useState(false)
   const [editTitle, setEditTitle] = useState('')
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
-    supabase.auth.getUser().then(async ({ data }) => {
-      const email = data.user?.email ?? ''
-      if (email) setAuthorName(email.split('@')[0])
-    })
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return
       const res = await fetch('/api/session')
@@ -92,38 +87,53 @@ export default function StudyDashboard() {
     setEditingTitle(false)
   }
 
-  const handlePublish = async () => {
+  const buildDeckCsv = async () => {
+    const cards = await getCardsByDeck(deckId)
+    const hasCards = cards.length > 0
+    const hasQuizItems = (deck?.quizItems?.length ?? 0) > 0
+    if (!hasCards && !hasQuizItems) {
+      throw new Error('Cannot publish an empty deck')
+    }
+
+    const esc = (v: unknown) => {
+      const s = String(v ?? '')
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g, '""')}"` : s
+    }
+
+    const csvHeaders = 'front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,explanation,enum_items,id_answer,id_variants'
+    const csvRows: string[] = []
+
+    for (const c of cards) {
+      csvRows.push([
+        esc(c.front), esc(c.back), esc(c.chapter), esc(c.subject || deck?.subject), esc(c.lesson), esc(c.type),
+        esc(c.mc_correct), esc(c.mc_distractor1), esc(c.mc_distractor2), esc(c.mc_distractor3),
+        esc(c.tf_answer), '', esc(c.enum_items), esc(c.id_answer), esc(c.id_variants),
+      ].join(','))
+    }
+
+    return [csvHeaders, ...csvRows].join('\n')
+  }
+
+  const downloadCsvToFolder = (filename: string, csvContent: string) => {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handlePublish = async (mode: 'overwrite' | 'append') => {
     if (!deck) return
     setPublishing(true)
     try {
-      const cards = await getCardsByDeck(deckId)
-      const hasCards = cards.length > 0
-      const hasQuizItems = (deck.quizItems?.length ?? 0) > 0
-      if (!hasCards && !hasQuizItems) {
-        addToast('Cannot publish an empty deck', 'error')
-        return
-      }
-
-      const esc = (v: unknown) => {
-        const s = String(v ?? '')
-        return s.includes(',') || s.includes('"') || s.includes('\n')
-          ? `"${s.replace(/"/g, '""')}"` : s
-      }
-
-      const csvHeaders = 'front,back,chapter,subject,lesson,type,mc_correct,mc_distractor1,mc_distractor2,mc_distractor3,tf_answer,enum_items,id_answer,id_variants'
-      const csvRows: string[] = []
-
-      for (const c of cards) {
-        csvRows.push([
-          esc(c.front), esc(c.back), esc(c.chapter), esc(c.subject || deck.subject), esc(c.lesson), esc(c.type),
-          esc(c.mc_correct), esc(c.mc_distractor1), esc(c.mc_distractor2), esc(c.mc_distractor3),
-          esc(c.tf_answer), esc(c.enum_items), esc(c.id_answer), esc(c.id_variants),
-        ].join(','))
-      }
-
-      const csvContent = [csvHeaders, ...csvRows].join('\n')
-
-      const name = authorName || 'Anonymous'
+      const csvContent = await buildDeckCsv()
+      const date = new Date().toISOString().split('T')[0]
+      const filename = mode === 'append'
+        ? `${deck.title ?? 'Deck'}-updated-${date}.csv`
+        : `${deck.title ?? 'Deck'}-${date}.csv`
 
       const res = await fetch('/api/publish', {
         method: 'POST',
@@ -132,7 +142,7 @@ export default function StudyDashboard() {
           title: deck.title,
           subject: deck.subject,
           csvContent,
-          authorName: name,
+          mode,
         }),
       })
 
@@ -141,15 +151,37 @@ export default function StudyDashboard() {
         throw new Error(resData.error || `Server error: ${res.status}`)
       }
 
-      if (resData.updated) {
-        addToast('Updated existing published deck in the feed!', 'success')
+      downloadCsvToFolder(filename, csvContent)
+
+      if (resData.appended) {
+        addToast('Added new cards on top of the published deck. CSV saved to your folder.', 'success')
+      } else if (resData.updated) {
+        addToast('Overwrote the published deck. CSV saved to your folder.', 'success')
       } else {
-        addToast('Published! Anyone can now find your deck in the feed.', 'success')
+        addToast('Published to the feed. CSV saved to your folder.', 'success')
       }
-      setShowPublish(false)
+      setShowRepublish(false)
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to publish', 'error')
     } finally {
+      setPublishing(false)
+    }
+  }
+
+  const startPublish = async () => {
+    if (!deck) return
+    setPublishing(true)
+    try {
+      const res = await fetch(`/api/publish?title=${encodeURIComponent(deck.title ?? 'Deck')}`)
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.existing) {
+        setShowRepublish(true)
+        setPublishing(false)
+        return
+      }
+      await handlePublish('overwrite')
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to publish', 'error')
       setPublishing(false)
     }
   }
@@ -244,10 +276,11 @@ export default function StudyDashboard() {
              </button>
              {canPublish && (
                <button
-                 onClick={() => setShowPublish(true)}
+                 onClick={startPublish}
+                 disabled={publishing}
                  className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full col-span-2 sm:col-span-1 squishy-btn"
                >
-                 <Share2 size={16} /> Publish
+                 <Share2 size={16} /> {publishing ? 'Publishing…' : 'Publish'}
                </button>
              )}
            </div>
@@ -364,28 +397,35 @@ export default function StudyDashboard() {
         />
       )}
 
-      {showPublish && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowPublish(false)}>
+      {showRepublish && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !publishing && setShowRepublish(false)}>
           <div
             className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-sm p-6 cyber-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)] mb-4">Publish to Feed</h2>
+            <h2 className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)] mb-2">Republish deck</h2>
             <p className="text-sm text-[var(--color-text-muted)] mb-4">
-              Publishing as: <span className="text-[var(--color-text-primary)] font-medium">{authorName || 'Anonymous'}</span>
+              This title is already in the feed. Overwrite the current cards, or add these cards on top? Duplicate flashcard answers are dropped.
             </p>
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-col gap-2 mt-4">
               <button
-                onClick={handlePublish}
+                onClick={() => handlePublish('overwrite')}
                 disabled={publishing}
-                className="flex items-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex-1 squishy-btn cyber-glow-hover"
+                className="flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition-opacity squishy-btn cyber-glow-hover"
               >
-                {publishing ? 'Publishing…' : 'Publish'}
+                {publishing ? 'Publishing…' : 'Overwrite current cards'}
               </button>
               <button
-                onClick={() => setShowPublish(false)}
+                onClick={() => handlePublish('append')}
                 disabled={publishing}
-                className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] disabled:opacity-50 transition-colors squishy-btn"
+                className="flex items-center justify-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-6 py-3 rounded-xl font-medium border border-[var(--color-border)] hover:border-[var(--color-border-neon)] disabled:opacity-50 transition-colors squishy-btn"
+              >
+                Add cards on top
+              </button>
+              <button
+                onClick={() => setShowRepublish(false)}
+                disabled={publishing}
+                className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] py-2 disabled:opacity-50"
               >
                 Cancel
               </button>

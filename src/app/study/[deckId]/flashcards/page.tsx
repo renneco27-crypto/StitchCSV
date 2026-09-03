@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { X, Layers, List } from 'lucide-react'
+import { X, Layers, List, Shuffle } from 'lucide-react'
 import { getCardsByDeck, getCardsForReview } from '@/db/cardRepository'
 import { useFlashcardSession } from '@/hooks/useFlashcardSession'
+import { shuffleSeeded } from '@/lib/shuffleSeeded'
 import TopBar from '@/components/TopBar'
 import FlashcardProgress from '@/features/flashcards/FlashcardProgress'
 import FlashcardDeck from '@/features/flashcards/FlashcardDeck'
@@ -13,6 +14,22 @@ import SessionEndCard from '@/features/flashcards/SessionEndCard'
 import FlashcardListView from '@/features/flashcards/FlashcardListView'
 import type { Card } from '@/lib/zodSchemas'
 
+function uniqueByAnswer(cards: Card[]): Card[] {
+  const seen = new Set<string>()
+  const kept: Card[] = []
+  for (const card of cards) {
+    const key = (card.back ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
+    if (!key) {
+      kept.push(card)
+      continue
+    }
+    if (seen.has(key)) continue
+    seen.add(key)
+    kept.push(card)
+  }
+  return kept
+}
+
 export default function FlashcardsPage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -20,9 +37,11 @@ export default function FlashcardsPage() {
   const deckId = params.deckId as string
   const modeReview = searchParams.get('mode') === 'review'
 
-  const [cards, setCards] = useState<Card[]>([])
+  const [baseCards, setBaseCards] = useState<Card[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'stack' | 'list'>('stack')
+  const [randomMode, setRandomMode] = useState(false)
+  const [shuffleSeed, setShuffleSeed] = useState(1)
 
   useEffect(() => {
     const load = async () => {
@@ -36,14 +55,23 @@ export default function FlashcardsPage() {
       }
       if (modeReview) {
         const dueCards = await getCardsForReview(deckId, new Date())
-        setCards(dueCards.length > 0 ? dueCards : allCards)
+        const dueFiltered = dueCards.filter((c) => {
+          const t = (c.type as string).toLowerCase()
+          return t !== 'tf' && t !== 'true_false' && c.type !== 'keyword'
+        })
+        setBaseCards(uniqueByAnswer(dueFiltered.length > 0 ? dueFiltered : allCards))
       } else {
-        setCards(allCards)
+        setBaseCards(uniqueByAnswer(allCards))
       }
       setLoading(false)
     }
     load()
   }, [deckId, modeReview])
+
+  const cards = useMemo(
+    () => (randomMode ? shuffleSeeded(baseCards, shuffleSeed) : baseCards),
+    [baseCards, randomMode, shuffleSeed]
+  )
 
   const session = useFlashcardSession(deckId, cards)
 
@@ -235,11 +263,30 @@ export default function FlashcardsPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setViewMode(viewMode === 'stack' ? 'list' : 'stack')}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-sm font-semibold rounded-lg border border-purple-400/60 hover:bg-purple-500/10 text-purple-400 transition-colors"
               title={viewMode === 'stack' ? 'Switch to scrollable list' : 'Switch to flashcard stack'}
             >
-              {viewMode === 'stack' ? <List size={14} /> : <Layers size={14} />}
-              <span className="hidden sm:inline">{viewMode === 'stack' ? 'List View' : 'Card View'}</span>
+              {viewMode === 'stack' ? <List size={16} /> : <Layers size={16} />}
+              <span className="hidden sm:inline text-base font-semibold text-purple-400">{viewMode === 'stack' ? 'List View' : 'Card View'}</span>
+            </button>
+            <button
+              onClick={() => {
+                if (randomMode) {
+                  setRandomMode(false)
+                } else {
+                  setShuffleSeed((Date.now() % 2147483646) + 1)
+                  setRandomMode(true)
+                }
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                randomMode
+                  ? 'border-purple-400/60 text-purple-400 hover:bg-purple-500/10'
+                  : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
+              }`}
+              title={randomMode ? 'Disable random order' : 'Randomize card order'}
+            >
+              <Shuffle size={14} />
+              <span className="hidden sm:inline">{randomMode ? 'Random On' : 'Random'}</span>
             </button>
             <button
               onClick={session.handleEndSession}
@@ -255,7 +302,7 @@ export default function FlashcardsPage() {
       {viewMode === 'list' ? (
         <FlashcardListView
           cards={cards}
-          onCardDeleted={(deletedId) => setCards(prev => prev.filter(c => c.id !== deletedId))}
+          onCardDeleted={(deletedId) => setBaseCards(prev => prev.filter(c => c.id !== deletedId))}
         />
       ) : (
         <>

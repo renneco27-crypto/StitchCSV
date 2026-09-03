@@ -1,5 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabaseServer'
+import { mergeDeckCsv } from '@/features/upload/csvParser'
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createServerSupabase()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'You must be signed in to publish' }, { status: 401 })
+    }
+
+    const title = request.nextUrl.searchParams.get('title')?.trim()
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+    }
+
+    const { data: existingDeck } = await supabase
+      .from('decks')
+      .select('id')
+      .eq('title', title)
+      .maybeSingle()
+
+    return NextResponse.json({ existing: Boolean(existingDeck?.id) })
+  } catch (err) {
+    console.error('publish check error:', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Failed to check publish status' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +58,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Your account does not have publishing permission' }, { status: 403 })
     }
 
-    const { title, subject, csvContent } = await request.json()
+    const { title, subject, csvContent, mode } = await request.json()
+    const publishMode = mode === 'append' ? 'append' : 'overwrite'
 
     if (!title || !csvContent) {
       return NextResponse.json({ error: 'Title and CSV content are required' }, { status: 400 })
@@ -39,16 +74,20 @@ export async function POST(request: NextRequest) {
 
     const { data: existingDeck } = await supabase
       .from('decks')
-      .select('id')
+      .select('id, csv_content')
       .eq('title', title.trim())
-      .single()
+      .maybeSingle()
 
     if (existingDeck) {
+      const nextCsv = publishMode === 'append' && existingDeck.csv_content
+        ? mergeDeckCsv(existingDeck.csv_content, csvContent)
+        : csvContent
+
       const { data, error } = await supabase
         .from('decks')
         .update({
           subject: subject || 'General',
-          csv_content: csvContent,
+          csv_content: nextCsv,
           author_name: authorName,
           device_id: user.id,
         })
@@ -58,7 +97,7 @@ export async function POST(request: NextRequest) {
 
       if (error) throw error
 
-      return NextResponse.json({ id: data.id, updated: true })
+      return NextResponse.json({ id: data.id, updated: true, appended: publishMode === 'append' })
     }
 
     const { data, error } = await supabase
