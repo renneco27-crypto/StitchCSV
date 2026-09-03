@@ -18,6 +18,7 @@ VOLUME RULES (MANDATORY):
 • Prioritize KEYWORD NOTES over flashcards. Put the bulk of unique information into keyword rows for the Notes tab (rich structured backs). Flashcards are a short review set, not a dump of every fact.
 • Flashcard-mode rows (type definition, concept, formula, process, or list) MUST NOT exceed 130 total. If more unique facts exist, keep them in keyword notes instead of extra flashcards. Do not create filler flashcards. Never emit two flashcards with the same back/answer.
 • Keyword notes have no 130 cap — extract thoroughly into notes. Quiz types (multiple_choice, true_false, enumeration, identification) should cover major topics but stay concise.
+• TRUE/FALSE IS NEVER A FLASHCARD. True/False items belong ONLY in the True/False quiz. Use type true_false, leave the back column EMPTY, and never reuse that statement as a definition/concept/formula/process/list flashcard. Never set a flashcard back to True, False, true, or false.
 Before finishing, internally verify that every major topic is represented.
 If the output reaches the response limit, stop only after completing the current CSV row and output exactly: CONTINUE_FROM_NEXT_ROW. When I reply with "Continue", resume immediately from the next unfinished row.
 
@@ -42,7 +43,7 @@ Apply the correct comma-padding so optional values always map to the correct abs
   COLUMN COUNT RULE: After mc_distractor3 (column 10), there must be exactly 5 empty columns to reach column 15.
   Format: "Question","","Chapter","Subject","Lesson",multiple_choice,Correct,D1,D2,D3,,,,,
 
-• true_false: Populate tf_answer with "true" or "false" and explanation with a brief justification.
+• true_false (QUIZ ONLY — NEVER a flashcard): Populate tf_answer with "true" or "false" and explanation with a brief justification. Leave back EMPTY. Do not also emit this as a flashcard.
   Format: "Statement","","Chapter","Subject","Lesson",true_false,,,,,true,"Explanation",,,
 
 • enumeration: Populate enum_items only. Include exactly 6 empty commas after the type value.
@@ -58,6 +59,7 @@ Enumeration items must be inside ONE cell, lowercase, separated with semicolons.
 Identification variants must be lowercase and separated with semicolons.
 MANDATORY TYPE DISTRIBUTION RULE: Generate cards of all relevant types (definition, keyword, multiple_choice, true_false, enumeration, identification).
 Most rows should be keyword notes. Flashcards (definition/concept/formula/process/list) are capped at 130 and should only cover the highest-yield examinable facts.
+true_false rows are quiz-only and MUST NEVER appear as flashcards.
 For study notes, key dates, biographies, and section summaries, generate keyword note cards for the Notes study tab.
 
 TOPIC: [INSERT TOPIC]

@@ -183,7 +183,10 @@ export default function StudyDashboard() {
   const tfCount = deck?.quizItems.filter((q) => q.mode === 'true_false').length ?? 0
   const enumCount = deck?.quizItems.filter((q) => q.mode === 'enumeration').length ?? 0
   const keywordCount = deck?.cards.filter((c) => c.type === 'keyword').length ?? 0
-  const flashcardCount = deck?.cards.filter((c) => c.type !== 'keyword' && (c.type as string) !== 'tf').length ?? 0
+  const flashcardCount = deck?.cards.filter((c) => {
+    const t = (c.type as string).toLowerCase()
+    return t !== 'keyword' && t !== 'tf' && t !== 'true_false'
+  }).length ?? 0
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">

@@ -178,6 +178,9 @@ function buildCards(rows: CSVRow[], deckId: string, primarySubject: string): Car
 
     const type = row.type.toLowerCase().trim()
 
+    // True/False is quiz-only — never create a flashcard card for it
+    if (type === 'true_false' || type === 'tf') return
+
     const back = resolveBack(row)
     if (!back) return
 
