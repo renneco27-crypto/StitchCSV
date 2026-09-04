@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { X, Layers, List, Shuffle } from 'lucide-react'
+import { X, Layers, List, Shuffle, Volume2 } from 'lucide-react'
 import { getCardsByDeck, getCardsForReview } from '@/db/cardRepository'
 import { useFlashcardSession } from '@/hooks/useFlashcardSession'
 import { shuffleSeeded } from '@/lib/shuffleSeeded'
@@ -254,6 +254,19 @@ export default function FlashcardsPage() {
   // Glow hint for buttons during vertical swipe
   const swipeHint = dragY < -30 ? 'know' : dragY > 30 ? 'dontknow' : null
 
+  const [autoReadDeck, setAutoReadDeck] = useState(false)
+
+  const handleCardFinished = useCallback(() => {
+    if (!autoReadDeck) return
+    if (!session.isAnimating) {
+      if (session.cardIndex < session.currentBatch.length - 1 || session.batchIndex < session.totalBatches - 1) {
+        session.handleNext()
+      } else {
+        setAutoReadDeck(false)
+      }
+    }
+  }, [autoReadDeck, session])
+
   return (
     <div className="h-[100dvh] overflow-hidden bg-[var(--color-bg)] flex flex-col">
       <TopBar
@@ -261,6 +274,18 @@ export default function FlashcardsPage() {
         onBack={handleBack}
         rightSlot={
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setAutoReadDeck(!autoReadDeck)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                autoReadDeck
+                  ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                  : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
+              }`}
+              title={autoReadDeck ? 'Stop continuous auto-read across all cards' : 'Auto-read every card continuously in sequence'}
+            >
+              <Volume2 size={14} className={autoReadDeck ? 'animate-bounce' : ''} />
+              <span>{autoReadDeck ? 'Reading Deck...' : 'Read All Cards'}</span>
+            </button>
             <button
               onClick={() => setViewMode(viewMode === 'stack' ? 'list' : 'stack')}
               className="flex items-center gap-1.5 px-2.5 py-1 text-sm font-semibold rounded-lg border border-purple-400/60 hover:bg-purple-500/10 text-purple-400 transition-colors"
@@ -356,6 +381,9 @@ export default function FlashcardsPage() {
                   animationClass={isExiting ? 'none' : session.animationClass}
                   onFlip={session.handleFlip}
                   onVerify={session.handleVerifyAnswer}
+                  onCardFinished={handleCardFinished}
+                  autoAdvance={autoReadDeck}
+                  onToggleAutoAdvance={() => setAutoReadDeck(!autoReadDeck)}
                 />
               </div>
             ) : null}

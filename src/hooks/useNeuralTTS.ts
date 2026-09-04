@@ -105,10 +105,24 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
     }
   }, [])
 
+  const isPlayingRef = useRef(false)
+  const currentSpeakingIdRef = useRef<string | null>(null)
+
+  // Keep refs updated with state
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+  }, [isPlaying])
+
+  useEffect(() => {
+    currentSpeakingIdRef.current = currentSpeakingId
+  }, [currentSpeakingId])
+
   const stop = useCallback(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel()
     }
+    isPlayingRef.current = false
+    currentSpeakingIdRef.current = null
     setIsPlaying(false)
     setIsPaused(false)
     setCurrentSpeakingId(null)
@@ -118,11 +132,11 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
   }, [])
 
   const pause = useCallback(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window && isPlaying) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && isPlayingRef.current) {
       window.speechSynthesis.pause()
       setIsPaused(true)
     }
-  }, [isPlaying])
+  }, [])
 
   const resume = useCallback(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window && isPaused) {
@@ -135,14 +149,14 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
     (rawText: string, id: string = 'default', options?: SpeakOptions) => {
       if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
 
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel()
-
-      // If already playing the same item, stop it
-      if (isPlaying && currentSpeakingId === id) {
+      // If user clicks the currently speaking button, stop it
+      if (isPlayingRef.current && currentSpeakingIdRef.current === id) {
         stop()
         return
       }
+
+      // Cancel any ongoing speech before starting new one
+      window.speechSynthesis.cancel()
 
       // Clean speech text (strip markdown symbols like **, *, _, #, math brackets for smooth pronunciation)
       const cleanText = rawText

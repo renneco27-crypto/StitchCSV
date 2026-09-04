@@ -212,12 +212,15 @@ function NotesContent({ deckId }: { deckId: string }) {
     )
   }
 
-  const readNote = (card: Card) => {
+  const [autoReadIndex, setAutoReadIndex] = useState<number | null>(null)
+
+  const readNote = (card: Card, onFinished?: () => void) => {
     const frontSpeechId = `note-front-${card.id}`
     const backSpeechId = `note-back-${card.id}`
 
     if (currentSpeakingId === frontSpeechId || currentSpeakingId === backSpeechId) {
       stopTTS()
+      setAutoReadIndex(null)
       return
     }
 
@@ -229,11 +232,33 @@ function NotesContent({ deckId }: { deckId: string }) {
     speak(card.front, frontSpeechId, {
       onEnd: () => {
         setTimeout(() => {
-          speak(card.back, backSpeechId)
+          speak(card.back, backSpeechId, {
+            onEnd: () => {
+              if (onFinished) {
+                setTimeout(onFinished, 600)
+              }
+            }
+          })
         }, 350)
       }
     })
   }
+
+  // Sequentially read next note when autoReadIndex changes
+  useEffect(() => {
+    if (autoReadIndex === null) return
+    if (autoReadIndex >= filtered.length) {
+      setAutoReadIndex(null)
+      return
+    }
+
+    const currentCard = filtered[autoReadIndex]
+    readNote(currentCard, () => {
+      setAutoReadIndex((prev) => (prev !== null ? prev + 1 : null))
+    })
+  }, [autoReadIndex])
+
+  const isAutoReadingAll = autoReadIndex !== null || isTTSPlaying
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
@@ -244,22 +269,22 @@ function NotesContent({ deckId }: { deckId: string }) {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => {
-                if (isTTSPlaying) {
+                if (isAutoReadingAll) {
                   stopTTS()
+                  setAutoReadIndex(null)
                 } else if (filtered.length > 0) {
-                  // Read sequentially from first note
-                  readNote(filtered[0])
+                  setAutoReadIndex(0)
                 }
               }}
               className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
-                isTTSPlaying
+                isAutoReadingAll
                   ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
                   : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
               }`}
-              title={isTTSPlaying ? "Stop read aloud" : "Read note aloud with neural voice and word highlight"}
+              title={isAutoReadingAll ? "Stop reading all notes" : "Read every note continuously in sequence with neural speech"}
             >
-              {isTTSPlaying ? <VolumeX size={13} /> : <Volume2 size={13} />}
-              <span className="hidden xs:inline">{isTTSPlaying ? 'Stop TTS' : 'Read Notes'}</span>
+              {isAutoReadingAll ? <VolumeX size={13} /> : <Volume2 size={13} />}
+              <span className="hidden xs:inline">{isAutoReadingAll ? 'Stop All' : 'Read All Notes'}</span>
             </button>
             <button
               onClick={() => setHideBoldKeywords(!hideBoldKeywords)}

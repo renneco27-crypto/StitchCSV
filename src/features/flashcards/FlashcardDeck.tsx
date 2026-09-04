@@ -15,6 +15,9 @@ interface FlashcardDeckProps {
   animationClass: 'none' | 'slide-right' | 'slide-left' | 'slide-in'
   onFlip: () => void
   onVerify?: (answer: string) => Promise<{ correct: boolean, isEvaluated: boolean }>
+  onCardFinished?: () => void
+  autoAdvance?: boolean
+  onToggleAutoAdvance?: () => void
 }
 
 export default function FlashcardDeck({
@@ -22,7 +25,10 @@ export default function FlashcardDeck({
   isFlipped,
   animationClass,
   onFlip,
-  onVerify
+  onVerify,
+  onCardFinished,
+  autoAdvance = false,
+  onToggleAutoAdvance,
 }: FlashcardDeckProps) {
   const animClass =
     animationClass === 'none' ? '' : animationClass
@@ -60,7 +66,14 @@ export default function FlashcardDeck({
     setTranscript('')
     setIsCorrectState(null)
     stopTTS()
-  }, [card.id, setTranscript, stopTTS])
+
+    if (autoAdvance) {
+      const timer = setTimeout(() => {
+        readWholeCard(false)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [card.id, setTranscript, stopTTS, autoAdvance])
 
   // Auto-verify debounce
   useEffect(() => {
@@ -86,7 +99,13 @@ export default function FlashcardDeck({
     }
 
     if (startFromBack) {
-      speak(card.back, backSpeechId)
+      speak(card.back, backSpeechId, {
+        onEnd: () => {
+          if (onCardFinished) {
+            setTimeout(onCardFinished, 800)
+          }
+        }
+      })
     } else {
       speak(card.front, frontSpeechId, {
         onEnd: () => {
@@ -96,8 +115,14 @@ export default function FlashcardDeck({
           }
           // Small pause before speaking answer for natural speech cadence
           setTimeout(() => {
-            speak(card.back, backSpeechId)
-          }, 350)
+            speak(card.back, backSpeechId, {
+              onEnd: () => {
+                if (onCardFinished) {
+                  setTimeout(onCardFinished, 800)
+                }
+              }
+            })
+          }, 400)
         }
       })
     }
@@ -128,6 +153,22 @@ export default function FlashcardDeck({
               {card.chapter}
             </span>
             <div className="flex items-center gap-2">
+              {onToggleAutoAdvance && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggleAutoAdvance()
+                  }}
+                  className={`px-2 py-1 rounded-lg border text-xs font-semibold transition-all ${
+                    autoAdvance
+                      ? 'bg-purple-100 text-purple-700 border-purple-400 shadow-sm'
+                      : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-purple-600 hover:bg-[var(--color-surface-2)]'
+                  }`}
+                  title={autoAdvance ? "Auto read next card is ON" : "Auto read every card in sequence"}
+                >
+                  {autoAdvance ? 'Auto-Read: ON' : 'Read Deck'}
+                </button>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -138,10 +179,10 @@ export default function FlashcardDeck({
                     ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
                     : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-2)]'
                 }`}
-                title={isCardSpeaking ? "Stop read aloud" : "Read everything: question, then flip to answer with word highlight"}
+                title={isCardSpeaking ? "Stop read aloud" : "Read this card: question, then flip to answer with word highlight"}
               >
                 {isCardSpeaking ? <VolumeX size={15} /> : <Volume2 size={15} />}
-                <span className="hidden xs:inline">{isCardSpeaking ? 'Stop' : 'Read All'}</span>
+                <span className="hidden xs:inline">{isCardSpeaking ? 'Stop' : 'Read Card'}</span>
               </button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
