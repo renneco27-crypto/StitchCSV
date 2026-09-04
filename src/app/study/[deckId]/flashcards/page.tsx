@@ -225,6 +225,19 @@ export default function FlashcardsPage() {
     return () => window.removeEventListener('keydown', handler)
   }, [session, handleBack])
 
+  const [autoReadDeck, setAutoReadDeck] = useState(false)
+
+  const handleCardFinished = useCallback(() => {
+    if (!autoReadDeck) return
+    if (!session.isAnimating) {
+      if (session.cardIndex < session.currentBatch.length - 1 || session.batchIndex < session.totalBatches - 1) {
+        session.handleNext()
+      } else {
+        setAutoReadDeck(false)
+      }
+    }
+  }, [autoReadDeck, session])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
@@ -253,19 +266,6 @@ export default function FlashcardsPage() {
 
   // Glow hint for buttons during vertical swipe
   const swipeHint = dragY < -30 ? 'know' : dragY > 30 ? 'dontknow' : null
-
-  const [autoReadDeck, setAutoReadDeck] = useState(false)
-
-  const handleCardFinished = useCallback(() => {
-    if (!autoReadDeck) return
-    if (!session.isAnimating) {
-      if (session.cardIndex < session.currentBatch.length - 1 || session.batchIndex < session.totalBatches - 1) {
-        session.handleNext()
-      } else {
-        setAutoReadDeck(false)
-      }
-    }
-  }, [autoReadDeck, session])
 
   return (
     <div className="h-[100dvh] overflow-hidden bg-[var(--color-bg)] flex flex-col">

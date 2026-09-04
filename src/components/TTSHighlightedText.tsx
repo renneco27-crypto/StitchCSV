@@ -57,7 +57,7 @@ export default function TTSHighlightedText({
   const tokens = tokenizeTextWithOffsets(text)
 
   return (
-    <span className={`inline-block ${className}`}>
+    <span className={`inline ${className}`}>
       {tokens.map((token, index) => {
         // Check if this token intersects with the spoken char range
         const isSpoken =
@@ -66,21 +66,19 @@ export default function TTSHighlightedText({
         return (
           <React.Fragment key={index}>
             {index > 0 && ' '}
-            {isSpoken ? (
-              <span
-                className="inline-block px-1.5 py-0.5 rounded-md bg-blue-100 text-[#003bb3] font-bold border-2 border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.5)] ring-2 ring-blue-400/30 scale-105 transition-all duration-100 ease-out align-baseline"
-                style={{
-                  boxShadow: '0 0 10px rgba(0, 102, 255, 0.45)',
-                  backgroundColor: '#dbeafe',
-                  color: '#0033aa',
-                  borderColor: '#2563eb',
-                }}
-              >
-                {token.text}
-              </span>
-            ) : (
-              <span className="transition-colors duration-150">{token.text}</span>
-            )}
+            <span
+              className={`inline-block px-1 py-0.5 rounded-md border text-inherit transition-colors duration-150 align-baseline ${
+                isSpoken
+                  ? 'bg-blue-100/90 text-[#0033aa] font-bold border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.45)] ring-1 ring-blue-400/40'
+                  : 'border-transparent bg-transparent'
+              }`}
+              style={{
+                boxSizing: 'border-box',
+                lineHeight: 'inherit',
+              }}
+            >
+              {token.text}
+            </span>
           </React.Fragment>
         )
       })}
