@@ -17,10 +17,14 @@ export interface UseNeuralTTSReturn {
   stop: () => void
   pause: () => void
   resume: () => void
+  skipToNextSentence: () => void
+  skipToPrevSentence: () => void
   isPlaying: boolean
   isPaused: boolean
   currentSpeakingId: string | null
   currentWordRange: { start: number; end: number } | null
+  currentSentenceIndex: number
+  totalSentences: number
   supported: boolean
 }
 
@@ -68,16 +72,114 @@ function getBestNeuralVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoic
   return voices[0] || null
 }
 
+export interface SentenceSegment {
+  rawSentence: string
+  cleanSentence: string
+  rawStart: number
+  rawEnd: number
+}
+
+function cleanSpeechText(str: string): string {
+  return str
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/[#•]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Parses raw text into individual sentences with character start/end offsets
+ * mapped directly to the raw text for zero-latency streaming synthesis and precise highlighting.
+ */
+export function splitIntoSentences(rawText: string): SentenceSegment[] {
+  if (!rawText || !rawText.trim()) return []
+
+  const result: SentenceSegment[] = []
+
+  // Prefer native Intl.Segmenter if supported by browser environment
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    try {
+      const segmenter = new (Intl as any).Segmenter('en', { granularity: 'sentence' })
+      const iter = segmenter.segment(rawText)
+      for (const seg of iter) {
+        const str = seg.segment as string
+        const trimmed = str.trim()
+        if (trimmed) {
+          const leadOffset = str.indexOf(trimmed)
+          const rawStart = seg.index + (leadOffset >= 0 ? leadOffset : 0)
+          const rawEnd = rawStart + trimmed.length
+          const cleanSentence = cleanSpeechText(trimmed)
+          if (cleanSentence) {
+            result.push({
+              rawSentence: trimmed,
+              cleanSentence,
+              rawStart,
+              rawEnd,
+            })
+          }
+        }
+      }
+      if (result.length > 0) return result
+    } catch {
+      // Fallback to regex below
+    }
+  }
+
+  // Regex fallback: split by sentence delimiters (. ! ? or newlines)
+  const regex = /[^.!?\n\r]+(?:[.!?]+|\n+|$)/g
+  let m: RegExpExecArray | null
+  while ((m = regex.exec(rawText)) !== null) {
+    const full = m[0]
+    const trimmed = full.trim()
+    if (trimmed) {
+      const leadOffset = full.indexOf(trimmed)
+      const rawStart = m.index + (leadOffset >= 0 ? leadOffset : 0)
+      const rawEnd = rawStart + trimmed.length
+      const cleanSentence = cleanSpeechText(trimmed)
+      if (cleanSentence) {
+        result.push({
+          rawSentence: trimmed,
+          cleanSentence,
+          rawStart,
+          rawEnd,
+        })
+      }
+    }
+  }
+
+  if (result.length === 0 && rawText.trim()) {
+    const trimmed = rawText.trim()
+    const leadOffset = rawText.indexOf(trimmed)
+    const rawStart = leadOffset >= 0 ? leadOffset : 0
+    result.push({
+      rawSentence: trimmed,
+      cleanSentence: cleanSpeechText(trimmed),
+      rawStart,
+      rawEnd: rawStart + trimmed.length,
+    })
+  }
+
+  return result
+}
+
 export function useNeuralTTS(): UseNeuralTTSReturn {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [currentSpeakingId, setCurrentSpeakingId] = useState<string | null>(null)
   const [currentWordRange, setCurrentWordRange] = useState<{ start: number; end: number } | null>(null)
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
+  const [totalSentences, setTotalSentences] = useState(0)
   const [supported, setSupported] = useState(false)
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const voicesRef = useRef<SpeechSynthesisVoice[]>([])
-  const activeTextRef = useRef<string>('')
+  const activeSessionIdRef = useRef<number>(0)
+  const sentencesRef = useRef<SentenceSegment[]>([])
+  const currentSentenceIdxRef = useRef<number>(0)
+  const activeOptionsRef = useRef<SpeakOptions | undefined>(undefined)
+  const activeSpeakingIdRef = useRef<string | null>(null)
 
   // Initialize and load available voices
   useEffect(() => {
@@ -118,17 +220,23 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
   }, [currentSpeakingId])
 
   const stop = useCallback(() => {
+    activeSessionIdRef.current += 1
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel()
     }
     isPlayingRef.current = false
     currentSpeakingIdRef.current = null
+    activeSpeakingIdRef.current = null
+    sentencesRef.current = []
+    currentSentenceIdxRef.current = 0
+    utteranceRef.current = null
+
     setIsPlaying(false)
     setIsPaused(false)
     setCurrentSpeakingId(null)
     setCurrentWordRange(null)
-    utteranceRef.current = null
-    activeTextRef.current = ''
+    setCurrentSentenceIndex(0)
+    setTotalSentences(0)
   }, [])
 
   const pause = useCallback(() => {
@@ -145,6 +253,99 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
     }
   }, [isPaused])
 
+  const playSentenceAtIndex = useCallback((index: number, sessionId: number) => {
+    if (sessionId !== activeSessionIdRef.current) return
+    const sentences = sentencesRef.current
+    if (index >= sentences.length) {
+      // Completed all sentences
+      isPlayingRef.current = false
+      currentSpeakingIdRef.current = null
+      activeSpeakingIdRef.current = null
+      utteranceRef.current = null
+
+      setIsPlaying(false)
+      setIsPaused(false)
+      setCurrentSpeakingId(null)
+      setCurrentWordRange(null)
+
+      const onEnd = activeOptionsRef.current?.onEnd
+      if (onEnd) {
+        onEnd()
+      }
+      return
+    }
+
+    const currentSeg = sentences[index]
+    currentSentenceIdxRef.current = index
+    setCurrentSentenceIndex(index)
+
+    const utterance = new SpeechSynthesisUtterance(currentSeg.cleanSentence)
+    utteranceRef.current = utterance
+
+    const bestVoice = getBestNeuralVoice(voicesRef.current)
+    if (bestVoice) {
+      utterance.voice = bestVoice
+    }
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+
+    // Synchronized word boundary mapped back into rawText character offsets
+    utterance.onboundary = (event: SpeechSynthesisEvent) => {
+      if (sessionId !== activeSessionIdRef.current) return
+      if (event.name === 'word') {
+        const charIndex = event.charIndex
+        let charLength = event.charLength
+
+        if (!charLength || charLength <= 0) {
+          const remaining = currentSeg.cleanSentence.slice(charIndex)
+          const match = remaining.match(/^[\w'-]+/)
+          charLength = match ? match[0].length : 1
+        }
+
+        const spokenWord = currentSeg.cleanSentence.slice(charIndex, charIndex + charLength).trim()
+        let wordPos = -1
+        if (spokenWord) {
+          const searchStart = Math.max(0, charIndex - 12)
+          wordPos = currentSeg.rawSentence.indexOf(spokenWord, searchStart)
+          if (wordPos === -1) {
+            wordPos = currentSeg.rawSentence.indexOf(spokenWord)
+          }
+        }
+
+        const finalStart = currentSeg.rawStart + (wordPos !== -1 ? wordPos : charIndex)
+        const finalEnd = finalStart + (spokenWord ? spokenWord.length : charLength)
+
+        setCurrentWordRange({
+          start: finalStart,
+          end: finalEnd,
+        })
+      }
+    }
+
+    utterance.onstart = () => {
+      if (sessionId !== activeSessionIdRef.current) return
+      setIsPlaying(true)
+      setIsPaused(false)
+      setCurrentSpeakingId(activeSpeakingIdRef.current)
+    }
+
+    utterance.onend = () => {
+      if (sessionId !== activeSessionIdRef.current) return
+      // Play next sentence sequentially without buffering delay
+      playSentenceAtIndex(index + 1, sessionId)
+    }
+
+    utterance.onerror = (e) => {
+      if (sessionId !== activeSessionIdRef.current) return
+      if (e.error !== 'interrupted' && e.error !== 'canceled') {
+        console.warn('SpeechSynthesis sentence error:', e)
+        playSentenceAtIndex(index + 1, sessionId)
+      }
+    }
+
+    window.speechSynthesis.speak(utterance)
+  }, [])
+
   const speak = useCallback(
     (rawText: string, id: string = 'default', options?: SpeakOptions) => {
       if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
@@ -155,98 +356,66 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
         return
       }
 
-      // Cancel any ongoing speech before starting new one
-      window.speechSynthesis.cancel()
+      // Stop any prior speech and cancel
+      stop()
 
-      // Clean speech text (strip markdown symbols like **, *, _, #, math brackets for smooth pronunciation)
-      const cleanText = rawText
-        .replace(/\*\*([^*]+)\*\*/g, '$1')
-        .replace(/\*([^*]+)\*/g, '$1')
-        .replace(/`([^`]+)`/g, '$1')
-        .replace(/[#•]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
+      const sentences = splitIntoSentences(rawText)
+      if (sentences.length === 0) return
 
-      if (!cleanText) return
+      activeSessionIdRef.current += 1
+      const thisSessionId = activeSessionIdRef.current
 
-      activeTextRef.current = cleanText
-      const utterance = new SpeechSynthesisUtterance(cleanText)
-      utteranceRef.current = utterance
+      sentencesRef.current = sentences
+      currentSentenceIdxRef.current = 0
+      activeOptionsRef.current = options
+      activeSpeakingIdRef.current = id
 
-      // Assign best neural voice
-      const bestVoice = getBestNeuralVoice(voicesRef.current)
-      if (bestVoice) {
-        utterance.voice = bestVoice
-      }
-      utterance.rate = 1.0
-      utterance.pitch = 1.0
+      setTotalSentences(sentences.length)
+      setCurrentSentenceIndex(0)
+      setIsPlaying(true)
+      setIsPaused(false)
+      setCurrentSpeakingId(id)
 
-      // Word boundary event for synchronized word highlighting
-      utterance.onboundary = (event: SpeechSynthesisEvent) => {
-        if (event.name === 'word') {
-          const charIndex = event.charIndex
-          let charLength = event.charLength
-
-          // If browser doesn't provide charLength (e.g. some webkit builds), approximate word length
-          if (!charLength || charLength <= 0) {
-            const remaining = cleanText.slice(charIndex)
-            const match = remaining.match(/^[\w'-]+/)
-            charLength = match ? match[0].length : 1
-          }
-
-          setCurrentWordRange({
-            start: charIndex,
-            end: charIndex + charLength,
-          })
-        }
-      }
-
-      utterance.onstart = () => {
-        setIsPlaying(true)
-        setIsPaused(false)
-        setCurrentSpeakingId(id)
-        setCurrentWordRange(null)
-      }
-
-      const onEndCallback = options?.onEnd
-
-      utterance.onend = () => {
-        setIsPlaying(false)
-        setIsPaused(false)
-        setCurrentSpeakingId(null)
-        setCurrentWordRange(null)
-        utteranceRef.current = null
-        if (onEndCallback) {
-          onEndCallback()
-        }
-      }
-
-      utterance.onerror = (e) => {
-        // 'interrupted' is normal when user cancels or triggers another utterance
-        if (e.error !== 'interrupted' && e.error !== 'canceled') {
-          console.warn('SpeechSynthesis error:', e)
-        }
-        setIsPlaying(false)
-        setIsPaused(false)
-        setCurrentSpeakingId(null)
-        setCurrentWordRange(null)
-        utteranceRef.current = null
-      }
-
-      window.speechSynthesis.speak(utterance)
+      playSentenceAtIndex(0, thisSessionId)
     },
-    [isPlaying, currentSpeakingId, stop]
+    [stop, playSentenceAtIndex]
   )
+
+  const skipToNextSentence = useCallback(() => {
+    if (!isPlayingRef.current) return
+    const nextIdx = currentSentenceIdxRef.current + 1
+    if (nextIdx < sentencesRef.current.length) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel()
+      }
+      playSentenceAtIndex(nextIdx, activeSessionIdRef.current)
+    } else {
+      stop()
+    }
+  }, [playSentenceAtIndex, stop])
+
+  const skipToPrevSentence = useCallback(() => {
+    if (!isPlayingRef.current) return
+    const prevIdx = Math.max(0, currentSentenceIdxRef.current - 1)
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+    }
+    playSentenceAtIndex(prevIdx, activeSessionIdRef.current)
+  }, [playSentenceAtIndex])
 
   return {
     speak,
     stop,
     pause,
     resume,
+    skipToNextSentence,
+    skipToPrevSentence,
     isPlaying,
     isPaused,
     currentSpeakingId,
     currentWordRange,
+    currentSentenceIndex,
+    totalSentences,
     supported,
   }
 }

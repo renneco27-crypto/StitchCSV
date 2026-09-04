@@ -70,7 +70,7 @@ export default function FlashcardDeck({
     if (autoAdvance) {
       const timer = setTimeout(() => {
         readWholeCard(false)
-      }, 500)
+      }, 250)
       return () => clearTimeout(timer)
     }
   }, [card.id, setTranscript, stopTTS, autoAdvance])
@@ -102,7 +102,7 @@ export default function FlashcardDeck({
       speak(card.back, backSpeechId, {
         onEnd: () => {
           if (onCardFinished) {
-            setTimeout(onCardFinished, 800)
+            setTimeout(onCardFinished, 350)
           }
         }
       })
@@ -118,11 +118,11 @@ export default function FlashcardDeck({
             speak(card.back, backSpeechId, {
               onEnd: () => {
                 if (onCardFinished) {
-                  setTimeout(onCardFinished, 800)
+                  setTimeout(onCardFinished, 350)
                 }
               }
             })
-          }, 400)
+          }, 250)
         }
       })
     }
@@ -153,22 +153,6 @@ export default function FlashcardDeck({
               {card.chapter}
             </span>
             <div className="flex items-center gap-2">
-              {onToggleAutoAdvance && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onToggleAutoAdvance()
-                  }}
-                  className={`px-2 py-1 rounded-lg border text-xs font-semibold transition-all ${
-                    autoAdvance
-                      ? 'bg-purple-100 text-purple-700 border-purple-400 shadow-sm'
-                      : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-purple-600 hover:bg-[var(--color-surface-2)]'
-                  }`}
-                  title={autoAdvance ? "Auto read next card is ON" : "Auto read every card in sequence"}
-                >
-                  {autoAdvance ? 'Auto-Read: ON' : 'Read Deck'}
-                </button>
-              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation()

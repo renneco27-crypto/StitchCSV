@@ -67,10 +67,10 @@ export default function TTSHighlightedText({
           <React.Fragment key={index}>
             {index > 0 && ' '}
             <span
-              className={`inline-block px-1 py-0.5 rounded-md border text-inherit transition-colors duration-150 align-baseline ${
+              className={`inline-block px-1 py-0.5 rounded-md border transition-colors duration-150 align-baseline ${
                 isSpoken
-                  ? 'bg-blue-100/90 text-[#0033aa] font-bold border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.45)] ring-1 ring-blue-400/40'
-                  : 'border-transparent bg-transparent'
+                  ? 'bg-blue-100/95 text-[#002d99] border-blue-500 shadow-[0_0_8px_rgba(37,99,235,0.35)] ring-1 ring-blue-400/40'
+                  : 'border-transparent bg-transparent text-inherit'
               }`}
               style={{
                 boxSizing: 'border-box',
