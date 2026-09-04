@@ -1,0 +1,89 @@
+'use client'
+
+import React from 'react'
+
+interface WordToken {
+  text: string
+  start: number
+  end: number
+}
+
+/**
+ * Tokenizes text into words and punctuation while keeping track of character indices
+ * for clean highlighting during TTS speech playback.
+ */
+export function tokenizeTextWithOffsets(rawText: string): WordToken[] {
+  const tokens: WordToken[] = []
+  // Matches consecutive non-whitespace characters or individual words
+  const regex = /\S+/g
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(rawText)) !== null) {
+    tokens.push({
+      text: match[0],
+      start: match.index,
+      end: match.index + match[0].length,
+    })
+  }
+
+  return tokens
+}
+
+interface TTSHighlightedTextProps {
+  text: string
+  isSpeaking: boolean
+  wordRange: { start: number; end: number } | null
+  className?: string
+  fallbackComponent?: React.ReactNode
+}
+
+/**
+ * Renders text with a sleek, glowing rounded bounding box highlight around the currently spoken word.
+ * If not currently speaking or range is null, renders the normal text.
+ */
+export default function TTSHighlightedText({
+  text,
+  isSpeaking,
+  wordRange,
+  className = '',
+  fallbackComponent,
+}: TTSHighlightedTextProps) {
+  if (!isSpeaking || !wordRange) {
+    if (fallbackComponent) return <>{fallbackComponent}</>
+    return <span className={className}>{text}</span>
+  }
+
+  // Tokenize text into words with offset ranges
+  const tokens = tokenizeTextWithOffsets(text)
+
+  return (
+    <span className={`inline-block ${className}`}>
+      {tokens.map((token, index) => {
+        // Check if this token intersects with the spoken char range
+        const isSpoken =
+          wordRange.start < token.end && wordRange.end > token.start
+
+        return (
+          <React.Fragment key={index}>
+            {index > 0 && ' '}
+            {isSpoken ? (
+              <span
+                className="inline-block px-1.5 py-0.5 rounded-md bg-blue-100 text-[#003bb3] font-bold border-2 border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.5)] ring-2 ring-blue-400/30 scale-105 transition-all duration-100 ease-out align-baseline"
+                style={{
+                  boxShadow: '0 0 10px rgba(0, 102, 255, 0.45)',
+                  backgroundColor: '#dbeafe',
+                  color: '#0033aa',
+                  borderColor: '#2563eb',
+                }}
+              >
+                {token.text}
+              </span>
+            ) : (
+              <span className="transition-colors duration-150">{token.text}</span>
+            )}
+          </React.Fragment>
+        )
+      })}
+    </span>
+  )
+}

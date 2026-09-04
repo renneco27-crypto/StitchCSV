@@ -2,14 +2,39 @@
 
 import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Eye, EyeOff, Search, ChevronDown, ChevronUp, Tag } from 'lucide-react'
+import { BookOpen, Eye, EyeOff, Search, ChevronDown, ChevronUp, Tag, Volume2, VolumeX } from 'lucide-react'
 import { getCardsByDeck } from '@/db/cardRepository'
 import { getDeck } from '@/db/deckRepository'
 import TopBar from '@/components/TopBar'
 import MathFormattedText from '@/components/MathFormattedText'
+import TTSHighlightedText from '@/components/TTSHighlightedText'
+import { useNeuralTTS } from '@/hooks/useNeuralTTS'
 import type { Card, Deck } from '@/lib/zodSchemas'
 
-function FormattedNoteText({ text, hideBold = false }: { text: string; hideBold?: boolean }) {
+function FormattedNoteText({
+  text,
+  hideBold = false,
+  isSpeaking = false,
+  wordRange = null,
+}: {
+  text: string
+  hideBold?: boolean
+  isSpeaking?: boolean
+  wordRange?: { start: number; end: number } | null
+}) {
+  if (isSpeaking && wordRange) {
+    return (
+      <div className="text-sm text-[var(--color-text-secondary)] leading-relaxed pt-1">
+        <TTSHighlightedText
+          text={text}
+          isSpeaking={isSpeaking}
+          wordRange={wordRange}
+          fallbackComponent={<MathFormattedText text={text} hideBold={hideBold} />}
+        />
+      </div>
+    )
+  }
+
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
 
   // Split multiple lines or bullet points
@@ -107,6 +132,15 @@ function NotesContent({ deckId }: { deckId: string }) {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const { speak, stop: stopTTS, isPlaying: isTTSPlaying, currentSpeakingId, currentWordRange } = useNeuralTTS()
+
+  // Stop speech on unmount
+  useEffect(() => {
+    return () => {
+      stopTTS()
+    }
+  }, [stopTTS])
+
   useEffect(() => {
     async function load() {
       const [d, allCards] = await Promise.all([getDeck(deckId), getCardsByDeck(deckId)])
@@ -178,6 +212,29 @@ function NotesContent({ deckId }: { deckId: string }) {
     )
   }
 
+  const readNote = (card: Card) => {
+    const frontSpeechId = `note-front-${card.id}`
+    const backSpeechId = `note-back-${card.id}`
+
+    if (currentSpeakingId === frontSpeechId || currentSpeakingId === backSpeechId) {
+      stopTTS()
+      return
+    }
+
+    // Ensure note is expanded
+    if (!revealed.has(card.id)) {
+      toggleReveal(card.id)
+    }
+
+    speak(card.front, frontSpeechId, {
+      onEnd: () => {
+        setTimeout(() => {
+          speak(card.back, backSpeechId)
+        }, 350)
+      }
+    })
+  }
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       <TopBar
@@ -185,6 +242,25 @@ function NotesContent({ deckId }: { deckId: string }) {
         onBack={() => router.push(`/study/${deckId}`)}
         rightSlot={
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={() => {
+                if (isTTSPlaying) {
+                  stopTTS()
+                } else if (filtered.length > 0) {
+                  // Read sequentially from first note
+                  readNote(filtered[0])
+                }
+              }}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                isTTSPlaying
+                  ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                  : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
+              }`}
+              title={isTTSPlaying ? "Stop read aloud" : "Read note aloud with neural voice and word highlight"}
+            >
+              {isTTSPlaying ? <VolumeX size={13} /> : <Volume2 size={13} />}
+              <span className="hidden xs:inline">{isTTSPlaying ? 'Stop TTS' : 'Read Notes'}</span>
+            </button>
             <button
               onClick={() => setHideBoldKeywords(!hideBoldKeywords)}
               className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
@@ -236,6 +312,12 @@ function NotesContent({ deckId }: { deckId: string }) {
             <div className="flex flex-col gap-3">
               {cards.map(card => {
                 const isRevealed = revealed.has(card.id)
+                const frontSpeechId = `note-front-${card.id}`
+                const backSpeechId = `note-back-${card.id}`
+                const isFrontSpeaking = isTTSPlaying && currentSpeakingId === frontSpeechId
+                const isBackSpeaking = isTTSPlaying && currentSpeakingId === backSpeechId
+                const isNoteSpeaking = isFrontSpeaking || isBackSpeaking
+
                 return (
                   <div
                     key={card.id}
@@ -248,17 +330,72 @@ function NotesContent({ deckId }: { deckId: string }) {
                       {/* Note Title remains always visible */}
                       <div className="flex-1">
                         <h4 className="font-['Playfair_Display'] font-semibold text-[var(--color-text-primary)] text-base tracking-wide leading-snug">
-                          <MathFormattedText text={card.front} hideBold={false} />
+                          {isFrontSpeaking ? (
+                            <TTSHighlightedText
+                              text={card.front}
+                              isSpeaking={isFrontSpeaking}
+                              wordRange={currentWordRange}
+                              fallbackComponent={<MathFormattedText text={card.front} hideBold={false} />}
+                            />
+                          ) : (
+                            <MathFormattedText text={card.front} hideBold={false} />
+                          )}
                         </h4>
                       </div>
-                      <span className="shrink-0 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] transition-colors mt-0.5">
-                        {isRevealed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            readNote(card)
+                          }}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-all ${
+                            isNoteSpeaking
+                              ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                              : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-2)]'
+                          }`}
+                          title={isNoteSpeaking ? "Stop read aloud" : "Read entire note: title and details with word highlighting"}
+                        >
+                          {isNoteSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                          <span className="hidden xs:inline">{isNoteSpeaking ? 'Stop' : 'Read All'}</span>
+                        </button>
+                        <span className="text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] transition-colors">
+                          {isRevealed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </span>
+                      </div>
                     </div>
 
                     {isRevealed && (
                       <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
-                        <FormattedNoteText text={card.back} hideBold={hideBoldKeywords} />
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[11px] uppercase tracking-wider text-[var(--color-text-muted)] font-semibold">
+                            Details & Notes
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (isBackSpeaking) {
+                                stopTTS()
+                              } else {
+                                speak(card.back, backSpeechId)
+                              }
+                            }}
+                            className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded border transition-all ${
+                              isBackSpeaking
+                                ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                                : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-2)]'
+                            }`}
+                            title={isBackSpeaking ? "Stop read aloud" : "Read note body aloud with word highlighting"}
+                          >
+                            {isBackSpeaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                            <span className="text-[11px]">{isBackSpeaking ? 'Stop' : 'Listen Body'}</span>
+                          </button>
+                        </div>
+                        <FormattedNoteText
+                          text={card.back}
+                          hideBold={hideBoldKeywords}
+                          isSpeaking={isBackSpeaking}
+                          wordRange={currentWordRange}
+                        />
                       </div>
                     )}
                   </div>

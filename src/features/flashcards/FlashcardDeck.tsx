@@ -1,10 +1,12 @@
 'use client'
 
-import { Star, Mic, MicOff } from 'lucide-react'
+import { Star, Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
 import type { Card } from '@/lib/zodSchemas'
 import StatBadge from '@/components/StatBadge'
 import MathFormattedText from '@/components/MathFormattedText'
+import TTSHighlightedText from '@/components/TTSHighlightedText'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
+import { useNeuralTTS } from '@/hooks/useNeuralTTS'
 import { useState, useEffect } from 'react'
 
 interface FlashcardDeckProps {
@@ -33,13 +35,17 @@ export default function FlashcardDeck({
         : 'know'
 
   const { isListening, transcript, interimTranscript, toggleListening, stopListening, setTranscript } = useSpeechRecognition()
+  const { speak, stop: stopTTS, isPlaying: isTTSPlaying, currentSpeakingId, currentWordRange } = useNeuralTTS()
   const [userAnswer, setUserAnswer] = useState('')
   const [isCorrectState, setIsCorrectState] = useState<boolean | null>(null)
 
-  // Stop the mic when this card unmounts (card changed) so the next card's mic can start cleanly
+  // Stop mic and TTS when card changes or unmounts
   useEffect(() => {
-    return () => { stopListening() }
-  }, [stopListening])
+    return () => { 
+      stopListening()
+      stopTTS()
+    }
+  }, [stopListening, stopTTS, card.id])
 
   // Sync STT transcript with input
   useEffect(() => {
@@ -53,7 +59,8 @@ export default function FlashcardDeck({
     setUserAnswer('')
     setTranscript('')
     setIsCorrectState(null)
-  }, [card.id, setTranscript])
+    stopTTS()
+  }, [card.id, setTranscript, stopTTS])
 
   // Auto-verify debounce
   useEffect(() => {
@@ -66,6 +73,37 @@ export default function FlashcardDeck({
     }, 800)
     return () => clearTimeout(timeout)
   }, [userAnswer, isCorrectState, onVerify])
+
+  const frontSpeechId = `card-front-${card.id}`
+  const backSpeechId = `card-back-${card.id}`
+  const isFrontSpeaking = isTTSPlaying && currentSpeakingId === frontSpeechId
+  const isBackSpeaking = isTTSPlaying && currentSpeakingId === backSpeechId
+
+  const readWholeCard = (startFromBack = false) => {
+    if (isTTSPlaying) {
+      stopTTS()
+      return
+    }
+
+    if (startFromBack) {
+      speak(card.back, backSpeechId)
+    } else {
+      speak(card.front, frontSpeechId, {
+        onEnd: () => {
+          // Once front is finished, flip to back and read answer
+          if (!isFlipped) {
+            onFlip()
+          }
+          // Small pause before speaking answer for natural speech cadence
+          setTimeout(() => {
+            speak(card.back, backSpeechId)
+          }, 350)
+        }
+      })
+    }
+  }
+
+  const isCardSpeaking = isFrontSpeaking || isBackSpeaking
 
   return (
     <div
@@ -86,10 +124,25 @@ export default function FlashcardDeck({
           onClick={onFlip}
         >
           <div className="flex justify-between items-start">
-            <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
+            <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
               {card.chapter}
             </span>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  readWholeCard(false)
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                  isCardSpeaking
+                    ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                    : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-2)]'
+                }`}
+                title={isCardSpeaking ? "Stop read aloud" : "Read everything: question, then flip to answer with word highlight"}
+              >
+                {isCardSpeaking ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                <span className="hidden xs:inline">{isCardSpeaking ? 'Stop' : 'Read All'}</span>
+              </button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
@@ -103,7 +156,16 @@ export default function FlashcardDeck({
           </div>
           <div className="flex-1 overflow-auto py-4 flex items-center justify-center">
             <div className="font-['Playfair_Display'] text-xl sm:text-2xl md:text-3xl text-center text-[var(--color-text-primary)] break-words w-full">
-              <MathFormattedText text={card.front} />
+              {isFrontSpeaking ? (
+                <TTSHighlightedText
+                  text={card.front}
+                  isSpeaking={isFrontSpeaking}
+                  wordRange={currentWordRange}
+                  fallbackComponent={<MathFormattedText text={card.front} />}
+                />
+              ) : (
+                <MathFormattedText text={card.front} />
+              )}
             </div>
           </div>
           
@@ -116,7 +178,7 @@ export default function FlashcardDeck({
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => {
                 setUserAnswer(e.target.value)
-                setTranscript(e.target.value) // fix sync issue when deleting
+                setTranscript(e.target.value)
               }}
             />
 
@@ -153,14 +215,40 @@ export default function FlashcardDeck({
           onClick={onFlip}
         >
           <div className="flex justify-between items-start">
-            <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
+            <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
               {card.chapter}
             </span>
-            <StatBadge label={card.status} value="" color={statusColor} />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  readWholeCard(true)
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                  isCardSpeaking
+                    ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                    : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-2)]'
+                }`}
+                title={isCardSpeaking ? "Stop read aloud" : "Read answer with neural speech & word highlight"}
+              >
+                {isCardSpeaking ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                <span className="hidden xs:inline">{isCardSpeaking ? 'Stop' : 'Read All'}</span>
+              </button>
+              <StatBadge label={card.status} value="" color={statusColor} />
+            </div>
           </div>
           <div className="flex-1 overflow-auto py-4 flex items-center justify-center flex-col gap-3">
             <div className="text-lg sm:text-xl font-medium text-center text-[var(--color-text-primary)] break-words w-full">
-              <MathFormattedText text={card.back} />
+              {isBackSpeaking ? (
+                <TTSHighlightedText
+                  text={card.back}
+                  isSpeaking={isBackSpeaking}
+                  wordRange={currentWordRange}
+                  fallbackComponent={<MathFormattedText text={card.back} />}
+                />
+              ) : (
+                <MathFormattedText text={card.back} />
+              )}
             </div>
             {card.type === 'formula' && (
               <>

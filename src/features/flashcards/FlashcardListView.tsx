@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Eye, EyeOff, Trash2, CheckSquare, Square, AlertTriangle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Eye, EyeOff, Trash2, CheckSquare, Square, AlertTriangle, Volume2, VolumeX } from 'lucide-react'
 import { deleteCard, bulkDeleteCards } from '@/db/cardRepository'
 import { useToastStore } from '@/store/toastStore'
 import MathFormattedText from '@/components/MathFormattedText'
+import TTSHighlightedText from '@/components/TTSHighlightedText'
+import { useNeuralTTS } from '@/hooks/useNeuralTTS'
 import type { Card } from '@/lib/zodSchemas'
 
 interface FlashcardListViewProps {
@@ -24,6 +26,15 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
     cardIds: string[]
     description: string
   } | null>(null)
+
+  const { speak, stop: stopTTS, isPlaying: isTTSPlaying, currentSpeakingId, currentWordRange } = useNeuralTTS()
+
+  // Stop speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      stopTTS()
+    }
+  }, [stopTTS])
 
   const toggleSelectCard = (cardId: string) => {
     setSelectedIds((prev) => {
@@ -47,6 +58,16 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
       }
       return next
     })
+  }
+
+  const handleToggleHideAll = () => {
+    if (hideAnswers) {
+      setRevealedIds(new Set(cards.map(c => c.id)))
+      setHideAnswers(false)
+    } else {
+      setRevealedIds(new Set())
+      setHideAnswers(true)
+    }
   }
 
   const promptDeleteSingle = (card: Card) => {
@@ -103,92 +124,85 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
     })
   }
 
-  const filtered = cards.filter(c =>
-    !search ||
-    c.front.toLowerCase().includes(search.toLowerCase()) ||
-    c.back.toLowerCase().includes(search.toLowerCase()) ||
-    c.chapter.toLowerCase().includes(search.toLowerCase())
+  const filtered = cards.filter(
+    (c) =>
+      c.front.toLowerCase().includes(search.toLowerCase()) ||
+      c.back.toLowerCase().includes(search.toLowerCase()) ||
+      c.chapter.toLowerCase().includes(search.toLowerCase())
   )
 
   // Group by chapter
   const grouped = filtered.reduce<Record<string, Card[]>>((acc, card) => {
-    const ch = card.chapter || 'General'
-    if (!acc[ch]) acc[ch] = []
-    acc[ch].push(card)
+    const chapter = card.chapter || 'General'
+    if (!acc[chapter]) acc[chapter] = []
+    acc[chapter].push(card)
     return acc
   }, {})
 
-  const chapters = Object.keys(grouped)
-
   return (
-    <div className="flex-1 overflow-auto flex flex-col w-full">
-      {/* Search & Bulk Action Bar */}
-      <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/50 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto flex items-center gap-1.5 sm:gap-2">
-          <div className="relative flex-1 min-w-[120px]">
-            <Search size={14} className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search cards…"
-              className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs sm:text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
-            />
-          </div>
+    <div className="flex flex-col h-full">
+      {/* Controls Header */}
+      <div className="p-4 border-b border-[var(--color-border)] flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full sm:w-72">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search cards..."
+            className="w-full pl-9 pr-4 py-1.5 text-sm rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
+          />
+        </div>
 
-          {filtered.length > 0 && (
-            <button
-              onClick={() => toggleSelectAll(filtered)}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] transition-colors shrink-0"
-              title="Select / Deselect all visible cards"
-            >
-              <CheckSquare size={14} />
-              <span className="hidden sm:inline">Select All</span>
-            </button>
-          )}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+          <button
+            onClick={handleToggleHideAll}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] rounded-lg transition-colors"
+            title={hideAnswers ? "Show all answers" : "Hide all answers for active recall"}
+          >
+            {hideAnswers ? <Eye size={14} /> : <EyeOff size={14} />}
+            <span>{hideAnswers ? 'Show Answers' : 'Hide Answers'}</span>
+          </button>
 
           {selectedIds.size > 0 && (
             <button
               onClick={promptDeleteBulk}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-xl bg-[var(--color-dontknow)] text-white hover:opacity-90 transition-opacity shrink-0 shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--color-dontknow)] border border-[var(--color-dontknow)]/30 hover:bg-[var(--color-dontknow)]/10 rounded-lg transition-colors"
             >
               <Trash2 size={14} />
-              <span className="text-[11px] sm:text-xs">Delete ({selectedIds.size})</span>
+              <span>Delete ({selectedIds.size})</span>
             </button>
           )}
-
-          <button
-            onClick={() => {
-              setHideAnswers(!hideAnswers)
-              setRevealedIds(new Set())
-            }}
-            className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-xl border transition-colors shrink-0 ${
-              hideAnswers
-                ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
-                : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
-            }`}
-            title="Toggle hide answers to test your recall"
-          >
-            {hideAnswers ? <EyeOff size={14} /> : <Eye size={14} />}
-            <span className="hidden md:inline">{hideAnswers ? 'Answers Hidden' : 'Hide Answers'}</span>
-          </button>
         </div>
       </div>
 
-      {/* Cards List */}
-      <div className="flex-1 overflow-auto px-4 pb-12 pt-4 max-w-2xl mx-auto w-full">
-        {chapters.map(chapter => (
-          <div key={chapter} className="mb-6">
-            {chapters.length > 1 && (
-              <h3 className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-semibold mb-3 px-1 flex items-center gap-1.5">
+      {/* Cards List Grouped by Chapter */}
+      <div className="flex-1 overflow-auto p-4 space-y-6">
+        {Object.entries(grouped).map(([chapter, chapterCards]) => (
+          <div key={chapter} className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-semibold flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
                 {chapter}
               </h3>
-            )}
-            <div className="flex flex-col gap-3">
-              {grouped[chapter].map((card, i) => {
+              <button
+                onClick={() => toggleSelectAll(chapterCards)}
+                className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+              >
+                {chapterCards.every((c) => selectedIds.has(c.id))
+                  ? 'Deselect Chapter'
+                  : 'Select Chapter'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
+              {chapterCards.map((card, i) => {
                 const isHidden = hideAnswers && !revealedIds.has(card.id)
                 const isSelected = selectedIds.has(card.id)
+                const frontSpeechId = `list-front-${card.id}`
+                const backSpeechId = `list-back-${card.id}`
+                const isFrontSpeaking = isTTSPlaying && currentSpeakingId === frontSpeechId
+                const isBackSpeaking = isTTSPlaying && currentSpeakingId === backSpeechId
 
                 return (
                   <div
@@ -223,16 +237,55 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
                             </span>
                           )}
                         </div>
-                        <button
-                          onClick={() => promptDeleteSingle(card)}
-                          className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
-                          title="Delete card"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (isFrontSpeaking || isBackSpeaking) {
+                                stopTTS()
+                              } else {
+                                speak(card.front, frontSpeechId, {
+                                  onEnd: () => {
+                                    // Make sure answer is revealed
+                                    if (isHidden) {
+                                      toggleAnswer(card.id)
+                                    }
+                                    setTimeout(() => {
+                                      speak(card.back, backSpeechId)
+                                    }, 350)
+                                  }
+                                })
+                              }
+                            }}
+                            className={`p-1.5 rounded-lg border transition-all ${
+                              isFrontSpeaking || isBackSpeaking
+                                ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                                : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-2)]'
+                            }`}
+                            title={isFrontSpeaking || isBackSpeaking ? "Stop read aloud" : "Read everything: question and answer with word highlight"}
+                          >
+                            {isFrontSpeaking || isBackSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                          </button>
+                          <button
+                            onClick={() => promptDeleteSingle(card)}
+                            className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-dontknow)] hover:bg-[var(--color-dontknow)]/10 transition-colors"
+                            title="Delete card"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </div>
                       <div className="font-['Playfair_Display'] text-base sm:text-lg text-[var(--color-text-primary)] leading-snug">
-                        <MathFormattedText text={card.front} />
+                        {isFrontSpeaking ? (
+                          <TTSHighlightedText
+                            text={card.front}
+                            isSpeaking={isFrontSpeaking}
+                            wordRange={currentWordRange}
+                            fallbackComponent={<MathFormattedText text={card.front} />}
+                          />
+                        ) : (
+                          <MathFormattedText text={card.front} />
+                        )}
                       </div>
                     </div>
 
@@ -246,14 +299,36 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
                         isHidden ? 'cursor-pointer hover:bg-[var(--color-surface-3)]' : ''
                       }`}
                     >
-                      <p className="text-[11px] uppercase tracking-wider text-[var(--color-know)] mb-1 font-semibold flex items-center justify-between">
-                        <span>Answer</span>
+                      <div className="text-[11px] uppercase tracking-wider text-[var(--color-know)] mb-1 font-semibold flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span>Answer</span>
+                          {!isHidden && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (isBackSpeaking) {
+                                  stopTTS()
+                                } else {
+                                  speak(card.back, backSpeechId)
+                                }
+                              }}
+                              className={`p-1 rounded border transition-all ${
+                                isBackSpeaking
+                                  ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                                  : 'text-[var(--color-text-muted)] border-[var(--color-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-3)]'
+                              }`}
+                              title={isBackSpeaking ? "Stop read aloud" : "Read answer with neural speech & word highlight"}
+                            >
+                              {isBackSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                            </button>
+                          )}
+                        </div>
                         {isHidden && (
                           <span className="text-xs text-[var(--color-accent)] font-normal">
                             Click to reveal
                           </span>
                         )}
-                      </p>
+                      </div>
 
                       {isHidden ? (
                         <p className="text-sm text-transparent select-none blur-[6px]">
@@ -261,7 +336,16 @@ export default function FlashcardListView({ cards: initialCards, onCardDeleted }
                         </p>
                       ) : (
                         <div className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-line font-medium">
-                          <MathFormattedText text={card.back} />
+                          {isBackSpeaking ? (
+                            <TTSHighlightedText
+                              text={card.back}
+                              isSpeaking={isBackSpeaking}
+                              wordRange={currentWordRange}
+                              fallbackComponent={<MathFormattedText text={card.back} />}
+                            />
+                          ) : (
+                            <MathFormattedText text={card.back} />
+                          )}
                         </div>
                       )}
                     </div>
