@@ -17,8 +17,6 @@ interface FlashcardDeckProps {
   onVerify?: (answer: string) => Promise<{ correct: boolean, isEvaluated: boolean }>
   onCardFinished?: () => void
   autoAdvance?: boolean
-  readMode?: 'both' | 'answer' | 'question'
-  readSpeed?: number
   onToggleAutoAdvance?: () => void
 }
 
@@ -30,8 +28,6 @@ export default function FlashcardDeck({
   onVerify,
   onCardFinished,
   autoAdvance = false,
-  readMode = 'both',
-  readSpeed = 1.25,
   onToggleAutoAdvance,
 }: FlashcardDeckProps) {
   const animClass =
@@ -74,10 +70,10 @@ export default function FlashcardDeck({
     if (autoAdvance) {
       const timer = setTimeout(() => {
         readWholeCard(false)
-      }, 50)
+      }, 100)
       return () => clearTimeout(timer)
     }
-  }, [card.id, setTranscript, stopTTS, autoAdvance, readMode, readSpeed])
+  }, [card.id, setTranscript, stopTTS, autoAdvance])
 
   // Auto-verify debounce
   useEffect(() => {
@@ -102,39 +98,23 @@ export default function FlashcardDeck({
       return
     }
 
-    const effectiveMode = autoAdvance ? readMode : (startFromBack ? 'answer' : 'both')
-
-    if (effectiveMode === 'answer') {
-      if (!isFlipped) onFlip()
+    if (startFromBack) {
       speak(card.back, backSpeechId, {
-        rate: readSpeed,
-        onEnd: () => {
-          if (onCardFinished) onCardFinished()
-        }
-      })
-    } else if (effectiveMode === 'question') {
-      if (isFlipped) onFlip()
-      speak(card.front, frontSpeechId, {
-        rate: readSpeed,
         onEnd: () => {
           if (onCardFinished) onCardFinished()
         }
       })
     } else {
-      // Both (Question then Answer)
-      if (isFlipped) onFlip()
       speak(card.front, frontSpeechId, {
-        rate: readSpeed,
         onEnd: () => {
           if (!isFlipped) onFlip()
           setTimeout(() => {
             speak(card.back, backSpeechId, {
-              rate: readSpeed,
               onEnd: () => {
                 if (onCardFinished) onCardFinished()
               }
             })
-          }, 100)
+          }, 150)
         }
       })
     }

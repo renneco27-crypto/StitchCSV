@@ -32,54 +32,33 @@ export interface UseNeuralTTSReturn {
 }
 
 /**
- * Prioritizes local low-latency voices (localService === true) for instant, 0ms playback,
- * preventing the 1-3 second cloud WebSocket buffering delay caused by Edge online voices.
+ * Robust voice selector that reliably selects high quality English voices
+ * across Chrome, Edge, Safari, and Firefox.
  */
 function getBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null
 
-  // 1. First priority: FAST local voices (localService === true) - zero network lag!
-  const localEnglish = voices.filter((v) => v.lang.startsWith('en') && v.localService)
-  if (localEnglish.length > 0) {
-    // If there is an installed local natural or neural voice
-    const localNatural = localEnglish.find(
-      (v) => v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Enhanced')
-    )
-    if (localNatural) return localNatural
+  const englishVoices = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('en'))
+  const candidateVoices = englishVoices.length > 0 ? englishVoices : voices
 
-    // Windows local voices: David, Zira, Mark
-    const david = localEnglish.find((v) => v.name.includes('David'))
-    if (david) return david
-    const zira = localEnglish.find((v) => v.name.includes('Zira'))
-    if (zira) return zira
-    const mark = localEnglish.find((v) => v.name.includes('Mark'))
-    if (mark) return mark
+  const preferredNames = [
+    'Aria',
+    'Guy',
+    'Jenny',
+    'Natural',
+    'Neural',
+    'Google US English',
+    'David',
+    'Zira',
+    'Mark',
+  ]
 
-    return localEnglish[0]
+  for (const name of preferredNames) {
+    const match = candidateVoices.find((v) => v.name.includes(name))
+    if (match) return match
   }
 
-  // 2. Second priority: Any local voice
-  const anyLocal = voices.filter((v) => v.localService)
-  if (anyLocal.length > 0) return anyLocal[0]
-
-  // 3. Fallback: Edge / Bing Online voices (if no local voices installed)
-  const msNatural = voices.filter(
-    (v) =>
-      v.lang.startsWith('en') &&
-      (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online'))
-  )
-  if (msNatural.length > 0) {
-    const aria = msNatural.find((v) => v.name.includes('Aria'))
-    if (aria) return aria
-    const guy = msNatural.find((v) => v.name.includes('Guy'))
-    if (guy) return guy
-    return msNatural[0]
-  }
-
-  const english = voices.filter((v) => v.lang.startsWith('en'))
-  if (english.length > 0) return english[0]
-
-  return voices[0] || null
+  return candidateVoices[0] || null
 }
 
 export interface SentenceSegment {
@@ -100,17 +79,14 @@ function cleanSpeechText(str: string): string {
 }
 
 /**
- * Parses raw text into concise sentences and clauses with character start/end offsets
+ * Parses raw text into individual sentences with character start/end offsets
  * mapped directly to the raw text for zero-latency streaming synthesis and precise highlighting.
  */
 export function splitIntoSentences(rawText: string): SentenceSegment[] {
   if (!rawText || !rawText.trim()) return []
 
   const result: SentenceSegment[] = []
-
-  // Regex splitting by sentence punctuation (. ! ? \n) as well as clause delimiters (, ; : —)
-  // for long compound sentences so each audio chunk is short and speaks instantly.
-  const regex = /[^.!?\n\r,;:—]+(?:[.!?\n\r,;:—]+|$)/g
+  const regex = /[^.!?\n\r]+(?:[.!?\n\r]+|$)/g
   let m: RegExpExecArray | null
 
   while ((m = regex.exec(rawText)) !== null) {

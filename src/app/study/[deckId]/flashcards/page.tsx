@@ -226,8 +226,6 @@ export default function FlashcardsPage() {
   }, [session, handleBack])
 
   const [autoReadDeck, setAutoReadDeck] = useState(false)
-  const [readMode, setReadMode] = useState<'both' | 'answer' | 'question'>('both')
-  const [readSpeed, setReadSpeed] = useState<number>(1.25)
 
   const handleCardFinished = useCallback(() => {
     if (!autoReadDeck) return
@@ -276,44 +274,18 @@ export default function FlashcardsPage() {
         onBack={handleBack}
         rightSlot={
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="flex items-center bg-[var(--color-surface-2)] p-0.5 rounded-lg border border-[var(--color-border)]">
-              <button
-                onClick={() => setAutoReadDeck(!autoReadDeck)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border transition-all ${
-                  autoReadDeck
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm animate-pulse'
-                    : 'border-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-surface-3)]'
-                }`}
-                title={autoReadDeck ? 'Stop continuous auto-read across all cards' : 'Auto-read every card continuously in sequence'}
-              >
-                <Volume2 size={14} className={autoReadDeck ? 'animate-bounce' : ''} />
-                <span>{autoReadDeck ? 'Reading Deck...' : 'Read All Cards'}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  const speeds = [1, 1.25, 1.5, 2]
-                  const next = speeds[(speeds.indexOf(readSpeed) + 1) % speeds.length]
-                  setReadSpeed(next)
-                }}
-                className="px-2 py-1 text-xs font-bold rounded-md text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-3)] transition-colors"
-                title="Speech speed: Click to cycle (1x, 1.25x, 1.5x, 2x)"
-              >
-                {readSpeed}x
-              </button>
-
-              <button
-                onClick={() => {
-                  const modes: Array<'both' | 'answer' | 'question'> = ['both', 'answer', 'question']
-                  const next = modes[(modes.indexOf(readMode) + 1) % modes.length]
-                  setReadMode(next)
-                }}
-                className="hidden xs:inline-block px-2 py-1 text-xs font-medium rounded-md text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-3)] transition-colors border-l border-[var(--color-border)]"
-                title="Read mode: Click to cycle (Both Q&A, Answer Only, Question Only)"
-              >
-                {readMode === 'both' ? 'Both' : readMode === 'answer' ? 'Answer' : 'Question'}
-              </button>
-            </div>
+            <button
+              onClick={() => setAutoReadDeck(!autoReadDeck)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                autoReadDeck
+                  ? 'bg-blue-100 text-[#003bb3] border-blue-400 shadow-sm animate-pulse'
+                  : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
+              }`}
+              title={autoReadDeck ? 'Stop continuous auto-read across all cards' : 'Auto-read every card continuously in sequence'}
+            >
+              <Volume2 size={14} className={autoReadDeck ? 'animate-bounce' : ''} />
+              <span>{autoReadDeck ? 'Reading Deck...' : 'Read All Cards'}</span>
+            </button>
 
             <button
               onClick={() => setViewMode(viewMode === 'stack' ? 'list' : 'stack')}
@@ -412,8 +384,6 @@ export default function FlashcardsPage() {
                   onVerify={session.handleVerifyAnswer}
                   onCardFinished={handleCardFinished}
                   autoAdvance={autoReadDeck}
-                  readMode={readMode}
-                  readSpeed={readSpeed}
                   onToggleAutoAdvance={() => setAutoReadDeck(!autoReadDeck)}
                 />
               </div>
