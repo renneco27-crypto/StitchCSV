@@ -28,21 +28,21 @@ export default function ModeCard({
     <button
       onClick={() => !disabled && router.push(href)}
       disabled={disabled}
-      className="flex flex-col items-start gap-2.5 rounded-2xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-blue-300 hover:shadow-md disabled:opacity-40 disabled:pointer-events-none group"
+      className="glass-card rounded-2xl p-5 text-left transition-all hover:border-[#0052cc] glass-card-hover disabled:opacity-40 disabled:pointer-events-none group flex flex-col items-start gap-2.5"
     >
       <div
-        className="flex items-center justify-center w-11 h-11 rounded-xl shadow-inner transition-transform group-hover:scale-105"
-        style={{ backgroundColor: `${color}15`, color }}
+        className="flex items-center justify-center w-11 h-11 rounded-xl shadow-xs transition-transform group-hover:scale-105 border border-slate-300/60"
+        style={{ backgroundColor: `${color}18`, color }}
       >
-        <Icon size={22} />
+        <Icon size={22} strokeWidth={2.4} />
       </div>
       <div>
-        <span className="text-sm font-bold text-slate-800 group-hover:text-[#0052cc] transition-colors block">
+        <span className="text-sm font-black text-slate-950 group-hover:text-[#0052cc] transition-colors block">
           {label}
         </span>
-        <span className="text-xs text-slate-500 mt-0.5 block leading-relaxed">{description}</span>
+        <span className="text-xs font-bold text-slate-600 mt-0.5 block leading-relaxed">{description}</span>
       </div>
-      <span className="text-xs font-bold mt-auto pt-1" style={{ color }}>
+      <span className="text-xs font-black mt-auto pt-1" style={{ color }}>
         {count}
       </span>
     </button>

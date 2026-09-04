@@ -206,7 +206,7 @@ export default function StudyDashboard() {
   }).length ?? 0
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb]">
+    <div className="min-h-screen pb-16">
       <TopBar
         title={deck?.title ?? 'Deck'}
         onBack={() => router.push('/')}
@@ -214,7 +214,7 @@ export default function StudyDashboard() {
       />
 
       <div className="max-w-5xl mx-auto px-4 pt-6">
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6">
+        <div className="glass-card rounded-3xl p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               {editingTitle ? (
@@ -229,12 +229,12 @@ export default function StudyDashboard() {
                     }}
                     onBlur={handleSaveTitle}
                     autoFocus
-                    className="text-xl sm:text-2xl font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 w-full max-w-md focus:outline-none focus:border-[#0052cc]"
+                    className="text-xl sm:text-2xl font-black text-slate-950 bg-white/90 border border-slate-300 rounded-xl px-3 py-1.5 w-full max-w-md focus:outline-none focus:border-[#0052cc]"
                   />
                 </div>
               ) : (
                 <h1
-                  className="text-xl sm:text-2xl font-bold text-slate-800 break-words cursor-pointer hover:text-[#0052cc] transition-colors"
+                  className="text-xl sm:text-2xl font-black text-slate-950 break-words cursor-pointer hover:text-[#0052cc] transition-colors"
                   onClick={() => { setEditTitle(deck?.title ?? ''); setEditingTitle(true) }}
                   title="Click to edit title"
                 >
@@ -242,10 +242,10 @@ export default function StudyDashboard() {
                 </h1>
               )}
               <div className="mt-2 flex items-center gap-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#0052cc] border border-blue-100">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100/90 text-[#003bb3] border border-blue-300">
                   {deck?.subject ?? 'General'}
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg">
+                <span className="inline-flex items-center gap-1.5 text-xs font-black text-amber-950 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg">
                   <Flame size={14} className="text-amber-600 fill-amber-500" />
                   {stats?.studyStreak ?? 0} day streak
                 </span>
@@ -255,35 +255,35 @@ export default function StudyDashboard() {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setShowCreator(true)}
-                className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl font-bold border border-slate-200 transition-colors text-xs squishy-btn shadow-sm"
+                className="flex items-center gap-2 bg-white/80 hover:bg-white text-slate-800 px-4 py-2.5 rounded-xl font-bold border border-slate-300/80 transition-colors text-xs squishy-btn shadow-xs"
               >
-                <Plus size={15} /> Edit / Add Cards
+                <Plus size={15} strokeWidth={2.4} /> Edit / Add Cards
               </button>
               {canPublish && (
                 <button
                   onClick={startPublish}
                   disabled={publishing}
-                  className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2.5 rounded-xl font-bold transition-all text-xs squishy-btn shadow-sm cursor-pointer"
+                  className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#003bb3] text-white px-4 py-2.5 rounded-xl font-black transition-all text-xs squishy-btn shadow-sm cursor-pointer"
                 >
-                  <Share2 size={15} /> {publishing ? 'Publishing…' : 'Publish to Feed'}
+                  <Share2 size={15} strokeWidth={2.4} /> {publishing ? 'Publishing…' : 'Publish to Feed'}
                 </button>
               )}
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+          <div className="mt-6 pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
             <div className="flex items-center gap-4">
               <ProgressRing value={progress} size={72} />
               <div className="flex flex-col gap-1">
-                <span className="text-sm font-bold text-slate-800">Mastery Rate: {Math.round(progress)}%</span>
+                <span className="text-sm font-black text-slate-950">Mastery Rate: {Math.round(progress)}%</span>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-950 font-black border border-emerald-300">
                     {masteredCount} Mastered
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold border border-amber-100">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950 font-black border border-amber-300">
                     {learningCount} Learning
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-[#0052cc] font-semibold border border-blue-100">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-[#003bb3] font-black border border-blue-300">
                     {newCount} New
                   </span>
                 </div>
@@ -295,18 +295,18 @@ export default function StudyDashboard() {
 
       {dueCount > 0 && (
         <div className="max-w-5xl mx-auto px-4 mb-6">
-          <div className="bg-white border-l-4 border-[#0052cc] rounded-2xl p-4 flex justify-between items-center shadow-sm border border-slate-200">
+          <div className="glass-card border-l-4 border-l-[#0052cc] rounded-2xl p-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0052cc] flex items-center justify-center">
-                <Bell size={16} />
+              <div className="w-9 h-9 rounded-xl bg-blue-100 text-[#003bb3] border border-blue-300 flex items-center justify-center">
+                <Bell size={18} strokeWidth={2.4} />
               </div>
-              <span className="text-xs sm:text-sm font-bold text-slate-800">
+              <span className="text-xs sm:text-sm font-black text-slate-950">
                 {dueCount} cards due for active review today
               </span>
             </div>
             <button
               onClick={() => router.push(`/study/${deckId}/flashcards?mode=review`)}
-              className="text-xs font-bold text-white bg-[#0052cc] hover:bg-[#0047b3] px-3.5 py-2 rounded-xl transition-all shadow-sm"
+              className="text-xs font-black text-white bg-[#0052cc] hover:bg-[#003bb3] px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
             >
               Start review →
             </button>
@@ -315,7 +315,7 @@ export default function StudyDashboard() {
       )}
 
       <div className="max-w-5xl mx-auto px-4">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+        <p className="text-xs font-black uppercase tracking-wider text-slate-700 mb-3">
           Select Study Mode
         </p>
       </div>
