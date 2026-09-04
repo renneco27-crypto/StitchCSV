@@ -10,6 +10,7 @@ export interface WordBoundary {
 
 export interface SpeakOptions {
   onEnd?: () => void
+  rate?: number
 }
 
 export interface UseNeuralTTSReturn {
@@ -19,6 +20,8 @@ export interface UseNeuralTTSReturn {
   resume: () => void
   skipToNextSentence: () => void
   skipToPrevSentence: () => void
+  setSpeechRate: (rate: number) => void
+  speechRate: number
   isPlaying: boolean
   isPaused: boolean
   currentSpeakingId: string | null
@@ -29,45 +32,52 @@ export interface UseNeuralTTSReturn {
 }
 
 /**
- * Finds the best neural voice available in the browser.
- * Prioritizes Microsoft Natural / Bing Neural voices (e.g. Aria, Guy, Jenny, Ryan)
- * which are native in Edge and Windows, then falls back to Google / Apple / system English voices.
+ * Prioritizes local low-latency voices (localService === true) for instant, 0ms playback,
+ * preventing the 1-3 second cloud WebSocket buffering delay caused by Edge online voices.
  */
-function getBestNeuralVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+function getBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null
 
-  // 1. First priority: Microsoft Edge / Bing Natural Neural voices
-  const msNaturalVoices = voices.filter(
+  // 1. First priority: FAST local voices (localService === true) - zero network lag!
+  const localEnglish = voices.filter((v) => v.lang.startsWith('en') && v.localService)
+  if (localEnglish.length > 0) {
+    // If there is an installed local natural or neural voice
+    const localNatural = localEnglish.find(
+      (v) => v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Enhanced')
+    )
+    if (localNatural) return localNatural
+
+    // Windows local voices: David, Zira, Mark
+    const david = localEnglish.find((v) => v.name.includes('David'))
+    if (david) return david
+    const zira = localEnglish.find((v) => v.name.includes('Zira'))
+    if (zira) return zira
+    const mark = localEnglish.find((v) => v.name.includes('Mark'))
+    if (mark) return mark
+
+    return localEnglish[0]
+  }
+
+  // 2. Second priority: Any local voice
+  const anyLocal = voices.filter((v) => v.localService)
+  if (anyLocal.length > 0) return anyLocal[0]
+
+  // 3. Fallback: Edge / Bing Online voices (if no local voices installed)
+  const msNatural = voices.filter(
     (v) =>
       v.lang.startsWith('en') &&
       (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online'))
   )
-  if (msNaturalVoices.length > 0) {
-    // Prefer Aria or Guy or Jenny if available
-    const aria = msNaturalVoices.find((v) => v.name.includes('Aria'))
+  if (msNatural.length > 0) {
+    const aria = msNatural.find((v) => v.name.includes('Aria'))
     if (aria) return aria
-    const guy = msNaturalVoices.find((v) => v.name.includes('Guy'))
+    const guy = msNatural.find((v) => v.name.includes('Guy'))
     if (guy) return guy
-    const jenny = msNaturalVoices.find((v) => v.name.includes('Jenny'))
-    if (jenny) return jenny
-    return msNaturalVoices[0]
+    return msNatural[0]
   }
 
-  // 2. Second priority: Google or Apple Neural/Enhanced US English
-  const enhancedVoices = voices.filter(
-    (v) =>
-      v.lang.startsWith('en') &&
-      (v.name.includes('Google') || v.name.includes('Enhanced') || v.name.includes('Premium'))
-  )
-  if (enhancedVoices.length > 0) {
-    return enhancedVoices[0]
-  }
-
-  // 3. Fallback: Any English voice
-  const englishVoices = voices.filter((v) => v.lang.startsWith('en'))
-  if (englishVoices.length > 0) {
-    return englishVoices[0]
-  }
+  const english = voices.filter((v) => v.lang.startsWith('en'))
+  if (english.length > 0) return english[0]
 
   return voices[0] || null
 }
@@ -90,7 +100,7 @@ function cleanSpeechText(str: string): string {
 }
 
 /**
- * Parses raw text into individual sentences with character start/end offsets
+ * Parses raw text into concise sentences and clauses with character start/end offsets
  * mapped directly to the raw text for zero-latency streaming synthesis and precise highlighting.
  */
 export function splitIntoSentences(rawText: string): SentenceSegment[] {
@@ -98,38 +108,11 @@ export function splitIntoSentences(rawText: string): SentenceSegment[] {
 
   const result: SentenceSegment[] = []
 
-  // Prefer native Intl.Segmenter if supported by browser environment
-  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
-    try {
-      const segmenter = new (Intl as any).Segmenter('en', { granularity: 'sentence' })
-      const iter = segmenter.segment(rawText)
-      for (const seg of iter) {
-        const str = seg.segment as string
-        const trimmed = str.trim()
-        if (trimmed) {
-          const leadOffset = str.indexOf(trimmed)
-          const rawStart = seg.index + (leadOffset >= 0 ? leadOffset : 0)
-          const rawEnd = rawStart + trimmed.length
-          const cleanSentence = cleanSpeechText(trimmed)
-          if (cleanSentence) {
-            result.push({
-              rawSentence: trimmed,
-              cleanSentence,
-              rawStart,
-              rawEnd,
-            })
-          }
-        }
-      }
-      if (result.length > 0) return result
-    } catch {
-      // Fallback to regex below
-    }
-  }
-
-  // Regex fallback: split by sentence delimiters (. ! ? or newlines)
-  const regex = /[^.!?\n\r]+(?:[.!?]+|\n+|$)/g
+  // Regex splitting by sentence punctuation (. ! ? \n) as well as clause delimiters (, ; : —)
+  // for long compound sentences so each audio chunk is short and speaks instantly.
+  const regex = /[^.!?\n\r,;:—]+(?:[.!?\n\r,;:—]+|$)/g
   let m: RegExpExecArray | null
+
   while ((m = regex.exec(rawText)) !== null) {
     const full = m[0]
     const trimmed = full.trim()
@@ -171,6 +154,7 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
   const [currentWordRange, setCurrentWordRange] = useState<{ start: number; end: number } | null>(null)
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
   const [totalSentences, setTotalSentences] = useState(0)
+  const [speechRate, setSpeechRate] = useState<number>(1.25)
   const [supported, setSupported] = useState(false)
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
@@ -282,11 +266,12 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
     const utterance = new SpeechSynthesisUtterance(currentSeg.cleanSentence)
     utteranceRef.current = utterance
 
-    const bestVoice = getBestNeuralVoice(voicesRef.current)
+    const bestVoice = getBestVoice(voicesRef.current)
     if (bestVoice) {
       utterance.voice = bestVoice
     }
-    utterance.rate = 1.0
+    const effectiveRate = activeOptionsRef.current?.rate ?? speechRate ?? 1.25
+    utterance.rate = Math.max(0.5, Math.min(2.5, effectiveRate))
     utterance.pitch = 1.0
 
     // Synchronized word boundary mapped back into rawText character offsets
@@ -332,7 +317,9 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
     utterance.onend = () => {
       if (sessionId !== activeSessionIdRef.current) return
       // Play next sentence sequentially without buffering delay
-      playSentenceAtIndex(index + 1, sessionId)
+      setTimeout(() => {
+        playSentenceAtIndex(index + 1, sessionId)
+      }, 5)
     }
 
     utterance.onerror = (e) => {
@@ -410,6 +397,8 @@ export function useNeuralTTS(): UseNeuralTTSReturn {
     resume,
     skipToNextSentence,
     skipToPrevSentence,
+    setSpeechRate,
+    speechRate,
     isPlaying,
     isPaused,
     currentSpeakingId,
