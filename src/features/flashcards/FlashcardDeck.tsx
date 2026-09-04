@@ -7,7 +7,7 @@ import MathFormattedText from '@/components/MathFormattedText'
 import TTSHighlightedText from '@/components/TTSHighlightedText'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { useNeuralTTS } from '@/hooks/useNeuralTTS'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface FlashcardDeckProps {
   card: Card
@@ -60,20 +60,46 @@ export default function FlashcardDeck({
     }
   }, [transcript, interimTranscript])
 
-  // Reset answer when card changes
-  useEffect(() => {
-    setUserAnswer('')
-    setTranscript('')
-    setIsCorrectState(null)
-    stopTTS()
+  const frontSpeechId = `card-front-${card.id}`
+  const backSpeechId = `card-back-${card.id}`
+  const isFrontSpeaking = isTTSPlaying && currentSpeakingId === frontSpeechId
+  const isBackSpeaking = isTTSPlaying && currentSpeakingId === backSpeechId
 
-    if (autoAdvance) {
-      const timer = setTimeout(() => {
-        readWholeCard(false)
-      }, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [card.id, setTranscript, stopTTS, autoAdvance])
+  const readWholeCard = useCallback(
+    (startFromBack = false) => {
+      if (isTTSPlaying) {
+        stopTTS()
+        return
+      }
+
+      if (startFromBack) {
+        speak(card.back, backSpeechId, {
+          onEnd: () => {
+            if (onCardFinished) onCardFinished()
+          }
+        })
+      } else {
+        speak(card.front, frontSpeechId, {
+          onEnd: () => {
+            if (!isFlipped) onFlip()
+            setTimeout(() => {
+              speak(card.back, backSpeechId, {
+                onEnd: () => {
+                  if (onCardFinished) onCardFinished()
+                }
+              })
+            }, 150)
+          }
+        })
+      }
+    },
+    [isTTSPlaying, stopTTS, speak, card.back, card.front, backSpeechId, frontSpeechId, isFlipped, onFlip, onCardFinished]
+  )
+
+  const readWholeCardRef = useRef(readWholeCard)
+  useEffect(() => {
+    readWholeCardRef.current = readWholeCard
+  }, [readWholeCard])
 
   // Auto-verify debounce
   useEffect(() => {
@@ -87,38 +113,20 @@ export default function FlashcardDeck({
     return () => clearTimeout(timeout)
   }, [userAnswer, isCorrectState, onVerify])
 
-  const frontSpeechId = `card-front-${card.id}`
-  const backSpeechId = `card-back-${card.id}`
-  const isFrontSpeaking = isTTSPlaying && currentSpeakingId === frontSpeechId
-  const isBackSpeaking = isTTSPlaying && currentSpeakingId === backSpeechId
+  // Reset answer when card changes
+  useEffect(() => {
+    setUserAnswer('')
+    setTranscript('')
+    setIsCorrectState(null)
+    stopTTS()
 
-  const readWholeCard = (startFromBack = false) => {
-    if (isTTSPlaying) {
-      stopTTS()
-      return
+    if (autoAdvance) {
+      const timer = setTimeout(() => {
+        readWholeCardRef.current(false)
+      }, 100)
+      return () => clearTimeout(timer)
     }
-
-    if (startFromBack) {
-      speak(card.back, backSpeechId, {
-        onEnd: () => {
-          if (onCardFinished) onCardFinished()
-        }
-      })
-    } else {
-      speak(card.front, frontSpeechId, {
-        onEnd: () => {
-          if (!isFlipped) onFlip()
-          setTimeout(() => {
-            speak(card.back, backSpeechId, {
-              onEnd: () => {
-                if (onCardFinished) onCardFinished()
-              }
-            })
-          }, 150)
-        }
-      })
-    }
-  }
+  }, [card.id, setTranscript, stopTTS, autoAdvance])
 
   const isCardSpeaking = isFrontSpeaking || isBackSpeaking
 
