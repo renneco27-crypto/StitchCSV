@@ -246,7 +246,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 shrink-0 h-screen sticky top-0 border-r border-slate-200 bg-white flex-col z-30">
+      <aside className="hidden lg:flex w-64 shrink-0 h-screen sticky top-0 border-r border-slate-300/80 bg-white/80 backdrop-blur-2xl flex-col z-30 shadow-[2px_0_16px_rgba(15,23,42,0.03)]">
         <NavContent />
       </aside>
     </>
