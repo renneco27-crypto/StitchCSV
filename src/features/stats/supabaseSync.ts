@@ -33,10 +33,12 @@ export async function syncStatsToSupabase(stats: Record<string, DeckStats>) {
       })
 
     if (error) {
-      console.error('Error syncing stats to Supabase:', error)
+      // If table does not exist or user unauthenticated, log informative warning
+      const errorMsg = error.message || error.details || JSON.stringify(error)
+      console.warn('Supabase user_stats sync warning:', errorMsg)
     }
   } catch (err) {
-    console.error('Error in syncStatsToSupabase:', err)
+    console.warn('Network or session issue in syncStatsToSupabase:', err)
   }
 }
 

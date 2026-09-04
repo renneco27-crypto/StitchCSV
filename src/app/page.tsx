@@ -37,53 +37,93 @@ export default function Home() {
   const studiedToday = dbStudiedToday !== null ? Math.max(dbStudiedToday, localStudiedToday) : localStudiedToday
 
   return (
-    <div className="min-h-screen relative px-4 py-8">
-      {/* Background Matrix Rain */}
-      <MatrixRainBackground opacity={0.25} />
+    <div className="min-h-screen bg-[#f4f7fb] pb-16">
+      <div className="w-full max-w-5xl mx-auto px-4 pt-4 sm:pt-6">
+        {/* T4CBS Signature Hero Header */}
+        <header
+          id="t4cbs-header"
+          className="relative rounded-3xl bg-gradient-to-b from-[#0052cc] to-[#0047b3] pt-8 pb-16 px-6 sm:px-10 text-center overflow-hidden shrink-0 shadow-lg"
+        >
+          {/* Top Left Rotated Diamond Accent */}
+          <div
+            id="decor-diamond"
+            aria-hidden="true"
+            className="absolute -top-10 -left-10 w-36 h-36 bg-white/10 rounded-2xl rotate-45 pointer-events-none"
+          />
 
-      <div className="max-w-3xl mx-auto relative z-10">
-        <div className="mb-6">
-          <h1 className="text-2xl font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
-            My Library
+          {/* Top Right Dark Glow Circle Accent */}
+          <div
+            id="decor-circle"
+            aria-hidden="true"
+            className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#002f80]/50 pointer-events-none"
+          />
+
+          <h1 id="brand-title" className="relative z-10 text-white font-bold text-2xl sm:text-3xl leading-tight tracking-tight">
+            StudyUp
           </h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            Your decks &amp; study streaks
+          <h2 id="brand-subtitle" className="relative z-10 text-white/90 font-medium text-base sm:text-lg leading-tight tracking-tight mt-1">
+            Personal Study &amp; Active Recall Deck Library
+          </h2>
+          <p id="brand-tag" className="relative z-10 text-white/80 font-semibold text-xs mt-1 tracking-wider uppercase">
+            Campus IT Edition
           </p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-          <div className="glass-panel rounded-xl border border-[var(--color-border)] p-4 flex items-center gap-4 cyber-glow-hover">
-            <div className="text-3xl font-bold text-[var(--color-accent)] font-['Playfair_Display']">
+        {/* Floating Stat Cards Overlapping Hero */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 -mt-8 px-2 relative z-20 mb-8">
+          {/* Streak Stat Card - Yellow/Amber Highlight */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-2xl shrink-0 border border-amber-200/60 shadow-inner">
               {totalStreak}
             </div>
             <div>
-              <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                Day streak
-              </p>
-              <p className="text-xs text-[var(--color-text-muted)]">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-800">
+                  Study Streak
+                </p>
+                <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Active
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
                 {studiedToday > 0
-                  ? `Studied ${studiedToday} deck${studiedToday === 1 ? '' : 's'} today`
-                  : 'Study today to keep it alive'}
+                  ? `Reviewed ${studiedToday} deck${studiedToday === 1 ? '' : 's'} today`
+                  : 'Review a deck today to preserve your streak'}
               </p>
             </div>
           </div>
 
-          <div className="glass-panel rounded-xl border border-[var(--color-border)] p-4 flex items-center gap-4 cyber-glow-hover">
-            <div className="text-3xl font-bold text-[var(--color-know)] font-['Playfair_Display']">
+          {/* Today's Reviews - Royal Blue Highlight */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0052cc] flex items-center justify-center font-bold text-2xl shrink-0 border border-blue-200/60 shadow-inner">
               {studiedToday}
             </div>
             <div>
-              <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                Studied today
-              </p>
-              <p className="text-xs text-[var(--color-text-muted)]">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-800">
+                  Studied Today
+                </p>
+                <span className="bg-blue-100 text-[#0052cc] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Progress
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
                 Decks reviewed so far today
               </p>
             </div>
           </div>
         </div>
 
-        <PastDecks />
+        {/* Decks Section */}
+        <section className="px-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">Your Decks</h3>
+              <p className="text-xs text-slate-500">Select a deck to begin flashcard, quiz, or notes recall</p>
+            </div>
+          </div>
+          <PastDecks />
+        </section>
       </div>
     </div>
   )

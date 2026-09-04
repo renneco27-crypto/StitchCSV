@@ -205,100 +205,120 @@ export default function StudyDashboard() {
   }).length ?? 0
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-screen bg-[#f4f7fb]">
       <TopBar
         title={deck?.title ?? 'Deck'}
         onBack={() => router.push('/')}
         rightSlot={<ExportButton deckId={deckId} deckTitle={deck?.title ?? 'Deck'} variant="icon" />}
       />
 
-      <div className="px-4 pt-6 min-w-0">
-        {editingTitle ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveTitle()
-                if (e.key === 'Escape') setEditingTitle(false)
-              }}
-              onBlur={handleSaveTitle}
-              autoFocus
-               className="text-2xl font-['Playfair_Display'] text-[var(--color-text-primary)] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1 w-full max-w-md focus:outline-none focus:border-[var(--color-accent)]"
-            />
-          </div>
-        ) : (
-          <h1
-            className="text-2xl font-['Playfair_Display'] text-[var(--color-text-primary)] break-words cursor-pointer hover:text-[var(--color-accent)] transition-colors"
-            onClick={() => { setEditTitle(deck?.title ?? ''); setEditingTitle(true) }}
-            title="Click to edit title"
-          >
-            {deck?.title ?? 'Deck'}
-          </h1>
-        )}
-        <div className="mt-1">
-          <StatBadge label={deck?.subject ?? 'General'} value={''} color="accent" />
-        </div>
+      <div className="max-w-5xl mx-auto px-4 pt-6">
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              {editingTitle ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveTitle()
+                      if (e.key === 'Escape') setEditingTitle(false)
+                    }}
+                    onBlur={handleSaveTitle}
+                    autoFocus
+                    className="text-xl sm:text-2xl font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 w-full max-w-md focus:outline-none focus:border-[#0052cc]"
+                  />
+                </div>
+              ) : (
+                <h1
+                  className="text-xl sm:text-2xl font-bold text-slate-800 break-words cursor-pointer hover:text-[#0052cc] transition-colors"
+                  onClick={() => { setEditTitle(deck?.title ?? ''); setEditingTitle(true) }}
+                  title="Click to edit title"
+                >
+                  {deck?.title ?? 'Deck'}
+                </h1>
+              )}
+              <div className="mt-2 flex items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#0052cc] border border-blue-100">
+                  {deck?.subject ?? 'General'}
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                  🔥 {stats?.studyStreak ?? 0} day streak
+                </span>
+              </div>
+            </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mt-4 items-start sm:items-center">
-          <div className="flex items-center gap-4 overflow-visible px-1">
-            <ProgressRing value={progress} size={72} />
-            <div className="flex flex-col gap-1">
-              <StatBadge label="Mastered" value={masteredCount} color="know" />
-              <StatBadge label="Learning" value={learningCount} color="mastered" />
-              <StatBadge label="New" value={newCount} color="new" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setShowCreator(true)}
+                className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl font-bold border border-slate-200 transition-colors text-xs squishy-btn shadow-sm"
+              >
+                <Plus size={15} /> Edit / Add Cards
+              </button>
+              {canPublish && (
+                <button
+                  onClick={startPublish}
+                  disabled={publishing}
+                  className="flex items-center gap-2 bg-[#0052cc] hover:bg-[#0047b3] text-white px-4 py-2.5 rounded-xl font-bold transition-all text-xs squishy-btn shadow-sm cursor-pointer"
+                >
+                  <Share2 size={15} /> {publishing ? 'Publishing…' : 'Publish to Feed'}
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 w-full sm:w-auto">
-             <button
-               onClick={() => setShowCreator(true)}
-               className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full sm:w-auto squishy-btn"
-             >
-               <Plus size={16} /> Edit / Add Cards
-             </button>
-             {canPublish && (
-               <button
-                 onClick={startPublish}
-                 disabled={publishing}
-                 className="flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-4 py-2 rounded-xl font-medium hover:border-[var(--color-border-neon)] border border-[var(--color-border)] transition-colors text-sm w-full col-span-2 sm:col-span-1 squishy-btn"
-               >
-                 <Share2 size={16} /> {publishing ? 'Publishing…' : 'Publish'}
-               </button>
-             )}
-           </div>
-        </div>
-
-        <div className="mt-2 text-sm text-[var(--color-mastered)] font-medium">
-          🔥 {stats?.studyStreak ?? 0} day streak
+          <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+            <div className="flex items-center gap-4">
+              <ProgressRing value={progress} size={72} />
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-bold text-slate-800">Mastery Rate: {Math.round(progress)}%</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100">
+                    {masteredCount} Mastered
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold border border-amber-100">
+                    {learningCount} Learning
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-[#0052cc] font-semibold border border-blue-100">
+                    {newCount} New
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {dueCount > 0 && (
-        <div className="mx-4 mt-4 glass-panel border-l-4 border-[var(--color-accent)] rounded-xl p-4 flex justify-between items-center cyber-glow">
-          <div className="flex items-center gap-2">
-            <Bell size={16} className="text-[var(--color-accent)]" />
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              {dueCount} cards due for review today
-            </span>
+        <div className="max-w-5xl mx-auto px-4 mb-6">
+          <div className="bg-white border-l-4 border-[#0052cc] rounded-2xl p-4 flex justify-between items-center shadow-sm border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0052cc] flex items-center justify-center">
+                <Bell size={16} />
+              </div>
+              <span className="text-xs sm:text-sm font-bold text-slate-800">
+                {dueCount} cards due for active review today
+              </span>
+            </div>
+            <button
+              onClick={() => router.push(`/study/${deckId}/flashcards?mode=review`)}
+              className="text-xs font-bold text-white bg-[#0052cc] hover:bg-[#0047b3] px-3.5 py-2 rounded-xl transition-all shadow-sm"
+            >
+              Start review →
+            </button>
           </div>
-          <button
-            onClick={() => router.push(`/study/${deckId}/flashcards?mode=review`)}
-            className="text-[var(--color-accent)] text-sm font-medium hover:underline"
-          >
-            Start review →
-          </button>
         </div>
       )}
 
-      <div className="px-4 mt-6">
-        <p className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
-          Study modes
+      <div className="max-w-5xl mx-auto px-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+          Select Study Mode
         </p>
       </div>
 
-      <div className="px-4 pb-8 mt-3">
+      <div className="max-w-5xl mx-auto px-4 pb-12">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <ModeCard
             icon={Layers}

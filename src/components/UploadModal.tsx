@@ -239,10 +239,10 @@ export default function UploadModal() {
   const tabButton = (t: 'file' | 'text' | 'notes', label: string) => (
     <button
       onClick={() => setTab(t)}
-      className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-colors squishy-btn shrink-0 ${
+      className={`px-4 py-2 text-xs font-bold rounded-xl transition-all squishy-btn shrink-0 ${
         tab === t
-          ? 'bg-[var(--color-accent)] text-white cyber-glow'
-          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]'
+          ? 'bg-[#0052cc] text-white shadow-sm'
+          : 'text-slate-600 hover:bg-slate-100'
       }`}
     >
       {label}
@@ -251,27 +251,30 @@ export default function UploadModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
       onClick={handleClose}
     >
       <div
-        className="glass-panel rounded-2xl border border-[var(--color-border)] w-full max-w-lg cyber-border flex flex-col max-h-[85vh] overflow-hidden"
+        className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-          <h2 className="text-lg font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
-            Create Deck
-          </h2>
+        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+          <div>
+            <h2 className="text-lg font-bold text-slate-800">
+              Create New Deck
+            </h2>
+            <p className="text-xs text-slate-500">Upload notes, copy AI prompts, or paste text</p>
+          </div>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-[var(--color-surface-2)] transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             aria-label="Close"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="flex gap-1 px-4 pt-3 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 pt-3 overflow-x-auto no-scrollbar border-b border-slate-100 pb-3">
           {tabButton('text', 'Paste Text')}
           {tabButton('notes', 'Notes Only (Claude)')}
           {tabButton('file', 'Upload File')}

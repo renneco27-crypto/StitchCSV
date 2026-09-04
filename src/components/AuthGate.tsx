@@ -44,33 +44,33 @@ export default function AuthGate() {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#050508] overflow-hidden">
-      {/* Smooth Matrix Rain Background */}
-      <MatrixRainBackground opacity={0.4} />
-
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#f4f7fb] overflow-y-auto">
       {welcome && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 glass-panel rounded-full border border-[var(--color-border)] px-6 py-3 cyber-glow">
-          <p className="text-[var(--color-accent)] font-medium">{welcome}</p>
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-white rounded-full border border-slate-200 px-6 py-3 shadow-lg">
+          <p className="text-[#0057ff] font-semibold">{welcome}</p>
         </div>
       )}
 
       {/* Auth Form Card */}
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 glass-panel w-full max-w-sm rounded-2xl border border-[var(--color-border)] p-8 text-center cyber-border shadow-2xl backdrop-blur-xl"
+        className="relative z-10 w-full max-w-sm rounded-[28px] bg-white border border-slate-200 shadow-xl overflow-hidden p-6 text-center"
       >
-        <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--color-accent)] text-white flex items-center justify-center font-['Playfair_Display'] font-bold text-2xl cyber-glow shadow-[0_0_25px_rgba(168,85,247,0.5)]">
-            S
+        <div className="relative -mx-6 -mt-6 bg-gradient-to-b from-[#0052cc] to-[#0047b3] pt-8 pb-10 px-6 text-center overflow-hidden mb-6">
+          <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-2xl rotate-45 pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#002f80]/50 pointer-events-none" />
+          <div className="relative z-10 flex justify-center mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-white text-[#0057ff] flex items-center justify-center font-bold text-2xl shadow-md">
+              S
+            </div>
           </div>
+          <h1 className="relative z-10 text-2xl font-bold text-white tracking-tight">
+            StudyUp
+          </h1>
+          <p className="relative z-10 text-xs text-white/80 mt-1">
+            {mode === 'signin' ? 'Sign in to continue your mastery' : 'Create an account to get started'}
+          </p>
         </div>
-
-        <h1 className="text-2xl font-['Playfair_Display'] font-bold text-[var(--color-text-primary)]">
-          Study<span className="text-[var(--color-accent)]">Up</span>
-        </h1>
-        <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1 mb-6">
-          {mode === 'signin' ? 'Sign in to continue your mastery' : 'Create an account to get started'}
-        </p>
 
         <input
           type="email"
@@ -112,6 +112,24 @@ export default function AuthGate() {
           className="mt-4 text-xs sm:text-sm text-[var(--color-accent)] hover:underline block w-full"
         >
           {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+        </button>
+
+        <div className="relative my-4 flex items-center justify-center">
+          <div className="border-t border-[var(--color-border)] w-full" />
+          <span className="bg-[var(--color-surface-2)] px-2 text-[10px] text-[var(--color-text-muted)] absolute uppercase tracking-wider">or</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('stitch-guest-access', 'true')
+              window.dispatchEvent(new Event('auth-status-change'))
+            }
+          }}
+          className="w-full py-2.5 px-4 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] text-xs text-[var(--color-text-secondary)] hover:text-white transition-colors"
+        >
+          Continue as Guest / Student Mode →
         </button>
       </form>
     </div>

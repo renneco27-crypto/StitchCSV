@@ -1,32 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  /* Deep Slate / Teal Indigo — professional dark design system */
-  --color-bg: #0a0c10;
-  --color-surface: #12151c;
-  --color-surface-2: #1a1e28;
-  --color-surface-3: #222733;
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-border-strong: rgba(255, 255, 255, 0.14);
-  --color-border-neon: #4f8ef7;
-  --color-text-primary: #eef0f6;
-  --color-text-secondary: #9ba3b8;
-  --color-text-muted: #5e6880;
-  --color-accent: #4f8ef7;
-  --color-accent-soft: rgba(79, 142, 247, 0.12);
-  --color-accent-glow: rgba(79, 142, 247, 0.3);
-  --color-know: #34d399;
-  --color-know-soft: rgba(52, 211, 153, 0.13);
-  --color-dontknow: #f87171;
-  --color-dontknow-soft: rgba(248, 113, 113, 0.13);
-  --color-mastered: #fbbf24;
-  --color-mastered-soft: rgba(251, 191, 36, 0.13);
-  --color-new: #818cf8;
-  --color-new-soft: rgba(129, 140, 248, 0.13);
+  /* Trash4Cash Barcode System (T4CBS) Professional Clean Palette */
+  --color-bg: #f4f7fb;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f5f9;
+  --color-surface-3: #e2e8f0;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-border-neon: #0057ff;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-accent: #0057ff;
+  --color-accent-soft: #dbeafe;
+  --color-accent-glow: rgba(0, 87, 255, 0.25);
+  --color-know: #16a34a;
+  --color-know-soft: #dcfce7;
+  --color-dontknow: #dc2626;
+  --color-dontknow-soft: #fee2e2;
+  --color-mastered: #d97706;
+  --color-mastered-soft: #fef3c7;
+  --color-new: #0284c7;
+  --color-new-soft: #e0f2fe;
 
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-sans);
+  --font-sans: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+.dark {
+  --color-bg: #0b0f17;
+  --color-surface: #111827;
+  --color-surface-2: #1f2937;
+  --color-surface-3: #374151;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border-neon: #3b82f6;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-accent: #3b82f6;
+  --color-accent-soft: rgba(59, 130, 246, 0.15);
+  --color-accent-glow: rgba(59, 130, 246, 0.35);
+  --color-know: #22c55e;
+  --color-know-soft: rgba(34, 197, 94, 0.15);
+  --color-dontknow: #ef4444;
+  --color-dontknow-soft: rgba(239, 68, 68, 0.15);
+  --color-mastered: #f59e0b;
+  --color-mastered-soft: rgba(245, 158, 11, 0.15);
+  --color-new: #38bdf8;
+  --color-new-soft: rgba(56, 189, 248, 0.15);
 }
 
 @theme inline {
@@ -37,40 +61,30 @@
 }
 
 html {
-  /* Slightly larger base for mobile readability */
-  font-size: 17px;
-}
-
-@media (min-width: 640px) {
-  html {
-    font-size: 16px;
-  }
+  font-size: 16px;
 }
 
 body {
-  background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(79, 142, 247, 0.07) 0%, transparent 60%),
-    radial-gradient(1000px 700px at -10% 110%, rgba(129, 140, 248, 0.05) 0%, transparent 55%),
-    var(--color-bg);
+  background-color: var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
 }
 
 /* Glow + glass utilities */
 .cyber-glow {
-  box-shadow: 0 0 10px rgba(79, 142, 247, 0.3), 0 0 20px rgba(79, 142, 247, 0.15);
+  box-shadow: 0 4px 14px var(--color-accent-glow);
 }
 .cyber-glow-hover:hover {
-  box-shadow: 0 0 15px rgba(79, 142, 247, 0.35), 0 0 30px rgba(79, 142, 247, 0.2);
+  box-shadow: 0 6px 20px var(--color-accent-glow);
 }
 .cyber-border {
-  border: 1px solid rgba(79, 142, 247, 0.4);
-  box-shadow: inset 0 0 5px rgba(79, 142, 247, 0.1), 0 0 5px rgba(79, 142, 247, 0.1);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 .glass-panel {
-  background: rgba(18, 21, 28, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .squishy-btn:active {
   transform: scale(0.95);

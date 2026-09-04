@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { Playfair_Display, Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google'
+import { Playfair_Display, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import ToastContainer from '@/components/ToastContainer'
 import AuthWrapper from '@/components/AuthWrapper'
 import Sidebar from '@/components/Sidebar'
+import MobileBottomNav from '@/components/MobileBottomNav'
 import UploadModal from '@/components/UploadModal'
 import './globals.css'
 
@@ -13,8 +14,8 @@ const playfairDisplay = Playfair_Display({
   variable: '--font-serif',
 })
 
-const beVietnamPro = Be_Vietnam_Pro({
-  weight: ['400', '500', '600', '700', '800', '900'],
+const plusJakartaSans = Plus_Jakarta_Sans({
+  weight: ['400', '500', '600', '700', '800'],
   subsets: ['latin'],
   variable: '--font-sans',
 })
@@ -39,16 +40,17 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${playfairDisplay.variable} ${beVietnamPro.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${playfairDisplay.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthWrapper>
             <div className="flex flex-col lg:flex-row flex-1">
               <Sidebar />
-              <main className="flex-1 min-w-0 flex flex-col">{children}</main>
+              <main className="flex-1 min-w-0 flex flex-col pb-16 lg:pb-0">{children}</main>
             </div>
           </AuthWrapper>
+          <MobileBottomNav />
           <UploadModal />
           <ToastContainer />
         </ThemeProvider>
