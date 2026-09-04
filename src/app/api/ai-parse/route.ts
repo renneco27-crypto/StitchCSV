@@ -114,6 +114,85 @@ ${text}
   return null
 }
 
+function callOpenCodeCli(text: string, subject: string, chapter: string): Promise<FlashcardRow[] | null> {
+  const prompt = `You are an expert College Information Technology (IT) professor.
+Convert these student lecture notes into a JSON array of flashcards for StitchCSV.
+Default Subject: "${subject}"
+Default Chapter: "${chapter}"
+
+Required keys for each object:
+"front", "back", "chapter", "subject", "lesson", "type" (one of: definition, concept, formula, process, list, multiple_choice, true_false, enumeration, identification),
+"mc_correct", "mc_distractor1", "mc_distractor2", "mc_distractor3", "tf_answer", "enum_items", "id_answer", "id_variants".
+
+Return ONLY raw JSON array.
+
+STUDENT NOTES:
+"""
+${text}
+"""`
+
+  return new Promise<FlashcardRow[] | null>((resolve) => {
+    try {
+      const opencodeCmd = process.platform === 'win32' ? 'opencode.cmd' : 'opencode'
+      const proc = spawn(opencodeCmd, ['run', '--pure', prompt], { shell: true })
+      let stdout = ''
+      let stderr = ''
+
+      proc.stdout.on('data', (d) => { stdout += d.toString() })
+      proc.stderr.on('data', (d) => { stderr += d.toString() })
+
+      const timer = setTimeout(() => {
+        try { proc.kill() } catch (e) {}
+        resolve(null)
+      }, 120000)
+
+      proc.on('close', (code) => {
+        clearTimeout(timer)
+        if (code === 0 && stdout.trim()) {
+          const clean = stdout
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/, '')
+            .replace(/\s*```$/g, '')
+            .trim()
+          try {
+            const parsed = JSON.parse(clean)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const rows: FlashcardRow[] = parsed.map((item) => ({
+                front: String(item.front || '').trim(),
+                back: String(item.back || '').trim(),
+                chapter: String(item.chapter || chapter).trim(),
+                subject: String(item.subject || subject).trim(),
+                lesson: String(item.lesson || 'Module 1').trim(),
+                type: String(item.type || 'concept').toLowerCase().trim(),
+                mc_correct: String(item.mc_correct || '').trim(),
+                mc_distractor1: String(item.mc_distractor1 || '').trim(),
+                mc_distractor2: String(item.mc_distractor2 || '').trim(),
+                mc_distractor3: String(item.mc_distractor3 || '').trim(),
+                tf_answer: String(item.tf_answer || '').toLowerCase().trim(),
+                enum_items: String(item.enum_items || '').trim(),
+                id_answer: String(item.id_answer || '').trim(),
+                id_variants: String(item.id_variants || '').trim(),
+              }))
+              resolve(rows)
+              return
+            }
+          } catch (err) {
+            console.warn('[ai-parse] OpenCode CLI JSON parse failed:', err)
+          }
+        }
+        resolve(null)
+      })
+
+      proc.on('error', () => {
+        clearTimeout(timer)
+        resolve(null)
+      })
+    } catch (err) {
+      resolve(null)
+    }
+  })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -123,10 +202,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Please provide valid text to parse.' }, { status: 400 })
     }
 
-    // 1. Try direct OpenCode server on port 4096
-    let rows = await callOpenCodeDirect(text, subject, chapter)
+    // 1. Prioritize OpenCode CLI: opencode run "prompt"
+    let rows = await callOpenCodeCli(text, subject, chapter)
 
-    // 2. Fallback to python scripts/opencode_it_csv_creator.py
+    // 2. Fallback to direct OpenCode server on port 4096
+    if (!rows || rows.length === 0) {
+      rows = await callOpenCodeDirect(text, subject, chapter)
+    }
+
+    // 3. Fallback to python scripts/opencode_it_csv_creator.py
     if (!rows || rows.length === 0) {
       const scriptPath = path.join(process.cwd(), 'scripts', 'opencode_it_csv_creator.py')
       rows = await new Promise<FlashcardRow[]>((resolve) => {
