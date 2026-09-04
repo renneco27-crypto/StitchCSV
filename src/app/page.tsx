@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Flame, BookOpen, CheckCircle2, Award } from 'lucide-react'
 import { useStatsStore } from '@/store/statsStore'
 import PastDecks from '@/features/upload/PastDecks'
 import { getStreakStatus } from '@/features/stats/statsCalculator'
 import { fetchStatsFromSupabase, syncStatsToSupabase } from '@/features/stats/supabaseSync'
-import MatrixRainBackground from '@/components/MatrixRainBackground'
 
 export default function Home() {
   const stats = useStatsStore((s) => s.stats)
@@ -37,89 +37,110 @@ export default function Home() {
   const studiedToday = dbStudiedToday !== null ? Math.max(dbStudiedToday, localStudiedToday) : localStudiedToday
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb] pb-16">
-      <div className="w-full max-w-5xl mx-auto px-4 pt-4 sm:pt-6">
-        {/* T4CBS Signature Hero Header */}
-        <header
-          id="t4cbs-header"
-          className="relative rounded-3xl bg-gradient-to-b from-[#0052cc] to-[#0047b3] pt-8 pb-16 px-6 sm:px-10 text-center overflow-hidden shrink-0 shadow-lg"
-        >
-          {/* Top Left Rotated Diamond Accent */}
-          <div
-            id="decor-diamond"
-            aria-hidden="true"
-            className="absolute -top-10 -left-10 w-36 h-36 bg-white/10 rounded-2xl rotate-45 pointer-events-none"
-          />
+    <div className="min-h-screen bg-[#eaeff5] pb-16">
+      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
+        {/* Sleek High-Contrast Dashboard Greeting Header */}
+        <header className="bg-white rounded-3xl border border-slate-300/90 shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6 sm:p-8 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+          {/* Subtle Background Accent Gradient */}
+          <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-50 rounded-full blur-3xl pointer-events-none opacity-60" />
 
-          {/* Top Right Dark Glow Circle Accent */}
-          <div
-            id="decor-circle"
-            aria-hidden="true"
-            className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#002f80]/50 pointer-events-none"
-          />
-
-          <h1 id="brand-title" className="relative z-10 text-white font-bold text-2xl sm:text-3xl leading-tight tracking-tight">
-            StudyUp
-          </h1>
-          <h2 id="brand-subtitle" className="relative z-10 text-white/90 font-medium text-base sm:text-lg leading-tight tracking-tight mt-1">
-            Personal Study &amp; Active Recall Deck Library
-          </h2>
-          <p id="brand-tag" className="relative z-10 text-white/80 font-semibold text-xs mt-1 tracking-wider uppercase">
-            Campus IT Edition
-          </p>
-        </header>
-
-        {/* Floating Stat Cards Overlapping Hero */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 -mt-8 px-2 relative z-20 mb-8">
-          {/* Streak Stat Card - Yellow/Amber Highlight */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-2xl shrink-0 border border-amber-200/60 shadow-inner">
-              {totalStreak}
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-[#0047b3] text-xs font-extrabold uppercase tracking-wider mb-2">
+              <span className="w-2 h-2 rounded-full bg-[#0052cc] animate-pulse" />
+              Campus IT Knowledge Base
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-slate-800">
-                  Study Streak
-                </p>
-                <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Active
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
-                {studiedToday > 0
-                  ? `Reviewed ${studiedToday} deck${studiedToday === 1 ? '' : 's'} today`
-                  : 'Review a deck today to preserve your streak'}
-              </p>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
+              StudyUp Dashboard
+            </h1>
+            <p className="text-sm font-medium text-slate-600 mt-1">
+              Active recall momentum &amp; flashcard review deck library
+            </p>
           </div>
 
-          {/* Today's Reviews - Royal Blue Highlight */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0052cc] flex items-center justify-center font-bold text-2xl shrink-0 border border-blue-200/60 shadow-inner">
-              {studiedToday}
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 flex items-center gap-3">
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Status</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                Active Session
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-slate-800">
+          </div>
+        </header>
+
+        {/* High-Contrast Compact Metrics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {/* Metric 1: Streak (Yellow/Gold Accent) */}
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-[0_2px_8px_rgba(15,23,42,0.04)] p-5 flex items-center justify-between hover:border-slate-400 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 border border-amber-300 flex items-center justify-center shadow-sm">
+                <Flame size={24} strokeWidth={2.4} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Study Streak
+                </p>
+                <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                  {totalStreak} <span className="text-xs font-semibold text-slate-600">day{totalStreak === 1 ? '' : 's'}</span>
+                </h3>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300/60">
+              Active
+            </span>
+          </div>
+
+          {/* Metric 2: Today's Reviews (Royal Blue Accent) */}
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-[0_2px_8px_rgba(15,23,42,0.04)] p-5 flex items-center justify-between hover:border-slate-400 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-100 text-[#0052cc] border border-blue-300 flex items-center justify-center shadow-sm">
+                <BookOpen size={24} strokeWidth={2.4} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Studied Today
                 </p>
-                <span className="bg-blue-100 text-[#0052cc] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Progress
-                </span>
+                <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                  {studiedToday} <span className="text-xs font-semibold text-slate-600">deck{studiedToday === 1 ? '' : 's'}</span>
+                </h3>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Decks reviewed so far today
-              </p>
             </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-100 text-[#0047b3] border border-blue-300/60">
+              Today
+            </span>
+          </div>
+
+          {/* Metric 3: Target Goal (Clean Slate/Emerald Accent) */}
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-[0_2px_8px_rgba(15,23,42,0.04)] p-5 flex items-center justify-between hover:border-slate-400 transition-all sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 border border-emerald-300 flex items-center justify-center shadow-sm">
+                <CheckCircle2 size={24} strokeWidth={2.4} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Daily Goal
+                </p>
+                <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                  {studiedToday > 0 ? '100%' : 'Pending'}
+                </h3>
+              </div>
+            </div>
+            <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+              studiedToday > 0
+                ? 'bg-emerald-100 text-emerald-900 border-emerald-300/60'
+                : 'bg-slate-100 text-slate-700 border-slate-300'
+            }`}>
+              {studiedToday > 0 ? 'Achieved' : '1 Deck Target'}
+            </span>
           </div>
         </div>
 
         {/* Decks Section */}
-        <section className="px-2">
+        <section>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-bold text-slate-800">Your Decks</h3>
-              <p className="text-xs text-slate-500">Select a deck to begin flashcard, quiz, or notes recall</p>
+              <h2 className="text-lg font-extrabold text-slate-900">Your Decks</h2>
+              <p className="text-xs font-medium text-slate-600">Choose a deck to review flashcards, quiz questions, or study notes</p>
             </div>
           </div>
           <PastDecks />

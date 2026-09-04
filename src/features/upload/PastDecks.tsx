@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { BookOpen, Trash2 } from 'lucide-react'
+import { BookOpen, Trash2, Star } from 'lucide-react'
 import { getAllDecks, deleteDeck } from '@/db/deckRepository'
 import { getCardsByDeck } from '@/db/cardRepository'
 import StatBadge from '@/components/StatBadge'
@@ -48,12 +48,12 @@ export default function PastDecks() {
 
   if (decks.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-        <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#0052cc] flex items-center justify-center mx-auto mb-4">
+      <div className="text-center py-16 bg-white rounded-3xl border border-slate-300 shadow-sm p-6">
+        <div className="w-16 h-16 rounded-2xl bg-blue-100 text-[#0047b3] flex items-center justify-center mx-auto mb-4 border border-blue-200">
           <BookOpen size={32} />
         </div>
-        <h4 className="text-base font-bold text-slate-800">No decks yet</h4>
-        <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        <h4 className="text-base font-extrabold text-slate-900">No decks yet</h4>
+        <p className="text-xs text-slate-600 mt-1 max-w-sm mx-auto font-medium">
           Upload your lecture notes, documents, or CSV to start active recall practice
         </p>
       </div>
@@ -73,58 +73,59 @@ export default function PastDecks() {
           <div
             key={deck.id}
             onClick={() => router.push('/study/' + deck.id)}
-            className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
+            className="bg-white rounded-2xl border border-slate-300 p-5 flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:border-[#0052cc] hover:shadow-[0_4px_16px_rgba(0,82,204,0.08)] transition-all group"
           >
             {/* Color Accent Indicator Strip */}
             <div className="w-1.5 bg-[#0052cc] h-12 rounded-full hidden sm:block shrink-0" />
             
             <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-base font-bold text-slate-800 group-hover:text-[#0052cc] transition-colors break-words">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-base font-extrabold text-slate-950 group-hover:text-[#0052cc] transition-colors break-words">
                   {deck.title}
                 </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#0052cc] border border-blue-100">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[#0047b3] border border-blue-200">
                   {deck.subject || 'General'}
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500">
-                <span className="font-medium">{totalCards} cards</span>
+              <div className="flex flex-wrap items-center gap-4 mt-2 text-xs font-semibold text-slate-600">
+                <span className="text-slate-800">{totalCards} cards</span>
                 {deckStats?.lastStudied && (
-                  <span>
+                  <span className="text-slate-500">
                     Last studied: {new Date(deckStats.lastStudied).toLocaleDateString()}
                   </span>
                 )}
                 {masteredCount > 0 && (
-                  <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
-                    ★ {masteredCount} mastered
+                  <span className="inline-flex items-center gap-1 font-bold text-amber-950 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md">
+                    <Star size={12} className="fill-amber-500 text-amber-600" />
+                    {masteredCount} mastered
                   </span>
                 )}
               </div>
 
               {totalCards > 0 && (
                 <div className="mt-3 flex items-center gap-3">
-                  <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden max-w-[220px]">
+                  <div className="flex-1 h-2.5 rounded-full bg-slate-200 overflow-hidden max-w-[240px]">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-[#0052cc] transition-all duration-300"
+                      className="h-full bg-[#0052cc] transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-600">
+                  <span className="text-xs font-extrabold text-slate-800">
                     {Math.round(progress)}%
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+            <div className="flex items-center justify-between sm:justify-end gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200">
               <div className="flex items-center gap-1.5">
                 <div onClick={(e) => e.stopPropagation()}>
                   <ExportButton deckId={deck.id} deckTitle={deck.title} variant="icon" />
                 </div>
                 <button
                   onClick={(e) => handleDelete(e, deck.id)}
-                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors p-2 rounded-xl"
+                  className="text-slate-500 hover:text-red-700 hover:bg-red-100 transition-colors p-2 rounded-xl"
                   aria-label="Delete deck"
                   title="Delete deck"
                 >
@@ -132,7 +133,7 @@ export default function PastDecks() {
                 </button>
               </div>
 
-              <button className="flex items-center gap-1 text-xs font-bold text-white bg-[#0052cc] hover:bg-[#0047b3] px-3.5 py-2 rounded-xl transition-all shadow-sm">
+              <button className="flex items-center gap-1.5 text-xs font-extrabold text-white bg-[#0052cc] hover:bg-[#0047b3] px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer">
                 Study →
               </button>
             </div>

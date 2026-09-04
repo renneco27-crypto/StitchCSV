@@ -14,6 +14,7 @@ import {
   Share2,
   BookOpen,
   Image as ImageIcon,
+  Flame,
 } from 'lucide-react'
 import { getDeck, updateDeck } from '@/db/deckRepository'
 import { getCardsByDeck } from '@/db/cardRepository'
@@ -244,8 +245,9 @@ export default function StudyDashboard() {
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#0052cc] border border-blue-100">
                   {deck?.subject ?? 'General'}
                 </span>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
-                  🔥 {stats?.studyStreak ?? 0} day streak
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg">
+                  <Flame size={14} className="text-amber-600 fill-amber-500" />
+                  {stats?.studyStreak ?? 0} day streak
                 </span>
               </div>
             </div>

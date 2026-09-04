@@ -1,31 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  /* Trash4Cash Barcode System (T4CBS) Professional Clean Palette */
-  --color-bg: #f4f7fb;
+  /* High-Contrast Sleek Palette (Deeper Neutrals & Sharp Borders) */
+  --color-bg: #eaeff5;
   --color-surface: #ffffff;
-  --color-surface-2: #f1f5f9;
-  --color-surface-3: #e2e8f0;
-  --color-border: #e2e8f0;
-  --color-border-strong: #cbd5e1;
-  --color-border-neon: #0057ff;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
-  --color-accent: #0057ff;
+  --color-surface-2: #e2e8f0;
+  --color-surface-3: #cbd5e1;
+  --color-border: #cbd5e1;
+  --color-border-strong: #94a3b8;
+  --color-border-neon: #0052cc;
+  --color-text-primary: #090d16;
+  --color-text-secondary: #1e293b;
+  --color-text-muted: #475569;
+  --color-accent: #0052cc;
   --color-accent-soft: #dbeafe;
-  --color-accent-glow: rgba(0, 87, 255, 0.25);
-  --color-know: #16a34a;
+  --color-accent-glow: rgba(0, 82, 204, 0.25);
+  --color-know: #15803d;
   --color-know-soft: #dcfce7;
-  --color-dontknow: #dc2626;
+  --color-dontknow: #b91c1c;
   --color-dontknow-soft: #fee2e2;
-  --color-mastered: #d97706;
+  --color-mastered: #b45309;
   --color-mastered-soft: #fef3c7;
-  --color-new: #0284c7;
+  --color-new: #0369a1;
   --color-new-soft: #e0f2fe;
 
   --font-serif: var(--font-sans);
-  --font-sans: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 

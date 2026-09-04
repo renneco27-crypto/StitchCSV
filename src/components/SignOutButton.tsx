@@ -20,7 +20,7 @@ export default function SignOutButton({ className = '', iconOnly = false }: { cl
     <button
       onClick={handleSignOut}
       disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 text-sm border border-[var(--color-border)] rounded-xl hover:border-[var(--color-border-neon)] hover:text-[var(--color-accent)] transition-colors disabled:opacity-50 squishy-btn ${className}`}
+      className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-300 rounded-xl hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors disabled:opacity-50 squishy-btn ${className}`}
       aria-label="Sign out"
     >
       {loading ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}

@@ -51,27 +51,27 @@ export default function Sidebar() {
 
   const NavContent = () => (
     <>
-      <div className="px-5 py-5 hidden lg:block border-b border-slate-100">
+      <div className="px-5 py-5 hidden lg:block border-b border-slate-200">
         <button
           onClick={() => router.push('/')}
           className="flex items-center gap-3 w-full squishy-btn text-left"
           title="StudyUp"
         >
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0052cc] to-[#2575fc] text-white flex items-center justify-center font-bold text-lg shadow-md shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0052cc] to-[#003bb3] text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
             S
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-bold text-slate-800 leading-tight">
+            <span className="text-base font-black text-slate-950 leading-tight">
               StudyUp
             </span>
-            <span className="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">
+            <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">
               Campus IT
             </span>
           </div>
         </button>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1.5 px-3 pt-4">
+      <nav className="flex-1 flex flex-col gap-1.5 px-3 pt-5">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href
           return (
@@ -82,13 +82,13 @@ export default function Sidebar() {
                 setIsMobileOpen(false)
               }}
               title={item.label}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
                 active
-                  ? 'bg-blue-50 text-[#0052cc] shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-blue-100/90 text-[#0047b3] border border-blue-200 shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
-              <item.icon size={18} className={`shrink-0 ${active ? 'text-[#0052cc]' : 'text-slate-400'}`} />
+              <item.icon size={18} className={`shrink-0 ${active ? 'text-[#0052cc]' : 'text-slate-500'}`} />
               <span>{item.label}</span>
             </button>
           )
@@ -100,9 +100,9 @@ export default function Sidebar() {
             setIsMobileOpen(false)
           }}
           title="Create Deck"
-          className="mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#0052cc] to-[#0047b3] text-white text-sm font-bold shadow-md hover:opacity-95 transition-all squishy-btn cursor-pointer"
+          className="mt-4 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-[#0052cc] hover:bg-[#0047b3] text-white text-sm font-black shadow-md transition-all squishy-btn cursor-pointer"
         >
-          <Plus size={18} className="shrink-0" />
+          <Plus size={18} className="shrink-0 stroke-[2.5]" />
           <span>Create Deck</span>
         </button>
 
