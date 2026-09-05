@@ -11,6 +11,8 @@ echo   - [1] Next.js Webapp:  http://127.0.0.1:3000
 echo   - [2] OpenCode Server: http://127.0.0.1:4096
 echo   - [3] Campus Ngrok:    (Auto-configured on launch)
 echo.
+echo Tip: Run "run_stitchapp.bat --auth" anytime to re-enter your Ngrok token.
+echo.
 
 cd /d "%~dp0"
 
@@ -19,7 +21,29 @@ cd /d "%~dp0"
 :: ----------------------------------------------------------------------
 if /i "%~1"=="--stop" goto DO_STOP
 if /i "%~1"=="--schedule" goto DO_SCHEDULE
+if /i "%~1"=="--auth" goto DO_AUTH
 goto NORMAL_START
+
+:DO_AUTH
+echo ======================================================================
+echo [NGROK AUTHENTICATION UPDATE]
+echo Current Token Path: %LOCALAPPDATA%\ngrok\ngrok.yml
+echo ======================================================================
+set /p NEW_TOKEN="Enter new Ngrok Authtoken: "
+if defined NEW_TOKEN (
+    set "NGROK_AUTHTOKEN=!NEW_TOKEN!"
+    where ngrok >nul 2>&1
+    if !errorlevel! equ 0 (
+        call ngrok config add-authtoken "!NEW_TOKEN!" >nul 2>&1
+    )
+    powershell -NoProfile -Command "Set-Content -Path (Join-Path $env:LOCALAPPDATA 'ngrok\ngrok.yml') -Value ('version: ''2''' + [Environment]::NewLine + 'authtoken: ' + '!NEW_TOKEN!') -Encoding utf8" >nul 2>&1
+    echo ======================================================================
+    echo [OK] Ngrok Authtoken updated and saved successfully!
+    echo ======================================================================
+) else (
+    echo [CANCELLED] No token entered.
+)
+exit /b 0
 
 :DO_STOP
 echo ======================================================================
