@@ -98,15 +98,22 @@ netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo.
     echo ======================================================================
-    echo [ALREADY RUNNING] A StitchApp Webapp instance is already active!
+    echo [PORT 3000 BUSY] A StitchApp or Node server is already running on port 3000.
     echo ======================================================================
-    echo - Host: http://127.0.0.1:3000
-    echo.
-    echo Your existing terminal is already running and serving requests.
-    echo Exiting this window to prevent duplicate instances.
+    echo Options:
+    echo   [1] Restart: Automatically kill previous process and start fresh (Default)
+    echo   [2] Exit: Keep existing process running
     echo ======================================================================
-    timeout /t 4 >nul 2>&1 || ping 127.0.0.1 -n 5 >nul
-    exit /b 0
+    set /p RESTART_CHOICE="Kill old process and restart now? (Y/n): "
+    if /i "!RESTART_CHOICE!"=="n" (
+        echo Keeping existing instance running. Exiting.
+        ping 127.0.0.1 -n 3 >nul
+        exit /b 0
+    )
+    echo Terminating old port 3000 process...
+    powershell -NoProfile -Command "$conns = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue; if ($conns) { foreach ($c in $conns) { Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue } }" >nul 2>&1
+    ping 127.0.0.1 -n 2 >nul
+    echo Old process terminated. Continuing launch...
 )
 
 :: ----------------------------------------------------------------------
