@@ -110,7 +110,7 @@ if not exist ".env.local" (
     echo [CONFIG] Generating default .env.local with Campus Relay configuration...
     (
         echo # StitchCSV Local Environment Configuration
-        echo OPENCODE_SERVER_URL=https://enduring-spherical-exquisite.ngrok-free.dev
+        echo OPENCODE_SERVER_URL=https://sandstorm-wilder-drainable.ngrok-free.dev
         echo AI_PROVIDER=gemini
         echo GEMINI_MODEL=gemini-2.0-flash
         echo GEMINI_BASE_URL=https://gemini.api.google.com/v1

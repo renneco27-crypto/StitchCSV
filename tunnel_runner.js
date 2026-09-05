@@ -43,7 +43,7 @@ async function connectTunnel() {
     const token = getCachedAuthtoken();
     const opts = {
       addr: PORT,
-      domain: 'enduring-spherical-exquisite.ngrok-free.dev',
+      domain: 'sandstorm-wilder-drainable.ngrok-free.dev',
     };
     if (token) {
       opts.authtoken = token;
