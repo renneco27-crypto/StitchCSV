@@ -138,35 +138,23 @@ if %errorlevel% neq 0 (
 )
 
 :: Verify Ngrok Authtoken or prompt user
-node -e "
-const fs = require('fs');
-const path = require('path');
-if (process.env.NGROK_AUTHTOKEN) process.exit(0);
-const paths = [
-  path.join(process.env.LOCALAPPDATA || '', 'ngrok', 'ngrok.yml'),
-  path.join(process.env.USERPROFILE || '', '.config', 'ngrok', 'ngrok.yml'),
-  path.join(process.env.USERPROFILE || '', '.ngrok2', 'ngrok.yml')
-];
-for (const p of paths) {
-  if (fs.existsSync(p) && /authtoken:\s*\S+/.test(fs.readFileSync(p, 'utf8'))) process.exit(0);
-}
-process.exit(1);
-" >nul 2>&1
-if %errorlevel% neq 0 (
-    echo.
-    echo ======================================================================
-    echo [NGROK AUTHENTICATION]
-    echo No Ngrok Auth Token detected for your campus relay.
-    echo Please paste your Ngrok Authtoken below (from https://dashboard.ngrok.com)
-    echo ======================================================================
-    set /p USER_NGROK_TOKEN="Enter Ngrok Authtoken: "
-    if defined USER_NGROK_TOKEN (
-        set "NGROK_AUTHTOKEN=!USER_NGROK_TOKEN!"
-        where ngrok >nul 2>&1
-        if !errorlevel! equ 0 (
-            call ngrok config add-authtoken "!USER_NGROK_TOKEN!" >nul 2>&1
+if not exist "%LOCALAPPDATA%\ngrok\ngrok.yml" (
+    if "%NGROK_AUTHTOKEN%"=="" (
+        echo.
+        echo ======================================================================
+        echo [NGROK AUTHENTICATION]
+        echo No Ngrok Auth Token detected for your campus relay.
+        echo Please paste your Ngrok Authtoken below (from https://dashboard.ngrok.com)
+        echo ======================================================================
+        set /p USER_NGROK_TOKEN="Enter Ngrok Authtoken: "
+        if defined USER_NGROK_TOKEN (
+            set "NGROK_AUTHTOKEN=!USER_NGROK_TOKEN!"
+            where ngrok >nul 2>&1
+            if !errorlevel! equ 0 (
+                call ngrok config add-authtoken "!USER_NGROK_TOKEN!" >nul 2>&1
+            )
+            echo   -^> Ngrok token saved successfully [OK]
         )
-        echo   -^> Ngrok token saved successfully [OK]
     )
 )
 
@@ -198,3 +186,10 @@ echo ======================================================================
 echo.
 
 call pnpm run dev || npm run dev
+if %errorlevel% neq 0 (
+    echo.
+    echo ======================================================================
+    echo [ERROR] Server exited with code %errorlevel%.
+    echo ======================================================================
+    pause
+)
