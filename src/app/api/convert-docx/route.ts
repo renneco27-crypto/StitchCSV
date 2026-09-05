@@ -279,6 +279,9 @@ export async function POST(request: NextRequest) {
             status: 200,
             headers: { 'Content-Type': 'text/csv; charset=utf-8' },
           })
+        } else {
+          const errText = await relayRes.text().catch(() => '')
+          console.warn(`[convert-docx] Relay returned status ${relayRes.status}: ${errText}`)
         }
       } catch (relayErr) {
         console.warn('[convert-docx] Relay forwarding failed, falling back to local extraction:', relayErr)

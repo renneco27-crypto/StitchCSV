@@ -198,9 +198,10 @@ export default function UploadModal() {
     if (!pasteText.trim()) return
     setTextLoading(true)
     try {
-      // Check if text is raw notes or CSV
+      // Strictly require CSV header ('front,' or 'front\t'). Without the starting format, send as notes.txt to server.
       const trimmed = pasteText.trim()
-      const isCsv = /^front[,\t]/i.test(trimmed) || trimmed.includes('quiz_type') || (trimmed.includes(',') && trimmed.split('\n')[0].split(',').length >= 5)
+      const firstLine = trimmed.split(/\r?\n/)[0]?.trim().toLowerCase() ?? ''
+      const isCsv = /^front[,\t]/.test(firstLine)
       const file = new File([pasteText], isCsv ? 'deck.csv' : 'notes.txt', { type: isCsv ? 'text/csv' : 'text/plain' })
       const id = await handleUpload(file, undefined, name)
       addToast('Deck created!', 'success')
