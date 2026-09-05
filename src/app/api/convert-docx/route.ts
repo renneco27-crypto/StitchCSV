@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as mammoth from 'mammoth'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
+import { spawn } from 'child_process'
 
 interface FlashcardRow {
   front: string
@@ -254,11 +258,67 @@ export async function POST(request: NextRequest) {
 
     const fileName = file.name.toLowerCase()
     const isTextFile = fileName.endsWith('.txt')
+    const isPdfOrPpt = fileName.endsWith('.pdf') || fileName.endsWith('.pptx') || fileName.endsWith('.ppt')
+
+    // If running in cloud environment (e.g. Render with 0.1% CPU) and a local PC relay is configured:
+    const relayUrl = process.env.OPENCODE_SERVER_URL
+    const isRelay = relayUrl && !relayUrl.includes('localhost') && !relayUrl.includes('127.0.0.1')
+    if (isRelay) {
+      try {
+        const relayTarget = `${relayUrl.replace(/\/$/, '')}/api/convert-docx`
+        const relayForm = new FormData()
+        relayForm.append('file', file)
+        const relayRes = await fetch(relayTarget, {
+          method: 'POST',
+          body: relayForm,
+          headers: { 'ngrok-skip-browser-warning': 'true' },
+        })
+        if (relayRes.ok) {
+          const csvText = await relayRes.text()
+          return new NextResponse(csvText, {
+            status: 200,
+            headers: { 'Content-Type': 'text/csv; charset=utf-8' },
+          })
+        } else {
+          const errText = await relayRes.text().catch(() => '')
+          console.warn(`[convert-docx] Relay returned status ${relayRes.status}: ${errText}`)
+        }
+      } catch (relayErr) {
+        console.warn('[convert-docx] Relay forwarding failed, falling back to local extraction:', relayErr)
+      }
+    }
 
     let rawTextFull: string
     let html: string
 
-    if (isTextFile) {
+    if (isPdfOrPpt) {
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const ext = path.extname(fileName)
+      const tempPath = path.join(os.tmpdir(), `stitch_${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`)
+      fs.writeFileSync(tempPath, buffer)
+
+      try {
+        const scriptPath = path.join(process.cwd(), 'scripts', 'doc_ppt_pdf_transcriber.py')
+        rawTextFull = await new Promise<string>((resolve, reject) => {
+          const py = spawn('python', [scriptPath, tempPath])
+          let out = ''
+          let err = ''
+          py.stdout.on('data', (d) => { out += d.toString() })
+          py.stderr.on('data', (d) => { err += d.toString() })
+          py.on('close', (code) => {
+            if (code === 0 && out.trim()) {
+              resolve(out)
+            } else {
+              reject(new Error(err || `Transcriber exited with code ${code}`))
+            }
+          })
+          py.on('error', (e) => reject(e))
+        })
+      } finally {
+        try { fs.unlinkSync(tempPath) } catch (e) {}
+      }
+    } else if (isTextFile) {
       rawTextFull = await file.text()
       html = '<p>' + rawTextFull.replace(/\n\n+/g, '</p><p>').replace(/\n/g, ' ') + '</p>'
     } else {

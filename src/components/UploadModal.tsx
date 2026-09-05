@@ -198,8 +198,11 @@ export default function UploadModal() {
     if (!pasteText.trim()) return
     setTextLoading(true)
     try {
-      // Create a CSV file from the pasted text so handleUpload parses it directly (pure algo, no AI)
-      const file = new File([pasteText], 'deck.csv', { type: 'text/csv' })
+      // Strictly require CSV header ('front,' or 'front\t'). Without the starting format, send as notes.txt to server.
+      const trimmed = pasteText.trim()
+      const firstLine = trimmed.split(/\r?\n/)[0]?.trim().toLowerCase() ?? ''
+      const isCsv = /^front[,\t]/.test(firstLine)
+      const file = new File([pasteText], isCsv ? 'deck.csv' : 'notes.txt', { type: isCsv ? 'text/csv' : 'text/plain' })
       const id = await handleUpload(file, undefined, name)
       addToast('Deck created!', 'success')
       handleClose()
@@ -300,7 +303,7 @@ export default function UploadModal() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,.docx,.txt"
+                accept=".csv,.docx,.txt,.pdf,.ppt,.pptx"
                 className="hidden"
                 onChange={handleFileSelect}
               />
@@ -312,7 +315,7 @@ export default function UploadModal() {
                     {state === 'dragover' ? 'Drop to upload' : 'Drop your file here'}
                   </p>
                   <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                    CSV, DOCX, or TXT &mdash; Word docs &amp; text files are converted with AI
+                    CSV, DOCX, TXT, PDF, or PPTX &mdash; Slides, docs &amp; notes converted with AI
                   </p>
                   <button
                     onClick={() => fileInputRef.current?.click()}
