@@ -96,24 +96,11 @@ if "%ENABLE_AUTO_SCHEDULE%"=="1" (
 :: ----------------------------------------------------------------------
 netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo.
-    echo ======================================================================
-    echo [PORT 3000 BUSY] A StitchApp or Node server is already running on port 3000.
-    echo ======================================================================
-    echo Options:
-    echo   [1] Restart: Automatically kill previous process and start fresh (Default)
-    echo   [2] Exit: Keep existing process running
-    echo ======================================================================
-    set /p RESTART_CHOICE="Kill old process and restart now? (Y/n): "
-    if /i "!RESTART_CHOICE!"=="n" (
-        echo Keeping existing instance running. Exiting.
-        ping 127.0.0.1 -n 3 >nul
-        exit /b 0
-    )
-    echo Terminating old port 3000 process...
+    echo [AUTO-CLEANUP] Port 3000 is occupied by a previous instance.
+    echo Overwriting port 3000: terminating old process to start fresh...
     powershell -NoProfile -Command "$conns = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue; if ($conns) { foreach ($c in $conns) { Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue } }" >nul 2>&1
     ping 127.0.0.1 -n 2 >nul
-    echo Old process terminated. Continuing launch...
+    echo   -^> Old process terminated. Port 3000 reclaimed [OK]
 )
 
 :: ----------------------------------------------------------------------
