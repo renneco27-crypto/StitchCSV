@@ -46,7 +46,7 @@ export async function handleUpload(
 ): Promise<string> {
   try {
     const ext = file.name.split('.').pop()?.toLowerCase()
-    const title = customTitle || file.name.replace(/\.(csv|docx|doc|txt)$/i, '')
+    const title = customTitle || file.name.replace(/\.(csv|docx|doc|txt|pdf|pptx|ppt)$/i, '')
 
     let csvText: string
 

@@ -92,7 +92,7 @@ export default function UploadZone() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,.docx,.txt"
+        accept=".csv,.docx,.txt,.pdf,.ppt,.pptx"
         className="hidden"
         onChange={handleFileSelect}
       />
@@ -104,7 +104,7 @@ export default function UploadZone() {
             {uploadState === 'dragover' ? 'Drop to upload' : 'Drop your file here'}
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            CSV, DOCX, or TXT &mdash; Word docs &amp; text files are converted with AI
+            CSV, DOCX, TXT, PDF, or PPTX &mdash; Slides, documents &amp; notes converted with AI
           </p>
           <button
             onClick={() => fileInputRef.current?.click()}
